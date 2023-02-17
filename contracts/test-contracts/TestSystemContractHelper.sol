@@ -8,7 +8,6 @@ import "../libraries/SystemContractsCaller.sol";
 import "../libraries/SystemContractHelper.sol";
 import "../libraries/Utils.sol";
 
-
 library TestSystemContractHelper {
     /// @notice Perform a `mimicCall` with `isSystem` flag, with the ability to pass extra abi data.
     /// @param to The address to call
@@ -27,20 +26,13 @@ library TestSystemContractHelper {
         uint256 extraAbiParam1,
         uint256 extraAbiParam2
     ) internal returns (bytes memory) {
-        bool success = rawSystemMimicCall(
-            to,
-            whoToMimic,
-            data,
-            isConstructor,
-            extraAbiParam1,
-            extraAbiParam2
-        );
+        bool success = rawSystemMimicCall(to, whoToMimic, data, isConstructor, extraAbiParam1, extraAbiParam2);
 
         uint256 size;
         assembly {
             size := returndatasize()
         }
-        if(!success) {
+        if (!success) {
             assembly {
                 returndatacopy(0, 0, size)
                 revert(0, size)

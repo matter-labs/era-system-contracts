@@ -11,7 +11,7 @@ library Utils {
         0x00ff000000000000000000000000000000000000000000000000000000000000;
 
     /// @dev Bit mask to set the "isConstructor" marker in the bytecode hash
-    bytes32 constant SET_IS_CONSTRUCTOR_MARKER_BIT_MASK = 
+    bytes32 constant SET_IS_CONSTRUCTOR_MARKER_BIT_MASK =
         0x0001000000000000000000000000000000000000000000000000000000000000;
 
     function safeCastToU128(uint256 _x) internal pure returns (uint128) {

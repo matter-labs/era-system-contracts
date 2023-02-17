@@ -26,7 +26,7 @@ contract L2EthToken is IEthToken {
     // TODO: Remove this variable with the new upgrade.
     address __DEPRECATED_l2Bridge = address(0);
 
-    modifier onlyBootloader {
+    modifier onlyBootloader() {
         require(msg.sender == BOOTLOADER_FORMAL_ADDRESS, "Callable only by the bootloader");
         _;
     }
@@ -57,7 +57,7 @@ contract L2EthToken is IEthToken {
     /// @dev It takes `uint256` as an argument to be able to properly simulate the behaviour of the
     /// Ethereum's `BALANCE` opcode that accepts uint256 as an argument and truncates any upper bits
     /// @param _account The address of the account to return the balance of.
-    function balanceOf(uint256 _account) external override view returns (uint256) {
+    function balanceOf(uint256 _account) external view override returns (uint256) {
         return balance[address(uint160(_account))];
     }
 

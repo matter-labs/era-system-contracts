@@ -21,7 +21,7 @@ import {DEPLOYER_SYSTEM_CONTRACT} from "./Constants.sol";
  * will be used for address derivation using CREATE. For the economy of space, this nonce is stored tightly
  * packed with the `minNonce`.
  * @dev The behavior of some of the methods depends on the nonce ordering of the account. Nonce ordering is a mere suggestion and all the checks that are present
- * here server more as a help to users to prevent from doing mistakes, rather 
+ * here server more as a help to users to prevent from doing mistakes, rather
  * rather than any invariants.
  */
 contract NonceHolder is INonceHolder, ISystemContract {
@@ -83,9 +83,9 @@ contract NonceHolder is INonceHolder, ISystemContract {
         IContractDeployer.AccountInfo memory accountInfo = DEPLOYER_SYSTEM_CONTRACT.getAccountInfo(msg.sender);
 
         require(_value != 0, "Nonce value can not be set to 0");
-        // If an account has sequential nonce ordering, we enforce that the previous 
+        // If an account has sequential nonce ordering, we enforce that the previous
         // nonce has already been used.
-        if(accountInfo.nonceOrdering == IContractDeployer.AccountNonceOrdering.Sequential && _key != 0) {
+        if (accountInfo.nonceOrdering == IContractDeployer.AccountNonceOrdering.Sequential && _key != 0) {
             require(isNonceUsed(msg.sender, _key - 1), "Previous nonce has not been used");
         }
 

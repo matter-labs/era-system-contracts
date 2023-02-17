@@ -59,7 +59,7 @@ uint256 constant BYTECODE_PUBLISHING_OVERHEAD = 100;
 uint256 constant MSG_VALUE_SIMULATOR_IS_SYSTEM_BIT = 1;
 
 /// @dev The maximal msg.value that context can have
-uint256 constant MAX_MSG_VALUE = 2**128 - 1;
+uint256 constant MAX_MSG_VALUE = 2 ** 128 - 1;
 
 /// @dev Prefix used during derivation of account addresses using CREATE2
 /// @dev keccak256("zksyncCreate2")
