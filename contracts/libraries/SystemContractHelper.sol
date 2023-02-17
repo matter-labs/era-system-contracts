@@ -140,19 +140,13 @@ library SystemContractHelper {
         bool isConstructor,
         bool isSystem
     ) internal returns (bytes memory) {
-        bool success = rawMimicCall(
-            to,
-            whoToMimic,
-            data,
-            isConstructor,
-            isSystem
-        );
+        bool success = rawMimicCall(to, whoToMimic, data, isConstructor, isSystem);
 
         uint256 size;
         assembly {
             size := returndatasize()
         }
-        if(!success) {
+        if (!success) {
             assembly {
                 returndatacopy(0, 0, size)
                 revert(0, size)

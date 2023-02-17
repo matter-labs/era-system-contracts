@@ -12,7 +12,7 @@ import "./Constants.sol";
  * The rest of the data is passed via calldata without copying.
  */
 contract EventWriter is ISystemContract {
-    fallback(bytes calldata _data) external onlySystemCall returns(bytes memory _result) {
+    fallback(bytes calldata _data) external onlySystemCall returns (bytes memory _result) {
         uint256 numberOfTopics = SystemContractHelper.getExtraAbiData(0);
         require(numberOfTopics <= 4, "Only 4 indexed fields are allowed");
 

@@ -37,21 +37,21 @@ contract MsgValueSimulator is ISystemContract {
             );
 
             // If the transfer of ETH fails, we do the most Ethereum-like behaviour in such situation: revert(0,0)
-            if(!success) {
+            if (!success) {
                 assembly {
-                    revert(0,0)
+                    revert(0, 0)
                 }
             }
         }
 
-        if(value > MAX_MSG_VALUE) {
-            // The if above should never be true, since noone should be able to have 
+        if (value > MAX_MSG_VALUE) {
+            // The if above should never be true, since noone should be able to have
             // MAX_MSG_VALUE wei of ether. However, if it does happen for some reason,
             // we will revert(0,0).
-            // Note, that we use raw revert here instead of `panic` to emulate behaviour close to 
+            // Note, that we use raw revert here instead of `panic` to emulate behaviour close to
             // the EVM's one, i.e. returndata should be empty.
             assembly {
-                return(0,0)
+                return(0, 0)
             }
         }
 
