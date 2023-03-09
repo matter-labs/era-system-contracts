@@ -50,7 +50,7 @@ contract ContractDeployer is IContractDeployer, ISystemContract {
 
     /// @notice Returns the account abstraction version if `_address` is a deployed contract.
     /// Returns the latest supported account abstraction version if `_address` is an EOA.
-    function extendedAccountVersion(address _address) public view returns (AccountAbstractionVersion) {
+    function extendedAccountVersion(address _address) external view returns (AccountAbstractionVersion) {
         AccountInfo memory info = _accountInfo[_address];
         if(info.supportedAAVersion != AccountAbstractionVersion.None) {
             return info.supportedAAVersion;
@@ -102,16 +102,8 @@ contract ContractDeployer is IContractDeployer, ISystemContract {
         bytes32 _bytecodeHash,
         bytes32 _salt,
         bytes calldata _input
-    ) public pure override returns (address newAddress) {
-        // No colission is not possible with the Ethereum's CREATE2, since
-        // the prefix begins with 0x20....
-        bytes32 constructorInputHash = keccak256(_input);
-
-        bytes32 hash = keccak256(
-            bytes.concat(CREATE2_PREFIX, bytes32(uint256(uint160(_sender))), _salt, _bytecodeHash, constructorInputHash)
-        );
-
-        newAddress = address(uint160(uint256(hash)));
+    ) external pure override returns (address) {
+        return _getNewAddressCreate2(_sender, _bytecodeHash, _salt, _input);
     }
 
     /// @notice Calculates the address of a deployed contract via create
@@ -120,14 +112,8 @@ contract ContractDeployer is IContractDeployer, ISystemContract {
     function getNewAddressCreate(
         address _sender,
         uint256 _senderNonce
-    ) public pure override returns (address newAddress) {
-        // No colission is possible with the Ethereum's CREATE2, since
-        // the prefix begins with 0x63....
-        bytes32 hash = keccak256(
-            bytes.concat(CREATE_PREFIX, bytes32(uint256(uint160(_sender))), bytes32(_senderNonce))
-        );
-
-        newAddress = address(uint160(uint256(hash)));
+    ) external pure override returns (address) {
+        return _getNewAddressCreate(_sender, _senderNonce);
     }
 
     /// @notice Deploys a contract with similar address derivation rules to the EVM's `CREATE2` opcode.
@@ -141,7 +127,7 @@ contract ContractDeployer is IContractDeployer, ISystemContract {
         bytes calldata _input
     ) external payable override onlySystemCall returns (address) {
         NONCE_HOLDER_SYSTEM_CONTRACT.incrementDeploymentNonce(msg.sender);
-        address newAddress = getNewAddressCreate2(msg.sender, _bytecodeHash, _salt, _input);
+        address newAddress = _getNewAddressCreate2(msg.sender, _bytecodeHash, _salt, _input);
 
         _nonSystemDeployOnAddress(_bytecodeHash, newAddress, AccountAbstractionVersion.None, _input);
 
@@ -160,7 +146,7 @@ contract ContractDeployer is IContractDeployer, ISystemContract {
         AccountAbstractionVersion _aaVersion
     ) external payable override onlySystemCall returns (address) {
         NONCE_HOLDER_SYSTEM_CONTRACT.incrementDeploymentNonce(msg.sender);
-        address newAddress = getNewAddressCreate2(msg.sender, _bytecodeHash, _salt, _input);
+        address newAddress = _getNewAddressCreate2(msg.sender, _bytecodeHash, _salt, _input);
 
         _nonSystemDeployOnAddress(_bytecodeHash, newAddress, _aaVersion, _input);
 
@@ -179,7 +165,7 @@ contract ContractDeployer is IContractDeployer, ISystemContract {
         bytes calldata _input
     ) external payable override onlySystemCall returns (address) {
         uint256 senderNonce = NONCE_HOLDER_SYSTEM_CONTRACT.incrementDeploymentNonce(msg.sender);
-        address newAddress = getNewAddressCreate(msg.sender, senderNonce);
+        address newAddress = _getNewAddressCreate(msg.sender, senderNonce);
 
         _nonSystemDeployOnAddress(_bytecodeHash, newAddress, AccountAbstractionVersion.None, _input);
 
@@ -199,7 +185,7 @@ contract ContractDeployer is IContractDeployer, ISystemContract {
         AccountAbstractionVersion _aaVersion
     ) external payable override onlySystemCall returns (address) {
         uint256 senderNonce = NONCE_HOLDER_SYSTEM_CONTRACT.incrementDeploymentNonce(msg.sender);
-        address newAddress = getNewAddressCreate(msg.sender, senderNonce);
+        address newAddress = _getNewAddressCreate(msg.sender, senderNonce);
 
         _nonSystemDeployOnAddress(_bytecodeHash, newAddress, _aaVersion, _input);
 
@@ -317,6 +303,45 @@ contract ContractDeployer is IContractDeployer, ISystemContract {
     function _ensureBytecodeIsKnown(bytes32 _bytecodeHash) internal view {
         uint256 knownCodeMarker = KNOWN_CODE_STORAGE_CONTRACT.getMarker(_bytecodeHash);
         require(knownCodeMarker > 0, "The code hash is not known");
+    }
+
+    /// @dev Calculates the address of a deployed contract via create2
+    /// @param _sender The account that deploys the contract.
+    /// @param _bytecodeHash The correctly formatted hash of the bytecode.
+    /// @param _salt The create2 salt.
+    /// @param _input The constructor data.
+    /// @return newAddress The derived address of the account.
+    function _getNewAddressCreate2(
+        address _sender,
+        bytes32 _bytecodeHash,
+        bytes32 _salt,
+        bytes calldata _input
+    ) internal pure returns (address newAddress) {
+        // No colission is not possible with the Ethereum's CREATE2, since
+        // the prefix begins with 0x20....
+        bytes32 constructorInputHash = keccak256(_input);
+
+        bytes32 hash = keccak256(
+            bytes.concat(CREATE2_PREFIX, bytes32(uint256(uint160(_sender))), _salt, _bytecodeHash, constructorInputHash)
+        );
+
+        newAddress = address(uint160(uint256(hash)));
+    }
+
+    /// @notice Calculates the address of a deployed contract via create
+    /// @param _sender The account that deploys the contract.
+    /// @param _senderNonce The deploy nonce of the sender's account.
+    function _getNewAddressCreate(
+        address _sender,
+        uint256 _senderNonce
+    ) internal pure returns (address newAddress) {
+        // No colission is possible with the Ethereum's CREATE2, since
+        // the prefix begins with 0x63....
+        bytes32 hash = keccak256(
+            bytes.concat(CREATE_PREFIX, bytes32(uint256(uint160(_sender))), bytes32(_senderNonce))
+        );
+
+        newAddress = address(uint160(uint256(hash)));
     }
 
     /// @notice Ensures that the _newAddress and assigns a new contract hash to it
