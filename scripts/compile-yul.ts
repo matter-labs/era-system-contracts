@@ -8,7 +8,7 @@ const COMPILER_VERSION = '1.3.11';
 const IS_COMPILER_PRE_RELEASE = false;
 
 async function compilerLocation(): Promise<string> {
-    if(IS_COMPILER_PRE_RELEASE) {
+    if (IS_COMPILER_PRE_RELEASE) {
         const url = getZksolcUrl('https://github.com/matter-labs/zksolc-prerelease', hre.config.zksolc.version);
         const salt = saltFromUrl(url);
         return await getZksolcPath(COMPILER_VERSION, salt);
@@ -57,10 +57,13 @@ function preparePaths(path: string, files: string[], outputDirName: string | nul
             return `sources/${val}`;
         })
         .join(' ');
-    const outputDir = outputDirName || files[0];
-    let absolutePathSources = `${process.env.ZKSYNC_HOME}/etc/system-contracts/${path}`;
+    const currentWorkingDirectory = process.cwd();
+    console.log(`Yarn project directory: ${currentWorkingDirectory}`);
 
-    let absolutePathArtifacts = `${process.env.ZKSYNC_HOME}/etc/system-contracts/${path}/artifacts`;
+    const outputDir = outputDirName || files[0];
+    let absolutePathSources = `${currentWorkingDirectory}/${path}`;
+
+    let absolutePathArtifacts = `${currentWorkingDirectory}/${path}/artifacts`;
 
     return new CompilerPaths(filePaths, outputDir, absolutePathSources, absolutePathArtifacts);
 }
@@ -80,10 +83,10 @@ class CompilerPaths {
 
 
 async function main() {
-    await compileYulFolder('contracts');
-    await compileYulFolder('contracts/precompiles');
+    //await compileYulFolder('contracts');
+    //await compileYulFolder('contracts/precompiles');
     await compileYulFolder('bootloader/build');
-    await compileYulFolder('bootloader/tests');
+    //await compileYulFolder('bootloader/tests');
 }
 
 main()

@@ -1,0 +1,19 @@
+[package]
+name = "test_infra"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+
+vm = { path = "../../../../matter/zksync-2-dev/core/lib/vm" }
+zksync_types = {path = "../../../../matter/zksync-2-dev/core/lib/types" }
+zksync_contracts = { path = "../../../../matter/zksync-2-dev/core/lib/contracts"}
+zksync_utils = { path = "../../../../matter/zksync-2-dev/core/lib/utils"}
+zksync_state = { path = "../../../../matter/zksync-2-dev/core/lib/state"}
+
+
+colored = "2.0"
+hex = "0.4"
+once_cell = "1.7"

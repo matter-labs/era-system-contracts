@@ -3,6 +3,7 @@ object "Bootloader" {
     }
     object "Bootloader_deployed" {
         code {
+            {{TEST_STATELESS}}
             /// @notice the address that will be the beneficiary of all the fees
             let OPERATOR_ADDRESS := mload(0)
 

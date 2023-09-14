@@ -47,5 +47,6 @@
     "preprocess": "rm -rf ./bootloader/build && yarn ts-node scripts/process.ts",
     "deploy-preimages": "ts-node scripts/deploy-preimages.ts",
     "compile-yul": "ts-node scripts/compile-yul.ts"
-  }
+  },
+  "packageManager": "yarn@1.22.19"
 }

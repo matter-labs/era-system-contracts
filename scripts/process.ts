@@ -49,7 +49,7 @@ function upgradeSystemContextCalldata() {
 
     const forceDeplyment: ForceDeployment = {
         bytecodeHash: newHash,
-        newAddress: SYSTEM_CONTRACTS.systemContext.address, 
+        newAddress: SYSTEM_CONTRACTS.systemContext.address,
         callConstructor: false,
         value: 0,
         input: '0x'
@@ -60,7 +60,7 @@ function upgradeSystemContextCalldata() {
 
     // Padding calldata from the right. We really need to do it, since Yul would "implicitly" pad it from the left and it
     // it is not what we want.
-    while((calldata.length - 2) % 64 != 0) {
+    while ((calldata.length - 2) % 64 != 0) {
         calldata += '0';
     }
 
@@ -68,10 +68,10 @@ function upgradeSystemContextCalldata() {
     const TABULATION = '\t\t\t\t\t';
     // In the first slot we need to store the calldata's length
     let data = `mstore(0x00, ${originalLength})\n`;
-    
+
     const slices = (calldata.length - 2) / 64;
 
-    for(let slice = 0; slice < slices; slice++) {
+    for (let slice = 0; slice < slices; slice++) {
         const offset = slice * 32;
         const sliceHex = calldata.slice(2 + offset * 2, 2 + offset * 2 + 64);
 
@@ -87,7 +87,7 @@ let params = {
     MARK_BATCH_AS_REPUBLISHED_SELECTOR: getSelector('KnownCodesStorage', 'markFactoryDeps'),
     VALIDATE_TX_SELECTOR: getSelector('IAccount', 'validateTransaction'),
     EXECUTE_TX_SELECTOR: getSelector('DefaultAccount', 'executeTransaction'),
-    RIGHT_PADDED_GET_ACCOUNT_VERSION_SELECTOR: getPaddedSelector('ContractDeployer','extendedAccountVersion'),
+    RIGHT_PADDED_GET_ACCOUNT_VERSION_SELECTOR: getPaddedSelector('ContractDeployer', 'extendedAccountVersion'),
     RIGHT_PADDED_GET_RAW_CODE_HASH_SELECTOR: getPaddedSelector('AccountCodeStorage', 'getRawCodeHash'),
     PAY_FOR_TX_SELECTOR: getSelector('DefaultAccount', 'payForTransaction'),
     PRE_PAYMASTER_SELECTOR: getSelector('DefaultAccount', 'prepareForPaymaster'),
@@ -104,10 +104,10 @@ let params = {
     RIGHT_PADDED_VALIDATE_NONCE_USAGE_SELECTOR: getPaddedSelector('INonceHolder', 'validateNonceUsage'),
     RIGHT_PADDED_MINT_ETHER_SELECTOR: getPaddedSelector('L2EthToken', 'mint'),
     GET_TX_HASHES_SELECTOR: getSelector('BootloaderUtilities', 'getTransactionHashes'),
-    CREATE_SELECTOR: getSelector('ContractDeployer','create'),
-    CREATE2_SELECTOR: getSelector('ContractDeployer','create2'),
-    CREATE_ACCOUNT_SELECTOR: getSelector('ContractDeployer','createAccount'),
-    CREATE2_ACCOUNT_SELECTOR: getSelector('ContractDeployer','create2Account'),
+    CREATE_SELECTOR: getSelector('ContractDeployer', 'create'),
+    CREATE2_SELECTOR: getSelector('ContractDeployer', 'create2'),
+    CREATE_ACCOUNT_SELECTOR: getSelector('ContractDeployer', 'createAccount'),
+    CREATE2_ACCOUNT_SELECTOR: getSelector('ContractDeployer', 'create2Account'),
     PADDED_TRANSFER_FROM_TO_SELECTOR: getPaddedSelector('L2EthToken', 'transferFromTo'),
     SUCCESSFUL_ACCOUNT_VALIDATION_MAGIC_VALUE: getPaddedSelector('IAccount', 'validateTransaction'),
     SUCCESSFUL_PAYMASTER_VALIDATION_MAGIC_VALUE: getPaddedSelector('IPaymaster', 'validateAndPayForPaymasterTransaction'),
@@ -145,7 +145,7 @@ async function main() {
     const provedBatchBootloader = preprocess.preprocess(
         bootloader,
         { BOOTLOADER_TYPE: 'proved_batch' }
-    );    
+    );
     console.log('Preprocessing playground block bootloader');
     const playgroundBatchBootloader = preprocess.preprocess(
         bootloader,
@@ -162,14 +162,25 @@ async function main() {
         { BOOTLOADER_TYPE: 'playground_batch' }
     );
 
-    if(!existsSync(OUTPUT_DIR)) {
+    if (!existsSync(OUTPUT_DIR)) {
         mkdirSync(OUTPUT_DIR);
     }
 
-    writeFileSync(`${OUTPUT_DIR}/proved_batch.yul`, provedBatchBootloader);
-    writeFileSync(`${OUTPUT_DIR}/playground_batch.yul`, playgroundBatchBootloader);
-    writeFileSync(`${OUTPUT_DIR}/gas_test.yul`, gasTestBootloader);
-    writeFileSync(`${OUTPUT_DIR}/fee_estimate.yul`, feeEstimationBootloader);
+    const testsForProvedBatchBootloader = await renderFile('bootloader/tests/function_test.yul', {});
+
+    const foobar = await renderFile('bootloader/bootloader.yul', {
+        ...params,
+        TEST_STATELESS: testsForProvedBatchBootloader
+    });
+    const foobar2 = preprocess.preprocess(foobar, { BOOTLOADER_TYPE: 'proved_batch' });
+    writeFileSync(`${OUTPUT_DIR}/function_test.yul`, foobar2);
+
+
+
+    //writeFileSync(`${OUTPUT_DIR}/proved_batch.yul`, provedBatchBootloader);
+    //writeFileSync(`${OUTPUT_DIR}/playground_batch.yul`, playgroundBatchBootloader);
+    //writeFileSync(`${OUTPUT_DIR}/gas_test.yul`, gasTestBootloader);
+    //writeFileSync(`${OUTPUT_DIR}/fee_estimate.yul`, feeEstimationBootloader);
 
     console.log('Preprocessing done!');
 }
