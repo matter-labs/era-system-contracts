@@ -1,5 +1,7 @@
 use crate::{test_count_tracer::TestCountTracer, tracer::BootloaderTestTracer};
+use colored::Colorize;
 use once_cell::sync::OnceCell;
+use std::process;
 use std::{env, sync::Arc};
 use tracing_subscriber::fmt;
 use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;
@@ -98,6 +100,8 @@ fn execute_internal_bootloader_test() {
     };
     println!(" ==== Running {} tests ====", test_count);
 
+    let mut tests_failed: u32 = 0;
+
     // Now we iterate over the tests.
     for test_id in 1..=test_count {
         println!("\n === Running test {}", test_id);
@@ -114,12 +118,33 @@ fn execute_internal_bootloader_test() {
             storage.clone(),
             HistoryDisabled,
         );
-        let custom_tracers = vec![Box::new(BootloaderTestTracer::new())
+        let test_result = Arc::new(OnceCell::default());
+
+        let custom_tracers = vec![Box::new(BootloaderTestTracer::new(test_result.clone()))
             as Box<dyn VmTracer<StorageView<InMemoryStorage>, HistoryDisabled>>];
 
         let result = vm.inspect_the_rest_of_the_batch(custom_tracers);
 
+        let test_result = test_result.get().unwrap();
+        match &test_result.result {
+            Ok(_) => println!("{} {}", "[PASS]".green(), test_result.test_name),
+            Err(error_info) => {
+                tests_failed += 1;
+                println!(
+                    "{} {} {}",
+                    "[FAIL]".red(),
+                    test_result.test_name,
+                    error_info
+                )
+            }
+        }
         vlog::debug!("Result: {:?}", result);
+    }
+    if tests_failed > 0 {
+        println!("{}", format!("{} tests failed.", tests_failed).red());
+        process::exit(1);
+    } else {
+        println!("{}", "ALL tests passed.".green())
     }
 }
 

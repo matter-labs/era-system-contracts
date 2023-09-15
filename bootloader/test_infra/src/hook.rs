@@ -21,6 +21,8 @@ pub(crate) enum TestVmHook {
     RequestedAssert(String),
     // Testing framework reporting the number of tests.
     TestCount(u32),
+    // 104 - test start.
+    TestStart(String),
 }
 
 const TEST_HOOKS: u32 = 5;
@@ -100,6 +102,7 @@ impl TestVmHook {
             ),
             102 => Self::RequestedAssert(test_hook_as_string(vm_hook_params[0])),
             103 => Self::TestCount(vm_hook_params[0].as_u32()),
+            104 => Self::TestStart(test_hook_as_string(vm_hook_params[0])),
 
             _ => Self::NoHook,
         }

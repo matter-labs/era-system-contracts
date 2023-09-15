@@ -19,10 +19,15 @@ function storeTestHookParam(paramId, value) {
 }
 
 
-function testLog(msg, data) {
+function testing_log(msg, data) {
     storeTestHookParam(0, nonOptimized(msg))
     storeTestHookParam(1, nonOptimized(data))
     setTestHook(nonOptimized(100))
+}
+
+function testing_start(test_name) {
+    storeTestHookParam(0, nonOptimized(test_name))
+    setTestHook(nonOptimized(104))
 }
 
 function testing_assertEq(a, b, message) {
@@ -41,6 +46,3 @@ function testing_totalTests(tests) {
     storeTestHookParam(0, unoptimized(tests))
     setTestHook(nonOptimized(103))
 }
-
-
-debugLog("Position", TEST_HOOK_PTR())

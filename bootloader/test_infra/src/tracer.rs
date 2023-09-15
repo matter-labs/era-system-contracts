@@ -1,36 +1,40 @@
+use std::sync::Arc;
+
 use colored::Colorize;
 
+use once_cell::sync::OnceCell;
 use vm::{
-    old_vm::utils::dump_memory_page_using_primitive_value, BootloaderState, DynTracer,
-    ExecutionEndTracer, ExecutionProcessing, Halt, HistoryMode, SimpleMemory, TxRevertReason,
-    VmExecutionResultAndLogs, VmExecutionStopReason, VmTracer, ZkSyncVmState,
+    DynTracer, ExecutionEndTracer, ExecutionProcessing, Halt, HistoryMode, SimpleMemory,
+    VmExecutionResultAndLogs, VmTracer,
 };
 use zksync_state::{StoragePtr, WriteStorage};
-use zksync_types::zkevm_test_harness::zk_evm::{
-    tracing::{BeforeExecutionData, VmLocalStateData},
-    zkevm_opcode_defs::{
-        decoding::{AllowedPcOrImm, EncodingModeProduction, VmEncodingMode},
-        RET_IMPLICIT_RETURNDATA_PARAMS_REGISTER,
-    },
-};
+use zksync_types::zkevm_test_harness::zk_evm::tracing::{BeforeExecutionData, VmLocalStateData};
 
 use crate::hook::TestVmHook;
 
+#[derive(Debug)]
+pub struct TestResult {
+    pub test_name: String,
+    pub result: Result<(), String>,
+}
+
 /// Bootloader test tracer that is executing while the bootloader tests are running.
 /// It can check the assers, return information about the running tests (and amount of tests) etc.
-
 pub struct BootloaderTestTracer {
     /// Set if the currently running test has failed.
-    test_failed: Option<String>,
+    test_result: Arc<OnceCell<TestResult>>,
     /// Set, if the currently running test should fail with a given assert.
     requested_assert: Option<String>,
+
+    test_name: Option<String>,
 }
 
 impl BootloaderTestTracer {
-    pub fn new() -> Self {
+    pub fn new(test_result: Arc<OnceCell<TestResult>>) -> Self {
         BootloaderTestTracer {
-            test_failed: None,
+            test_result,
             requested_assert: None,
+            test_name: None,
         }
     }
 }
@@ -50,74 +54,84 @@ impl<S, H: HistoryMode> DynTracer<S, H> for BootloaderTestTracer {
         }
         if let TestVmHook::AssertEqFailed(a, b, msg) = &hook {
             let result = format!("Assert failed: {} is not equal to {}: {}", a, b, msg);
-            self.test_failed = Some(result.clone());
+
+            self.test_result
+                .set(TestResult {
+                    test_name: self.test_name.clone().unwrap_or("".to_owned()),
+                    result: Err(result.clone()),
+                })
+                .unwrap();
             println!("{} {}", "TEST FAILED:".red(), result)
         }
         if let TestVmHook::RequestedAssert(requested_assert) = &hook {
             self.requested_assert = Some(requested_assert.clone())
+        }
+
+        if let TestVmHook::TestStart(test_name) = &hook {
+            self.test_name = Some(test_name.clone());
         }
     }
 }
 
 impl<H: HistoryMode> ExecutionEndTracer<H> for BootloaderTestTracer {
     fn should_stop_execution(&self) -> bool {
-        self.test_failed.is_some()
+        if let Some(TestResult {
+            test_name: _,
+            result: Err(_),
+        }) = self.test_result.get()
+        {
+            return true;
+        }
+        return false;
     }
 }
 
-impl<S: WriteStorage, H: HistoryMode> ExecutionProcessing<S, H> for BootloaderTestTracer {
-    fn after_vm_execution(
-        &mut self,
-        state: &mut ZkSyncVmState<S, H>,
-        _bootloader_state: &BootloaderState,
-        _stop_reason: VmExecutionStopReason,
-    ) {
-        if let Some(requested_assert) = &self.requested_assert {
-            let r1 = state.local_state.registers[RET_IMPLICIT_RETURNDATA_PARAMS_REGISTER as usize];
+impl<S: WriteStorage, H: HistoryMode> ExecutionProcessing<S, H> for BootloaderTestTracer {}
 
-            let outer_eh_location =
-                <EncodingModeProduction as VmEncodingMode<8>>::PcOrImm::MAX.as_u64();
-
-            if let VmExecutionStopReason::VmFinished = _stop_reason {
-                if state.execution_has_ended()
-                    && state.local_state.callstack.get_current_stack().pc.as_u64()
-                        == outer_eh_location
-                {
-                    if !state.local_state.flags.overflow_or_less_than_flag {
-                        let returndata = dump_memory_page_using_primitive_value(&state.memory, r1);
-                        let revert_reason = TxRevertReason::parse_error(&returndata);
-                        if let TxRevertReason::Halt(Halt::UnexpectedVMBehavior(reason)) =
-                            revert_reason
-                        {
-                            let reason = reason.strip_prefix("Assertion error: ").unwrap();
-                            if reason != requested_assert {
-                                println!(
-                                    "{} Should have failed with `{}`, but failed with `{}`",
-                                    "Test failed.".red(),
-                                    requested_assert,
-                                    reason,
-                                );
-                                return;
-                            } else {
-                                println!("{}", "[PASS]".bold().green());
-                                return;
-                            }
+impl<S: WriteStorage, H: HistoryMode> VmTracer<S, H> for BootloaderTestTracer {
+    fn save_results(&mut self, result: &mut VmExecutionResultAndLogs) {
+        let r = if let Some(requested_assert) = &self.requested_assert {
+            match &result.result {
+                vm::ExecutionResult::Success { .. } => Err(format!(
+                    "Should have failed with {}, but run succesfully.",
+                    requested_assert
+                )),
+                vm::ExecutionResult::Revert { output } => Err(format!(
+                    "Should have failed with {}, but run reverted with {}.",
+                    requested_assert,
+                    output.to_user_friendly_string()
+                )),
+                vm::ExecutionResult::Halt { reason } => {
+                    if let Halt::UnexpectedVMBehavior(reason) = reason {
+                        let reason = reason.strip_prefix("Assertion error: ").unwrap();
+                        if reason == requested_assert {
+                            Ok(())
+                        } else {
+                            Err(format!(
+                                "Should have failed with `{}`, but failed with different assert `{}`",
+                                requested_assert, reason
+                            ))
                         }
+                    } else {
+                        Err(format!(
+                            "Should have failed with `{}`, but halted with`{}`",
+                            requested_assert, reason
+                        ))
                     }
                 }
             }
-            println!(
-                "{} Should have failed with {}, but run succefully.",
-                "Test failed.".red(),
-                requested_assert,
-            );
-            return;
-        }
-
-        println!("{}", "[PASS]".bold().green());
+        } else {
+            match &result.result {
+                vm::ExecutionResult::Success { .. } => Ok(()),
+                vm::ExecutionResult::Revert { output } => Err(output.to_user_friendly_string()),
+                vm::ExecutionResult::Halt { reason } => Err(reason.to_string()),
+            }
+        };
+        self.test_result
+            .set(TestResult {
+                test_name: self.test_name.clone().unwrap_or("".to_owned()),
+                result: r,
+            })
+            .unwrap();
     }
-}
-
-impl<S: WriteStorage, H: HistoryMode> VmTracer<S, H> for BootloaderTestTracer {
-    fn save_results(&mut self, _result: &mut VmExecutionResultAndLogs) {}
 }

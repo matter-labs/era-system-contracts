@@ -161,7 +161,7 @@ function createTestFramework(tests: string[]): string {
     tests.forEach((value, index) => {
         testFramework += `
         case ${index + 1} {
-            testLog("Starting test ${value}", ${index})
+            testing_start("${value}")
             ${value}()
         }
         `
