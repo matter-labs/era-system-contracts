@@ -61,7 +61,6 @@ impl<S, H: HistoryMode> DynTracer<S, H> for BootloaderTestTracer {
                     result: Err(result.clone()),
                 })
                 .unwrap();
-            println!("{} {}", "TEST FAILED:".red(), result)
         }
         if let TestVmHook::RequestedAssert(requested_assert) = &hook {
             self.requested_assert = Some(requested_assert.clone())
@@ -127,11 +126,13 @@ impl<S: WriteStorage, H: HistoryMode> VmTracer<S, H> for BootloaderTestTracer {
                 vm::ExecutionResult::Halt { reason } => Err(reason.to_string()),
             }
         };
-        self.test_result
-            .set(TestResult {
-                test_name: self.test_name.clone().unwrap_or("".to_owned()),
-                result: r,
-            })
-            .unwrap();
+        if self.test_result.get().is_none() {
+            self.test_result
+                .set(TestResult {
+                    test_name: self.test_name.clone().unwrap_or("".to_owned()),
+                    result: r,
+                })
+                .unwrap();
+        }
     }
 }
