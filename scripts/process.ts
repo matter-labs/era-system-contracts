@@ -124,6 +124,58 @@ let params = {
     ...SYSTEM_PARAMS
 };
 
+
+function extractFunctionNames(sourceCode: string): string[] {
+    // Remove single-line comments
+    sourceCode = sourceCode.replace(/\/\/[^\n]*/g, '');
+
+    // Remove multi-line comments
+    sourceCode = sourceCode.replace(/\/\*[\s\S]*?\*\//g, '');
+
+
+    const regexPatterns = [
+        /function\s+(TEST\w+)/g,
+    ];
+
+    let results: string[] = [];
+    for (const pattern of regexPatterns) {
+        let match;
+        while ((match = pattern.exec(sourceCode)) !== null) {
+            results.push(match[1]);
+        }
+    }
+
+    return [...new Set(results)]; // Remove duplicates
+}
+
+function createTestFramework(tests: string[]): string {
+    let testFramework = `
+    let test_id:= mload(0)
+
+    switch test_id 
+    case 0 {
+        testing_totalTests(${tests.length})
+    }
+    `;
+
+    tests.forEach((value, index) => {
+        testFramework += `
+        case ${index + 1} {
+            testLog("Starting test ${value}", ${index})
+            ${value}()
+        }
+        `
+    });
+
+    testFramework += `
+        default {
+        }
+    return (0, 0)
+    `
+
+    return testFramework;
+}
+
 async function main() {
     const bootloader = await renderFile('bootloader/bootloader.yul', params);
     // The overhead is unknown for gas tests and so it should be zero to calculate it 
@@ -162,18 +214,30 @@ async function main() {
         { BOOTLOADER_TYPE: 'playground_batch' }
     );
 
+    console.log('Preprocessing bootloader tests');
+    const bootloaderTests = await renderFile('bootloader/tests/bootloader/bootloader_test.yul', {});
+
+    let testMethods = extractFunctionNames(bootloaderTests)
+
+    console.log("Found tests: " + testMethods);
+
+    let testFramework = createTestFramework(testMethods);
+
+
+    const bootloaderTestUtils = await renderFile('bootloader/tests/utils/test_utils.yul', {});
+
+    const bootloaderWithTests = await renderFile('bootloader/bootloader.yul', {
+        ...params,
+        TEST_STATELESS: bootloaderTestUtils + "\n" + bootloaderTests + "\n" + testFramework
+    });
+    const provedBootloaderWithTests = preprocess.preprocess(bootloaderWithTests, { BOOTLOADER_TYPE: 'proved_batch' });
+
     if (!existsSync(OUTPUT_DIR)) {
         mkdirSync(OUTPUT_DIR);
     }
 
-    const testsForProvedBatchBootloader = await renderFile('bootloader/tests/function_test.yul', {});
 
-    const foobar = await renderFile('bootloader/bootloader.yul', {
-        ...params,
-        TEST_STATELESS: testsForProvedBatchBootloader
-    });
-    const foobar2 = preprocess.preprocess(foobar, { BOOTLOADER_TYPE: 'proved_batch' });
-    writeFileSync(`${OUTPUT_DIR}/function_test.yul`, foobar2);
+    writeFileSync(`${OUTPUT_DIR}/bootloader_test.yul`, provedBootloaderWithTests);
 
 
 
