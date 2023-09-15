@@ -1,23 +1,46 @@
+
+
+// We're locating the test hooks 'before' the last free slot.
+function TEST_HOOK_PTR() -> ret {
+    ret := LAST_FREE_SLOT()
+}
+
+function TEST_HOOK_PARAMS_OFFSET() -> ret {
+    ret := sub(TEST_HOOK_PTR(), mul(5, 32))
+}
+
+function setTestHook(hook) {
+    mstore(TEST_HOOK_PTR(), unoptimized(hook))
+}   
+
+function storeTestHookParam(paramId, value) {
+    let offset := add(TEST_HOOK_PARAMS_OFFSET(), mul(32, paramId))
+    mstore(offset, unoptimized(value))
+}
+
+
 function testLog(msg, data) {
-    storeVmHookParam(0, nonOptimized(msg))
-    storeVmHookParam(1, nonOptimized(data))
-    setHook(nonOptimized(100))
+    storeTestHookParam(0, nonOptimized(msg))
+    storeTestHookParam(1, nonOptimized(data))
+    setTestHook(nonOptimized(100))
 }
 
 function testing_assertEq(a, b, message) {
     if iszero(eq(a, b)) {
-        storeVmHookParam(0, nonOptimized(a))
-        storeVmHookParam(1, nonOptimized(b))
-        // Hack...
-        storeVmHookParam(3, nonOptimized(message))
-        setHook(nonOptimized(101))
+        storeTestHookParam(0, nonOptimized(a))
+        storeTestHookParam(1, nonOptimized(b))
+        storeTestHookParam(2, nonOptimized(message))
+        setTestHook(nonOptimized(102))
     }
 }
 function testing_testWillFailWith(message) {
-    storeVmHookParam(0, unoptimized(message))
-    setHook(nonOptimized(102))
+    storeTestHookParam(0, unoptimized(message))
+    setTestHook(nonOptimized(102))
 }
 function testing_totalTests(tests) {
-    storeVmHookParam(0, unoptimized(tests))
-    setHook(nonOptimized(103))
+    storeTestHookParam(0, unoptimized(tests))
+    setTestHook(nonOptimized(103))
 }
+
+
+debugLog("Position", TEST_HOOK_PTR())

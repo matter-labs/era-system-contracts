@@ -1,19 +1,20 @@
+use crate::{test_count_tracer::TestCountTracer, tracer::BootloaderTestTracer};
 use once_cell::sync::OnceCell;
 use std::{env, sync::Arc};
+use tracing_subscriber::fmt;
+use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
 use vm::{HistoryDisabled, L1BatchEnv, L2BlockEnv, SystemEnv, TxExecutionMode, Vm, VmTracer};
 use zksync_contracts::{
     read_sys_contract_bytecode, read_zbin_bytecode, BaseSystemContracts, ContractLanguage,
     SystemContractCode,
 };
 use zksync_state::{InMemoryStorage, StoragePtr, StorageView};
-
 use zksync_types::{block::legacy_miniblock_hash, Address, L1BatchNumber, MiniblockNumber, U256};
-
 use zksync_utils::bytecode::hash_bytecode;
 use zksync_utils::{bytes_to_be_words, u256_to_h256};
 
-use crate::{test_count_tracer::TestCountTracer, tracer::BootloaderTestTracer};
-
+mod hook;
 mod test_count_tracer;
 mod tracer;
 
@@ -32,6 +33,7 @@ fn execute_internal_bootloader_test() {
         hash,
     };
 
+    // FIXME: this is still taking DefaultAccount from ZKSYNC_HOME directory.
     let bytecode = read_sys_contract_bytecode("", "DefaultAccount", ContractLanguage::Sol);
     let hash = hash_bytecode(&bytecode);
     let default_aa = SystemContractCode {
@@ -73,6 +75,7 @@ fn execute_internal_bootloader_test() {
 
     // First - get the number of tests.
     let test_count = {
+        // FIXME: this is still taking System Contracts from ZKSYNC_HOME
         let storage: StoragePtr<StorageView<InMemoryStorage>> =
             StorageView::new(InMemoryStorage::with_system_contracts(hash_bytecode)).to_rc_ptr();
 
@@ -116,10 +119,15 @@ fn execute_internal_bootloader_test() {
 
         let result = vm.inspect_the_rest_of_the_batch(custom_tracers);
 
-        println!("Result: {:?}", result);
+        vlog::debug!("Result: {:?}", result);
     }
 }
 
 fn main() {
+    tracing_subscriber::registry()
+        .with(fmt::Layer::default())
+        .with(tracing_subscriber::EnvFilter::from_default_env())
+        .init();
+
     execute_internal_bootloader_test();
 }
