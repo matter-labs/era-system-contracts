@@ -6,7 +6,10 @@ use std::{env, sync::Arc};
 use tracing_subscriber::fmt;
 use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
-use vm::{HistoryDisabled, L1BatchEnv, L2BlockEnv, SystemEnv, TxExecutionMode, Vm, VmTracer};
+use vm::{
+    HistoryDisabled, L1BatchEnv, L2BlockEnv, SystemEnv, TxExecutionMode, Vm, VmExecutionMode,
+    VmTracer,
+};
 use zksync_contracts::{
     read_sys_contract_bytecode, read_zbin_bytecode, BaseSystemContracts, ContractLanguage,
     SystemContractCode,
@@ -94,7 +97,7 @@ fn execute_internal_bootloader_test() {
 
         // We're using a TestCountTracer (and passing 0 as fee account) - this should cause the bootloader
         // test framework to report number of tests via VM hook.
-        vm.inspect_the_rest_of_the_batch(custom_tracers);
+        vm.inspect(custom_tracers, VmExecutionMode::Bootloader);
 
         test_count.get().unwrap().clone()
     };
@@ -123,7 +126,7 @@ fn execute_internal_bootloader_test() {
         let custom_tracers = vec![Box::new(BootloaderTestTracer::new(test_result.clone()))
             as Box<dyn VmTracer<StorageView<InMemoryStorage>, HistoryDisabled>>];
 
-        let result = vm.inspect_the_rest_of_the_batch(custom_tracers);
+        vm.inspect(custom_tracers, VmExecutionMode::Bootloader);
 
         let test_result = test_result.get().unwrap();
         match &test_result.result {
@@ -138,7 +141,6 @@ fn execute_internal_bootloader_test() {
                 )
             }
         }
-        vlog::debug!("Result: {:?}", result);
     }
     if tests_failed > 0 {
         println!("{}", format!("{} tests failed.", tests_failed).red());

@@ -1,11 +1,11 @@
 use vm::{
     constants::{BOOTLOADER_HEAP_PAGE, VM_HOOK_PARAMS_START_POSITION},
-    old_vm::utils::heap_page_from_base,
     HistoryMode, SimpleMemory,
 };
 
 use zksync_types::{
     zkevm_test_harness::zk_evm::{
+        aux_structures::MemoryPage,
         tracing::{BeforeExecutionData, VmLocalStateData},
         zkevm_opcode_defs::{FatPointer, Opcode, UMAOpcode},
     },
@@ -63,6 +63,10 @@ fn test_hook_as_int_or_hex(hook_param: U256) -> String {
     } else {
         hook_param.to_string()
     }
+}
+
+pub const fn heap_page_from_base(base: MemoryPage) -> MemoryPage {
+    MemoryPage(base.0 + 2)
 }
 
 impl TestVmHook {
