@@ -6,7 +6,7 @@ labels: bug
 assignees: ''
 ---
 
-### 🐛 Bug Report for zkSync Era In-Memory Node
+### 🐛 Script Bug Report
 
 #### 📝 Description
 
