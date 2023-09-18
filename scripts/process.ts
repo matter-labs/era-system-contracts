@@ -223,7 +223,6 @@ async function main() {
 
     let testFramework = createTestFramework(testMethods);
 
-
     const bootloaderTestUtils = await renderFile('bootloader/tests/utils/test_utils.yul', {});
 
     const bootloaderWithTests = await renderFile('bootloader/bootloader.yul', {
@@ -236,15 +235,11 @@ async function main() {
         mkdirSync(OUTPUT_DIR);
     }
 
-
     writeFileSync(`${OUTPUT_DIR}/bootloader_test.yul`, provedBootloaderWithTests);
-
-
-
-    //writeFileSync(`${OUTPUT_DIR}/proved_batch.yul`, provedBatchBootloader);
-    //writeFileSync(`${OUTPUT_DIR}/playground_batch.yul`, playgroundBatchBootloader);
-    //writeFileSync(`${OUTPUT_DIR}/gas_test.yul`, gasTestBootloader);
-    //writeFileSync(`${OUTPUT_DIR}/fee_estimate.yul`, feeEstimationBootloader);
+    writeFileSync(`${OUTPUT_DIR}/proved_batch.yul`, provedBatchBootloader);
+    writeFileSync(`${OUTPUT_DIR}/playground_batch.yul`, playgroundBatchBootloader);
+    writeFileSync(`${OUTPUT_DIR}/gas_test.yul`, gasTestBootloader);
+    writeFileSync(`${OUTPUT_DIR}/fee_estimate.yul`, feeEstimationBootloader);
 
     console.log('Preprocessing done!');
 }
