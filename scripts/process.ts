@@ -227,7 +227,7 @@ async function main() {
 
     const bootloaderWithTests = await renderFile('bootloader/bootloader.yul', {
         ...params,
-        TEST_STATELESS: bootloaderTestUtils + "\n" + bootloaderTests + "\n" + testFramework
+        CODE_START_PLACEHOLDER: bootloaderTestUtils + "\n" + bootloaderTests + "\n" + testFramework
     });
     const provedBootloaderWithTests = preprocess.preprocess(bootloaderWithTests, { BOOTLOADER_TYPE: 'proved_batch' });
 
