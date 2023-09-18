@@ -3,21 +3,17 @@
 pragma solidity ^0.8.0;
 
 import {ISystemContext} from "./interfaces/ISystemContext.sol";
+import {ISystemContract} from "./interfaces/ISystemContract.sol";
 import {ISystemContextDeprecated} from "./interfaces/ISystemContextDeprecated.sol";
 import {SystemContractHelper} from "./libraries/SystemContractHelper.sol";
-import {BOOTLOADER_FORMAL_ADDRESS} from "./Constants.sol";
+import {BOOTLOADER_FORMAL_ADDRESS, SystemLogKey} from "./Constants.sol";
 
 /**
  * @author Matter Labs
  * @notice Contract that stores some of the context variables, that may be either
  * block-scoped, tx-scoped or system-wide.
  */
-contract SystemContext is ISystemContext, ISystemContextDeprecated {
-    modifier onlyBootloader() {
-        require(msg.sender == BOOTLOADER_FORMAL_ADDRESS, "Callable only by the bootloader");
-        _;
-    }
-
+contract SystemContext is ISystemContext, ISystemContextDeprecated, ISystemContract {
     /// @notice The number of latest L2 blocks to store.
     /// @dev EVM requires us to be able to query the hashes of previous 256 blocks.
     /// We could either:
@@ -82,15 +78,18 @@ contract SystemContext is ISystemContext, ISystemContextDeprecated {
     /// @notice The information about the virtual blocks upgrade, which tracks when the migration to the L2 blocks has started and finished.
     VirtualBlockUpgradeInfo internal virtualBlockUpgradeInfo;
 
+    /// @notice Number of current transaction in block.
+    uint16 public txNumberInBlock;
+
     /// @notice Set the current tx origin.
     /// @param _newOrigin The new tx origin.
-    function setTxOrigin(address _newOrigin) external onlyBootloader {
+    function setTxOrigin(address _newOrigin) external onlyCallFromBootloader {
         origin = _newOrigin;
     }
 
     /// @notice Set the the current gas price.
     /// @param _gasPrice The new tx gasPrice.
-    function setGasPrice(uint256 _gasPrice) external onlyBootloader {
+    function setGasPrice(uint256 _gasPrice) external onlyCallFromBootloader {
         gasPrice = _gasPrice;
     }
 
@@ -325,7 +324,7 @@ contract SystemContext is ISystemContext, ISystemContextDeprecated {
         bytes32 _expectedPrevL2BlockHash,
         bool _isFirstInBatch,
         uint128 _maxVirtualBlocksToCreate
-    ) external onlyBootloader { 
+    ) external onlyCallFromBootloader { 
         // We check that the timestamp of the L2 block is consistent with the timestamp of the batch.
         if(_isFirstInBatch) {
             uint128 currentBatchTimestamp = currentBatchInfo.timestamp;
@@ -373,9 +372,17 @@ contract SystemContext is ISystemContext, ISystemContextDeprecated {
         _setVirtualBlock(_l2BlockNumber, _maxVirtualBlocksToCreate, _l2BlockTimestamp);
     }
 
+    /// @notice Appends the transaction hash to the rolling hash of the current L2 block.
+    /// @param _txHash The hash of the transaction.
+    function appendTransactionToCurrentL2Block(
+        bytes32 _txHash
+    ) external onlyCallFromBootloader {
+        currentL2BlockTxsRollingHash = keccak256(abi.encode(currentL2BlockTxsRollingHash, _txHash));
+    }
+
     /// @notice Publishes L2->L1 logs needed to verify the validity of this batch on L1.
     /// @dev Should be called at the end of the current batch.
-    function publishBatchDataToL1() external onlyBootloader {
+    function publishTimestampDataToL1() external onlyCallFromBootloader {
         (uint128 currentBatchNumber, uint128 currentBatchTimestamp) = getBatchNumberAndTimestamp();
         (, uint128 currentL2BlockTimestamp) = getL2BlockNumberAndTimestamp();
 
@@ -386,15 +393,7 @@ contract SystemContext is ISystemContext, ISystemContextDeprecated {
         // In order to spend less pubdata, the packed version is published
         uint256 packedTimestamps = (uint256(currentBatchTimestamp) << 128) | currentL2BlockTimestamp;
 
-        SystemContractHelper.toL1(false, bytes32(packedTimestamps), prevBatchHash);
-    }
-
-    /// @notice Appends the transaction hash to the rolling hash of the current L2 block.
-    /// @param _txHash The hash of the transaction.
-    function appendTransactionToCurrentL2Block(
-        bytes32 _txHash
-    ) external onlyBootloader {
-        currentL2BlockTxsRollingHash = keccak256(abi.encode(currentL2BlockTxsRollingHash, _txHash));
+        SystemContractHelper.toL1(false, bytes32(uint256(SystemLogKey.PACKED_BATCH_AND_L2_BLOCK_TIMESTAMP_KEY)), bytes32(packedTimestamps));
     }
 
     /// @notice Ensures that the timestamp of the batch is greater than the timestamp of the last L2 block.
@@ -420,7 +419,7 @@ contract SystemContext is ISystemContext, ISystemContextDeprecated {
         uint128 _newTimestamp,
         uint128 _expectedNewNumber,
         uint256 _baseFee
-    ) external onlyBootloader {
+    ) external onlyCallFromBootloader {
         (uint128 previousBatchNumber, uint128 previousBatchTimestamp) = getBatchNumberAndTimestamp();
         require(_newTimestamp > previousBatchTimestamp, "Timestamps should be incremental");
         require(previousBatchNumber + 1 == _expectedNewNumber, "The provided block number is not correct");
@@ -438,11 +437,14 @@ contract SystemContext is ISystemContext, ISystemContextDeprecated {
         currentBatchInfo = newBlockInfo;
 
         baseFee = _baseFee;
+
+        // The correctness of this block hash:
+        SystemContractHelper.toL1(false, bytes32(uint256(SystemLogKey.PREV_BATCH_HASH_KEY)), _prevBatchHash);
     }
 
     /// @notice A testing method that manually sets the current blocks' number and timestamp.
     /// @dev Should be used only for testing / ethCalls and should never be used in production.
-    function unsafeOverrideBatch(uint256 _newTimestamp, uint256 _number, uint256 _baseFee) external onlyBootloader {
+    function unsafeOverrideBatch(uint256 _newTimestamp, uint256 _number, uint256 _baseFee) external onlyCallFromBootloader {
         BlockInfo memory newBlockInfo = BlockInfo({
             number: uint128(_number),
             timestamp: uint128(_newTimestamp)
@@ -450,6 +452,14 @@ contract SystemContext is ISystemContext, ISystemContextDeprecated {
         currentBatchInfo = newBlockInfo;
 
         baseFee = _baseFee;
+    }
+
+    function incrementTxNumberInBatch() external onlyCallFromBootloader {
+        txNumberInBlock += 1;
+    }
+
+    function resetTxNumberInBatch() external onlyCallFromBootloader {
+        txNumberInBlock = 0;
     }
 
     /*//////////////////////////////////////////////////////////////

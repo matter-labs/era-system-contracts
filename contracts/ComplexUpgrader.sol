@@ -12,15 +12,12 @@ import {FORCE_DEPLOYER} from "./Constants.sol";
  */
 contract ComplexUpgrader is IComplexUpgrader {
     /// @notice Executes an upgrade process by delegating calls to another contract.
-    /// @dev This function allows only the `FORCE_DEPLOYER` to initiate the upgrade. 
+    /// @dev This function allows only the `FORCE_DEPLOYER` to initiate the upgrade.
     /// If the delegate call fails, the function will revert the transaction, returning the error message
     /// provided by the delegated contract.
     /// @param _delegateTo the address of the contract to which the calls will be delegated
     /// @param _calldata the calldata to be delegate called in the `_delegateTo` contract
-    function upgrade(
-        address _delegateTo,
-        bytes calldata _calldata
-    ) external payable {
+    function upgrade(address _delegateTo, bytes calldata _calldata) external payable {
         require(msg.sender == FORCE_DEPLOYER, "Can only be called by FORCE_DEPLOYER");
 
         require(_delegateTo.code.length > 0, "Delegatee is an EOA");

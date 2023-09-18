@@ -10,7 +10,7 @@ import "./interfaces/IImmutableSimulator.sol";
 import "./interfaces/IEthToken.sol";
 import "./interfaces/IL1Messenger.sol";
 import "./interfaces/ISystemContext.sol";
-import "./interfaces/IBytecodeCompressor.sol";
+import "./interfaces/ICompressor.sol";
 import "./interfaces/IComplexUpgrader.sol";
 import "./BootloaderUtilities.sol";
 
@@ -59,13 +59,9 @@ BootloaderUtilities constant BOOTLOADER_UTILITIES = BootloaderUtilities(address(
 
 address constant EVENT_WRITER_CONTRACT = address(SYSTEM_CONTRACTS_OFFSET + 0x0d);
 
-IBytecodeCompressor constant BYTECODE_COMPRESSOR_CONTRACT = IBytecodeCompressor(
-    address(SYSTEM_CONTRACTS_OFFSET + 0x0e)
-);
+ICompressor constant COMPRESSOR_CONTRACT = ICompressor(address(SYSTEM_CONTRACTS_OFFSET + 0x0e));
 
-IComplexUpgrader constant COMPLEX_UPGRADER_CONTRACT = IComplexUpgrader(
-    address(SYSTEM_CONTRACTS_OFFSET + 0x0f)
-);
+IComplexUpgrader constant COMPLEX_UPGRADER_CONTRACT = IComplexUpgrader(address(SYSTEM_CONTRACTS_OFFSET + 0x0f));
 
 /// @dev If the bitwise AND of the extraAbi[2] param when calling the MSG_VALUE_SIMULATOR
 /// is non-zero, the call will be assumed to be a system one.
@@ -80,3 +76,20 @@ bytes32 constant CREATE2_PREFIX = 0x2020dba91b30cc0006188af794c2fb30dd8520db7e2c
 /// @dev Prefix used during derivation of account addresses using CREATE
 /// @dev keccak256("zksyncCreate")
 bytes32 constant CREATE_PREFIX = 0x63bae3a9951d38e8a3fbb7b70909afc1200610fc5bc55ade242f815974674f23;
+
+uint256 constant STATE_DIFF_ENTRY_SIZE = 156;
+
+/// @dev While the "real" amount of pubdata that can be sent rarely exceeds the 110k - 120k, it is better to 
+/// allow the operator to provide any reasonably large value in order to avoid unneeded constraints on the operator.  
+uint256 constant MAX_ALLOWED_PUBDATA_PER_BATCH = 520000;
+
+enum SystemLogKey {
+    L2_TO_L1_LOGS_TREE_ROOT_KEY,
+    TOTAL_L2_TO_L1_PUBDATA_KEY,
+    STATE_DIFF_HASH_KEY,
+    PACKED_BATCH_AND_L2_BLOCK_TIMESTAMP_KEY,
+    PREV_BATCH_HASH_KEY,
+    CHAINED_PRIORITY_TXN_HASH_KEY,
+    NUMBER_OF_LAYER_1_TXS_KEY,
+    EXPECTED_SYSTEM_CONTRACT_UPGRADE_TX_HASH
+}

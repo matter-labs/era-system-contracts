@@ -236,7 +236,7 @@ contract ContractDeployer is IContractDeployer, ISystemContract {
     /// by `FORCE_DEPLOYER`.
     function forceDeployOnAddresses(ForceDeployment[] calldata _deployments) external payable {
         require(
-            msg.sender == FORCE_DEPLOYER || msg.sender == address(COMPLEX_UPGRADER_CONTRACT), 
+            msg.sender == FORCE_DEPLOYER || msg.sender == address(COMPLEX_UPGRADER_CONTRACT),
             "Can only be called by FORCE_DEPLOYER or COMPLEX_UPGRADER_CONTRACT"
         );
 

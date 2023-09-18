@@ -22,10 +22,23 @@ library UnsafeBytesCalldata {
         }
     }
 
+    function readUint32(bytes calldata _bytes, uint256 _start) internal pure returns (uint32 result) {
+        assembly {
+            let offset := sub(_bytes.offset, 28)
+            result := calldataload(add(offset, _start))
+        }
+    }
+
     function readUint64(bytes calldata _bytes, uint256 _start) internal pure returns (uint64 result) {
         assembly {
             let offset := sub(_bytes.offset, 24)
             result := calldataload(add(offset, _start))
+        }
+    }
+
+    function readBytes32(bytes calldata _bytes, uint256 _start) internal pure returns (bytes32 result) {
+        assembly {
+            result := calldataload(add(_bytes.offset, _start))
         }
     }
 }

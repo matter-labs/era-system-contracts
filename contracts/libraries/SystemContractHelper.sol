@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8;
 
-import {MAX_SYSTEM_CONTRACT_ADDRESS} from "../Constants.sol";
+import {MAX_SYSTEM_CONTRACT_ADDRESS, MSG_VALUE_SYSTEM_CONTRACT} from "../Constants.sol";
 
 import "./SystemContractsCaller.sol";
 
@@ -143,7 +143,7 @@ library SystemContractHelper {
     /// NOTE: The precompile type depends on `this` which calls precompile, which means that only
     /// system contracts corresponding to the list of precompiles above can do `precompileCall`.
     /// @dev If used not in the `sha256`, `keccak256` or `ecrecover` contracts, it will just burn the gas provided.
-    function precompileCall(uint256 _rawParams, uint32 _gasToBurn) internal view returns (bool success) {
+    function unsafePrecompileCall(uint256 _rawParams, uint32 _gasToBurn) internal view returns (bool success) {
         address callAddr = PRECOMPILE_CALL_ADDRESS;
 
         // After `precompileCall` gas will be burned down to 0 if there are not enough of them,
@@ -155,6 +155,17 @@ library SystemContractHelper {
             _gasToBurn := and(_gasToBurn, cleanupMask)
             success := staticcall(_rawParams, callAddr, _gasToBurn, 0xFFFF, 0, 0)
         }
+    }
+
+    /// @notice The safe version of the precompileCall function above. It should be used in contexts where it produces
+    /// other work than gas burning, to prevent the operator from generating the result of the precompile.
+    /// @param _rawParams The packed precompile params. They can be retrieved by
+    /// the `packPrecompileParams` method.
+    /// @param _gasToBurn The number of gas to burn during this call.
+    /// @return success Whether the call was successful.
+    function precompileCall(uint256 _rawParams, uint32 _gasToBurn) internal view returns (bool success) {
+        require(gasleft() >= _gasToBurn);
+        success = unsafePrecompileCall(_rawParams, _gasToBurn);
     }
 
     /// @notice Set `msg.value` to next far call.
@@ -327,5 +338,15 @@ library SystemContractHelper {
     /// @return `true` or `false` based on whether the `_address` is a system contract.
     function isSystemContract(address _address) internal pure returns (bool) {
         return uint160(_address) <= uint160(MAX_SYSTEM_CONTRACT_ADDRESS);
+    }
+
+    /// @notice Method used for burning a certain amount of gas.
+    /// @param _gasToPay The number of gas to burn.
+    function burnGas(uint32 _gasToPay) internal view {
+        bool precompileCallSuccess = unsafePrecompileCall(
+            0, // The precompile parameters are formal ones. We only need the precompile call to burn gas.
+            _gasToPay
+        );
+        require(precompileCallSuccess, "Failed to charge gas");
     }
 }

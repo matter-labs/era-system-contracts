@@ -3,77 +3,9 @@ object "Bootloader" {
     }
     object "Bootloader_deployed" {
         code {
-            /// @notice the address that will be the beneficiary of all the fees
-            let OPERATOR_ADDRESS := mload(0)
-
-            let GAS_PRICE_PER_PUBDATA := 0
-
-            // Initializing batch params
-            {
-                /// @notice The hash of the previous batch
-                let PREV_BATCH_HASH := mload(32)
-                /// @notice The timestamp of the batch being processed
-                let NEW_BATCH_TIMESTAMP := mload(64)
-                /// @notice The number of the new batch being processed.
-                /// While this number is deterministic for each batch, we
-                /// still provide it here to ensure consistency between the state
-                /// of the VM and the state of the operator.
-                let NEW_BATCH_NUMBER := mload(96)
-
-                /// @notice The gas price on L1 for ETH. In the future, a trustless value will be enforced.
-                /// For now, this value is trusted to be fairly provided by the operator.
-                let L1_GAS_PRICE := mload(128)
-
-                /// @notice The minimal gas price that the operator agrees upon. 
-                /// In the future, it will have an EIP1559-like lower bound.
-                let FAIR_L2_GAS_PRICE := mload(160)
-
-                /// @notice The expected base fee by the operator.
-                /// Just like the batch number, while calculated on the bootloader side,
-                /// the operator still provides it to make sure that its data is in sync. 
-                let EXPECTED_BASE_FEE := mload(192)
-
-                validateOperatorProvidedPrices(L1_GAS_PRICE, FAIR_L2_GAS_PRICE)
-
-                // This implementation of the bootloader relies on the correct version of the SystemContext
-                // and it can not be upgraded via a standard upgrade transaction, but needs to ensure 
-                // correctness itself before any transaction is executed. 
-                upgradeSystemContextIfNeeded()
-                
-                let baseFee := 0
-
-                <!-- @if BOOTLOADER_TYPE=='proved_batch' -->
-
-                // Only for the proved batch we enforce that the baseFee proposed 
-                // by the operator is equal to the expected one. For the playground batch, we allow
-                // the operator to provide any baseFee the operator wants.
-                baseFee, GAS_PRICE_PER_PUBDATA := getBaseFee(L1_GAS_PRICE, FAIR_L2_GAS_PRICE)
-                if iszero(eq(baseFee, EXPECTED_BASE_FEE)) {
-                    debugLog("baseFee", baseFee)
-                    debugLog("EXPECTED_BASE_FEE", EXPECTED_BASE_FEE)
-                    assertionError("baseFee inconsistent")
-                }
-
-                setNewBatch(PREV_BATCH_HASH, NEW_BATCH_TIMESTAMP, NEW_BATCH_NUMBER, EXPECTED_BASE_FEE)
-
-                <!-- @endif -->
-
-                <!-- @if BOOTLOADER_TYPE=='playground_batch' -->
-
-                baseFee, GAS_PRICE_PER_PUBDATA := getBaseFee(L1_GAS_PRICE, FAIR_L2_GAS_PRICE)
-
-                let SHOULD_SET_NEW_BATCH := mload(224)
-
-                switch SHOULD_SET_NEW_BATCH 
-                case 0 {    
-                    unsafeOverrideBatch(NEW_BATCH_TIMESTAMP, NEW_BATCH_NUMBER, EXPECTED_BASE_FEE)
-                }
-                default {
-                    setNewBatch(PREV_BATCH_HASH, NEW_BATCH_TIMESTAMP, NEW_BATCH_NUMBER, EXPECTED_BASE_FEE)
-                }
-
-                <!-- @endif -->
-            }
+            ////////////////////////////////////////////////////////////////////////////
+            //                      Function Declarations
+            ////////////////////////////////////////////////////////////////////////////
 
             // While we definitely cannot control the gas price on L1,
             // we need to check the operator does not provide any absurd numbers there
@@ -383,9 +315,46 @@ object "Bootloader" {
                 ret := mul(COMPRESSED_BYTECODES_END_SLOT(), 32)
             }
 
+            /// @dev Slots needed to store priority txs L1 data (`chainedPriorityTxsHash` and `numberOfLayer1Txs`).
+            function PRIORITY_TXS_L1_DATA_RESERVED_SLOTS() -> ret {
+                ret := 2
+            }
+
+            /// @dev Slot from which storing of the priority txs L1 data begins.
+            function PRIORITY_TXS_L1_DATA_BEGIN_SLOT() -> ret {
+                ret := add(COMPRESSED_BYTECODES_BEGIN_SLOT(), COMPRESSED_BYTECODES_SLOTS())
+            }
+
+            /// @dev The byte from which storing of the priority txs L1 data begins.
+            function PRIORITY_TXS_L1_DATA_BEGIN_BYTE() -> ret {
+                ret := mul(PRIORITY_TXS_L1_DATA_BEGIN_SLOT(), 32)
+            }
+
+            /// @dev Slot from which storing of the L1 Messenger pubdata begins.
+            function OPERATOR_PROVIDED_L1_MESSENGER_PUBDATA_BEGIN_SLOT() -> ret {
+                ret := add(PRIORITY_TXS_L1_DATA_BEGIN_SLOT(), PRIORITY_TXS_L1_DATA_RESERVED_SLOTS())
+            }
+
+            /// @dev The byte storing of the L1 Messenger pubdata begins.
+            function OPERATOR_PROVIDED_L1_MESSENGER_PUBDATA_BEGIN_BYTE() -> ret {
+                ret := mul(OPERATOR_PROVIDED_L1_MESSENGER_PUBDATA_BEGIN_SLOT(), 32)
+            }
+
+            /// @dev Slots needed to store L1 Messenger pubdata.
+            /// There are 3 additional slots needed: one for L1Messengers' function signature,
+            /// one for such function input (calldata) array offset, one for length of the array
+            function OPERATOR_PROVIDED_L1_MESSENGER_PUBDATA_SLOTS() -> ret {
+                ret := add(ceilDiv(MAX_PUBDATA_PER_BATCH(), 32), 3)
+            }
+
+            /// @dev The slot right after the last slot of the L1 Messenger pubdata memory area.
+            function OPERATOR_PROVIDED_L1_MESSENGER_PUBDATA_END_SLOT() -> ret {
+                ret := add(OPERATOR_PROVIDED_L1_MESSENGER_PUBDATA_BEGIN_SLOT(), OPERATOR_PROVIDED_L1_MESSENGER_PUBDATA_SLOTS())
+            }
+
             /// @dev The slot from which the bootloader transactions' descriptions begin
             function TX_DESCRIPTION_BEGIN_SLOT() -> ret {
-                ret := COMPRESSED_BYTECODES_END_SLOT()
+                ret := OPERATOR_PROVIDED_L1_MESSENGER_PUBDATA_END_SLOT()
             }
 
             /// @dev The byte from which the bootloader transactions' descriptions begin
@@ -517,6 +486,10 @@ object "Bootloader" {
                 ret := 0x000000000000000000000000000000000000800e
             }
 
+            function L1_MESSENGER_ADDR() -> ret {
+                ret := 0x0000000000000000000000000000000000008008
+            }
+
             /// @dev The minimal allowed distance in bytes between the pointer to the compressed data
             /// and the end of the area dedicated for the compressed bytecodes. 
             /// In fact, only distance of 192 should be sufficient: there it would be possible to insert
@@ -549,123 +522,6 @@ object "Bootloader" {
             function CHECK_ENOUGH_GAS_OVERHEAD() -> ret {
                 ret := 1000000
             }
-
-            // Now, we iterate over all transactions, processing each of them
-            // one by one.
-            // Here, the `resultPtr` is the pointer to the memory slot, where we will write
-            // `true` or `false` based on whether the tx execution was successful,
-
-            // The position at which the tx offset of the transaction should be placed
-            let currentExpectedTxOffset := add(TXS_IN_BATCH_LAST_PTR(), mul(MAX_POSTOP_SLOTS(), 32))
-
-            let txPtr := TX_DESCRIPTION_BEGIN_BYTE()
-
-            // At the COMPRESSED_BYTECODES_BEGIN_BYTE() the pointer to the newest bytecode to be published 
-            // is stored.
-            mstore(COMPRESSED_BYTECODES_BEGIN_BYTE(), add(COMPRESSED_BYTECODES_BEGIN_BYTE(), 0x20))
-
-            // Iterating through transaction descriptions
-            let transactionIndex := 0 
-            for { 
-                let resultPtr := RESULT_START_PTR()
-            } lt(txPtr, TXS_IN_BATCH_LAST_PTR()) { 
-                txPtr := add(txPtr, TX_DESCRIPTION_SIZE())
-                resultPtr := add(resultPtr, 32)
-                transactionIndex := add(transactionIndex, 1)
-            } {
-                let execute := mload(txPtr)
-
-                debugLog("txPtr", txPtr)
-                debugLog("execute", execute)
-                
-                if iszero(execute) {
-                    // We expect that all transactions that are executed
-                    // are continuous in the array.
-                    break
-                }                
-
-                let txDataOffset := mload(add(txPtr, 0x20))
-
-                // We strongly enforce the positions of transactions
-                if iszero(eq(currentExpectedTxOffset, txDataOffset)) {
-                    debugLog("currentExpectedTxOffset", currentExpectedTxOffset)
-                    debugLog("txDataOffset", txDataOffset)
-
-                    assertionError("Tx data offset is incorrect")
-                }
-
-                currentExpectedTxOffset := validateAbiEncoding(txDataOffset)
-
-                // Checking whether the last slot of the transaction's description
-                // does not go out of bounds.
-                if gt(sub(currentExpectedTxOffset, 32), LAST_FREE_SLOT()) {
-                    debugLog("currentExpectedTxOffset", currentExpectedTxOffset)
-                    debugLog("LAST_FREE_SLOT", LAST_FREE_SLOT())
-
-                    assertionError("currentExpectedTxOffset too high")
-                }
-
-                validateTypedTxStructure(add(txDataOffset, 0x20))
-    
-                <!-- @if BOOTLOADER_TYPE=='proved_batch' -->
-                {
-                    debugLog("ethCall", 0)
-                    processTx(txDataOffset, resultPtr, transactionIndex, 0, GAS_PRICE_PER_PUBDATA)
-                }
-                <!-- @endif -->
-                <!-- @if BOOTLOADER_TYPE=='playground_batch' -->
-                {
-                    let txMeta := mload(txPtr)
-                    let processFlags := getWordByte(txMeta, 31)
-                    debugLog("flags", processFlags)
-
-
-                    // `processFlags` argument denotes which parts of execution should be done:
-                    //  Possible values:
-                    //     0x00: validate & execute (normal mode)
-                    //     0x02: perform ethCall (i.e. use mimicCall to simulate the call)
-
-                    let isETHCall := eq(processFlags, 0x02)
-                    debugLog("ethCall", isETHCall)
-                    processTx(txDataOffset, resultPtr, transactionIndex, isETHCall, GAS_PRICE_PER_PUBDATA)
-                }
-                <!-- @endif -->
-                // Signal to the vm that the transaction execution is complete
-                setHook(VM_HOOK_TX_HAS_ENDED())
-                // Increment tx index within the system.
-                considerNewTx()
-            }
-
-            // The bootloader doesn't have to pay anything
-            setPricePerPubdataByte(0)
-
-            // Resetting tx.origin and gasPrice to 0, so we don't pay for
-            // publishing them on-chain.
-            setTxOrigin(0)
-            setGasPrice(0)
-
-            // Transferring all the ETH received in the batch to the operator
-            directETHTransfer(
-                selfbalance(),
-                OPERATOR_ADDRESS
-            )
-
-            // Hook that notifies that the operator should provide final information for the batch
-            setHook(VM_HOOK_FINAL_L2_STATE_INFO())
-
-            // Each batch typically ends with a special block which contains no transactions. 
-            // So we need to have this method to reflect it in the system contracts too.
-            //
-            // The reason is that as of now our node requires that each storage write (event, etc) belongs to a particular
-            // L2 block. In case a batch is sealed by timeout (i.e. the resources of the batch have not been exhaused, but we need
-            // to seal it to assure timely finality), we need to process sending funds to the operator *after* the last
-            // non-empty L2 block has been already sealed. We can not override old L2 blocks, so we need to create a new empty "fictive" block for it.
-            //
-            // The other reason why we need to set this block is so that in case of empty batch (i.e. the one which has no transactions), 
-            // the virtual block number as well as miniblock number are incremented.
-            setL2Block(transactionIndex)
-
-            publishBatchDataToL1()
 
             /// @dev Ceil division of integers
             function ceilDiv(x, y) -> ret {
@@ -724,11 +580,17 @@ object "Bootloader" {
                             assertionError("Protocol upgrade tx not first")
                         }
 
-                        processL1Tx(txDataOffset, resultPtr, transactionIndex, userProvidedPubdataPrice)
+                        // This is to be called in the event that the L1 Transaction is a protocol upgrade txn.
+                        // Since this is upgrade transactions, we are okay that the gasUsed by the transaction will 
+                        // not cover this additional hash computation
+                        let canonicalL1TxHash := getCanonicalL1TxHash(txDataOffset)
+                        sendToL1Native(true, protocolUpgradeTxHashKey(), canonicalL1TxHash)
+
+                        processL1Tx(txDataOffset, resultPtr, transactionIndex, userProvidedPubdataPrice, false)
                     }
                     case 255 {
                         // This is an L1->L2 transaction.
-                        processL1Tx(txDataOffset, resultPtr, transactionIndex, userProvidedPubdataPrice)
+                        processL1Tx(txDataOffset, resultPtr, transactionIndex, userProvidedPubdataPrice, true)
                     }
                     default {
                         // The user has not agreed to this pubdata price
@@ -1026,12 +888,14 @@ object "Bootloader" {
             /// @param resultPtr The pointer at which the result of the execution of this transaction
             /// @param transactionIndex The index of the transaction
             /// @param gasPerPubdata The price per pubdata to be used
+            /// @param isPriorityOp Whether the transaction is a priority one
             /// should be stored.
             function processL1Tx(
                 txDataOffset,
                 resultPtr,
                 transactionIndex,
                 gasPerPubdata,
+                isPriorityOp
             ) {
                 // For L1->L2 transactions we always use the pubdata price provided by the transaction. 
                 // This is needed to ensure DDoS protection. All the excess expenditure 
@@ -1127,10 +991,17 @@ object "Bootloader" {
                 mstore(resultPtr, success)
                 
                 debugLog("Send message to L1", success)
-                
-                // Sending the L2->L1 to notify the L1 contracts that the priority 
-                // operation has been processed.
-                sendToL1(true, canonicalL1TxHash, success)
+
+                // Sending the L2->L1 log so users will be able to prove transaction execution result on L1.
+                sendL2LogUsingL1Messenger(true, canonicalL1TxHash, success)
+                 
+                if isPriorityOp {
+                    // Update priority txs L1 data
+                    mstore(0x00, mload(PRIORITY_TXS_L1_DATA_BEGIN_BYTE()))
+                    mstore(0x20, canonicalL1TxHash)
+                    mstore(PRIORITY_TXS_L1_DATA_BEGIN_BYTE(), keccak256(0x00, 0x40))
+                    mstore(add(PRIORITY_TXS_L1_DATA_BEGIN_BYTE(), 0x20), add(mload(add(PRIORITY_TXS_L1_DATA_BEGIN_BYTE(), 0x20)), 1))
+                }   
             }
 
             function getExecuteL1TxAndGetRefund(txDataOffset, gasForExecution) -> potentialRefund, success {
@@ -1981,7 +1852,7 @@ object "Bootloader" {
             /// 2. Overhead for taking up the bootloader memory. The bootloader memory has a cap on its length, mainly enforced to keep the RAM requirements
             /// for the node smaller. That is, the user needs to pay a share proportional to the length of the ABI encoding of the transaction.
             /// 3. Overhead for taking up a slot for the transaction. Since each batch has the limited number of transactions in it, the user must pay 
-            /// at least 1/MAX_TRANSACTIONS_IN_BLOCK part of the overhead.
+            /// at least 1/MAX_TRANSACTIONS_IN_BATCH part of the overhead.
             function getTransactionUpfrontOverhead(
                 txGasLimit,
                 gasPerPubdataByte,
@@ -2060,6 +1931,11 @@ object "Bootloader" {
                 if lt(x, y) {
                     ret := x
                 }
+            }
+
+            /// @dev Returns constant that is equal to `keccak256("")`
+            function EMPTY_STRING_KECCAK() -> ret {
+                ret := 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470
             }
 
             /// @dev Returns whether x <= y
@@ -2580,17 +2456,122 @@ object "Bootloader" {
             <!-- @endif -->
 
 
-            /// @dev Sends an L2->L1 log.
+            /// @dev Sends a L2->L1 log using L1Messengers' `sendL2ToL1Log`.
             /// @param isService The isService flag of the call.
             /// @param key The `key` parameter of the log.
             /// @param value The `value` parameter of the log.
-            function sendToL1(isService, key, value) {
+            function sendL2LogUsingL1Messenger(isService, key, value) {
+                mstore(0, {{RIGHT_PADDED_SEND_L2_TO_L1_LOG_SELECTOR}})
+                mstore(4, isService)
+                mstore(36, key)
+                mstore(68, value)
+
+                let success := call(
+                    gas(),
+                    L1_MESSENGER_ADDR(),
+                    0,
+                    0,
+                    100,
+                    0,
+                    0
+                )
+
+                if iszero(success) {
+                    debugLog("Failed to send L1Messenger L2Log", key)
+                    debugLog("Failed to send L1Messenger L2Log", value)
+
+                    revertWithReason(L1_MESSENGER_LOG_SENDING_FAILED_ERR_CODE(), 1)
+                }
+            }
+
+            /// @dev Sends a native (VM) L2->L1 log.
+            /// @param isService The isService flag of the call.
+            /// @param key The `key` parameter of the log.
+            /// @param value The `value` parameter of the log.
+            function sendToL1Native(isService, key, value) {
                 verbatim_3i_0o("to_l1", isService, key, value)
-            } 
+            }
+
+            /// @notice Performs L1 Messenger pubdata "publishing" call.
+            /// @dev Expected to be used at the end of the batch.
+            function l1MessengerPublishingCall() {
+                let ptr := OPERATOR_PROVIDED_L1_MESSENGER_PUBDATA_BEGIN_BYTE()
+                debugLog("Publishing batch data to L1", 0)
+                // First slot (only last 4 bytes) -- selector
+                mstore(ptr, {{PUBLISH_PUBDATA_SELECTOR}})
+                // Second slot -- offset
+                mstore(add(ptr, 32), 0x20)
+                setHook(VM_HOOK_PUBDATA_REQUESTED())
+                // Third slot -- length of pubdata
+                let len := mload(add(ptr, 64))
+                // 4 bytes for selector, 32 bytes for array offset and 32 bytes for array length
+                let fullLen := add(len, 68)
+
+                // ptr + 28 because the function selector only takes up the last 4 bytes in the first slot.
+                let success := call(
+                    gas(),
+                    L1_MESSENGER_ADDR(),
+                    0,
+                    add(ptr, 28),
+                    fullLen,
+                    0,
+                    0
+                )
+
+                if iszero(success) {
+                    debugLog("Failed to publish L2Logs data", 0)
+
+                    revertWithReason(L1_MESSENGER_PUBLISHING_FAILED_ERR_CODE(), 1)
+                }
+            }
+
+            function publishTimestampDataToL1() {
+                debugLog("Publishing timestamp data to L1", 0)
+
+                mstore(0, {{RIGHT_PADDED_PUBLISH_TIMESTAMP_DATA_TO_L1_SELECTOR}})
+                let success := call(
+                    gas(),
+                    SYSTEM_CONTEXT_ADDR(),
+                    0,
+                    0,
+                    4,
+                    0,
+                    0
+                )
+
+                if iszero(success) {
+                    debugLog("Failed publish timestamp data to L1", 0)
+                    revertWithReason(FAILED_TO_PUBLISH_TIMESTAMP_DATA_TO_L1(), 1)
+                }
+            }
+
+            /// @notice Performs a call of a System Context
+            /// method that have no input parameters
+            function callSystemContext(paddedSelector) {
+                mstore(0, paddedSelector)
+
+                let success := call(
+                    gas(),
+                    SYSTEM_CONTEXT_ADDR(),
+                    0,
+                    0,
+                    4,
+                    0,
+                    0
+                )
+
+                if iszero(success) {
+                    debugLog("Failed to call System Context", 0)
+
+                    revertWithReason(FAILED_TO_CALL_SYSTEM_CONTEXT_ERR_CODE(), 1)
+                }
+            }
             
             /// @dev Increment the number of txs in the batch
             function considerNewTx() {
                 verbatim_0i_0o("increment_tx_counter")
+
+                callSystemContext({{RIGHT_PADDED_INCREMENT_TX_NUMBER_IN_BLOCK_SELECTOR}})
             }
 
             /// @dev Set the new price per pubdata byte
@@ -2728,26 +2709,6 @@ object "Bootloader" {
                         // step of the transaction to fail, returning a consistent error message. 
                         nearCallPanic()
                     }
-                }
-            } 
-
-            function publishBatchDataToL1() {
-                debugLog("Publishing batch data to L1", 0)
-
-                mstore(0, {{RIGHT_PADDED_PUBLISH_BATCH_DATA_TO_L1_SELECTOR}})
-                let success := call(
-                    gas(),
-                    SYSTEM_CONTEXT_ADDR(),
-                    0,
-                    0,
-                    4,
-                    0,
-                    0
-                )
-
-                if iszero(success) {
-                    debugLog("Failed publish batch data to L1", 0)
-                    revertWithReason(FAILED_TO_PUBLISH_BATCH_DATA_TO_L1(), 1)
                 }
             }
 
@@ -2969,6 +2930,8 @@ object "Bootloader" {
                         // Upgrade transaction, no need to validate as it is validated on L1.
                     }
                     case 255 {
+                        // Double-check that the operator doesn't try to do an upgrade transaction via L1 -> L2 transaction.
+                        assertEq(gt(getFrom(innerTxDataOffset), MAX_SYSTEM_CONTRACT_ADDR()), 1, "from in kernel space")
                         // L1 transaction, no need to validate as it is validated on L1. 
                     }
                     default {
@@ -3352,7 +3315,7 @@ object "Bootloader" {
             /// Since the slot after the transaction is not touched,
             /// this slot can be used in the in-circuit VM out of box.
             function askOperatorForRefund(gasLeft) {
-                storeVmHookParam(0, nonOptimized(gasLeft)) 
+                storeVmHookParam(0, nonOptimized(gasLeft))
                 setHook(VM_HOOK_ASK_OPERATOR_FOR_REFUND())
             }
             
@@ -3464,8 +3427,20 @@ object "Bootloader" {
                 ret := 25
             }
 
-            function FAILED_TO_PUBLISH_BATCH_DATA_TO_L1() -> ret {
+            function L1_MESSENGER_PUBLISHING_FAILED_ERR_CODE() -> ret {
                 ret := 26
+            }
+
+            function L1_MESSENGER_LOG_SENDING_FAILED_ERR_CODE() -> ret {
+                ret := 27
+            }
+
+            function FAILED_TO_CALL_SYSTEM_CONTEXT_ERR_CODE() -> ret {
+                ret := 28
+            }
+
+            function FAILED_TO_PUBLISH_TIMESTAMP_DATA_TO_L1() -> ret {
+                ret := 29
             }
 
             /// @dev Accepts a 1-word literal and returns its length in bytes
@@ -3601,6 +3576,11 @@ object "Bootloader" {
                 ret := 11
             }
 
+            /// @norice The id of the VM hook that use used to notify the operator that it needs to insert the pubdata.
+            function VM_HOOK_PUBDATA_REQUESTED() -> ret {
+                ret := 12
+            }
+
             // Need to prevent the compiler from optimizing out similar operations, 
             // which may have different meaning for the offline debugging 
             function unoptimized(val) -> ret {
@@ -3623,6 +3603,226 @@ object "Bootloader" {
                 let offset := add(VM_HOOK_PARAMS_OFFSET(), mul(32, paramId))
                 mstore(offset, unoptimized(value))
             }
+
+            /// @dev Log key used by Executor.sol for processing. See Constants.sol::SystemLogKey enum
+            function chainedPriorityTxnHashLogKey() -> ret {
+                ret := 5
+            }
+
+            /// @dev Log key used by Executor.sol for processing. See Constants.sol::SystemLogKey enum
+            function numberOfLayer1TxsLogKey() -> ret {
+                ret := 6
+            }
+
+            /// @dev Log key used by Executor.sol for processing. See Constants.sol::SystemLogKey enum
+            function protocolUpgradeTxHashKey() -> ret {
+                ret := 7
+            }
+
+            ////////////////////////////////////////////////////////////////////////////
+            //                      Main Transaction Processing
+            ////////////////////////////////////////////////////////////////////////////
+
+            /// @notice the address that will be the beneficiary of all the fees
+            let OPERATOR_ADDRESS := mload(0)
+
+            let GAS_PRICE_PER_PUBDATA := 0
+
+            // Initializing block params
+            {
+                /// @notice The hash of the previous batch
+                let PREV_BATCH_HASH := mload(32)
+                /// @notice The timestamp of the batch being processed
+                let NEW_BATCH_TIMESTAMP := mload(64)
+                /// @notice The number of the new batch being processed.
+                /// While this number is deterministic for each batch, we
+                /// still provide it here to ensure consistency between the state
+                /// of the VM and the state of the operator.
+                let NEW_BATCH_NUMBER := mload(96)
+
+                /// @notice The gas price on L1 for ETH. In the future, a trustless value will be enforced.
+                /// For now, this value is trusted to be fairly provided by the operator.
+                let L1_GAS_PRICE := mload(128)
+
+                /// @notice The minimal gas price that the operator agrees upon. 
+                /// In the future, it will have an EIP1559-like lower bound.
+                let FAIR_L2_GAS_PRICE := mload(160)
+
+                /// @notice The expected base fee by the operator.
+                /// Just like the batch number, while calculated on the bootloader side,
+                /// the operator still provides it to make sure that its data is in sync. 
+                let EXPECTED_BASE_FEE := mload(192)
+
+                validateOperatorProvidedPrices(L1_GAS_PRICE, FAIR_L2_GAS_PRICE)
+
+                // This implementation of the bootloader relies on the correct version of the SystemContext
+                // and it can not be upgraded via a standard upgrade transaction, but needs to ensure 
+                // correctness itself before any transaction is executed. 
+                upgradeSystemContextIfNeeded()
+
+                let baseFee := 0
+
+                <!-- @if BOOTLOADER_TYPE=='proved_batch' -->
+
+                // Only for the proved batch we enforce that the baseFee proposed 
+                // by the operator is equal to the expected one. For the playground batch, we allow
+                // the operator to provide any baseFee the operator wants.
+                baseFee, GAS_PRICE_PER_PUBDATA := getBaseFee(L1_GAS_PRICE, FAIR_L2_GAS_PRICE)
+                if iszero(eq(baseFee, EXPECTED_BASE_FEE)) {
+                    debugLog("baseFee", baseFee)
+                    debugLog("EXPECTED_BASE_FEE", EXPECTED_BASE_FEE)
+                    assertionError("baseFee inconsistent")
+                }
+
+                setNewBatch(PREV_BATCH_HASH, NEW_BATCH_TIMESTAMP, NEW_BATCH_NUMBER, EXPECTED_BASE_FEE)
+
+                <!-- @endif -->
+
+                <!-- @if BOOTLOADER_TYPE=='playground_batch' -->
+
+                baseFee, GAS_PRICE_PER_PUBDATA := getBaseFee(L1_GAS_PRICE, FAIR_L2_GAS_PRICE)
+
+                let SHOULD_SET_NEW_BATCH := mload(224)
+
+                switch SHOULD_SET_NEW_BATCH 
+                case 0 {    
+                    unsafeOverrideBatch(NEW_BATCH_TIMESTAMP, NEW_BATCH_NUMBER, EXPECTED_BASE_FEE)
+                }
+                default {
+                    setNewBatch(PREV_BATCH_HASH, NEW_BATCH_TIMESTAMP, NEW_BATCH_NUMBER, EXPECTED_BASE_FEE)
+                }
+
+                <!-- @endif -->
+            }
+
+            // Now, we iterate over all transactions, processing each of them
+            // one by one.
+            // Here, the `resultPtr` is the pointer to the memory slot, where we will write
+            // `true` or `false` based on whether the tx execution was successful,
+
+            // The position at which the tx offset of the transaction should be placed
+            let currentExpectedTxOffset := add(TXS_IN_BATCH_LAST_PTR(), mul(MAX_POSTOP_SLOTS(), 32))
+
+            let txPtr := TX_DESCRIPTION_BEGIN_BYTE()
+
+            // At the COMPRESSED_BYTECODES_BEGIN_BYTE() the pointer to the newest bytecode to be published 
+            // is stored.
+            mstore(COMPRESSED_BYTECODES_BEGIN_BYTE(), add(COMPRESSED_BYTECODES_BEGIN_BYTE(), 0x20))
+
+            // At start storing keccak256("") as `chainedPriorityTxsHash` and 0 as `numberOfLayer1Txs`
+            mstore(PRIORITY_TXS_L1_DATA_BEGIN_BYTE(), EMPTY_STRING_KECCAK())
+            mstore(add(PRIORITY_TXS_L1_DATA_BEGIN_BYTE(), 0x20), 0)
+
+            // Iterating through transaction descriptions
+            let transactionIndex := 0 
+            for { 
+                let resultPtr := RESULT_START_PTR()
+            } lt(txPtr, TXS_IN_BATCH_LAST_PTR()) { 
+                txPtr := add(txPtr, TX_DESCRIPTION_SIZE())
+                resultPtr := add(resultPtr, 32)
+                transactionIndex := add(transactionIndex, 1)
+            } {
+                let execute := mload(txPtr)
+
+                debugLog("txPtr", txPtr)
+                debugLog("execute", execute)
+                
+                if iszero(execute) {
+                    // We expect that all transactions that are executed
+                    // are continuous in the array.
+                    break
+                }                
+
+                let txDataOffset := mload(add(txPtr, 0x20))
+
+                // We strongly enforce the positions of transactions
+                if iszero(eq(currentExpectedTxOffset, txDataOffset)) {
+                    debugLog("currentExpectedTxOffset", currentExpectedTxOffset)
+                    debugLog("txDataOffset", txDataOffset)
+
+                    assertionError("Tx data offset is incorrect")
+                }
+
+                currentExpectedTxOffset := validateAbiEncoding(txDataOffset)
+
+                // Checking whether the last slot of the transaction's description
+                // does not go out of bounds.
+                if gt(sub(currentExpectedTxOffset, 32), LAST_FREE_SLOT()) {
+                    debugLog("currentExpectedTxOffset", currentExpectedTxOffset)
+                    debugLog("LAST_FREE_SLOT", LAST_FREE_SLOT())
+
+                    assertionError("currentExpectedTxOffset too high")
+                }
+
+                validateTypedTxStructure(add(txDataOffset, 0x20))
+    
+                <!-- @if BOOTLOADER_TYPE=='proved_batch' -->
+                {
+                    debugLog("ethCall", 0)
+                    processTx(txDataOffset, resultPtr, transactionIndex, 0, GAS_PRICE_PER_PUBDATA)
+                }
+                <!-- @endif -->
+                <!-- @if BOOTLOADER_TYPE=='playground_batch' -->
+                {
+                    let txMeta := mload(txPtr)
+                    let processFlags := getWordByte(txMeta, 31)
+                    debugLog("flags", processFlags)
+
+
+                    // `processFlags` argument denotes which parts of execution should be done:
+                    //  Possible values:
+                    //     0x00: validate & execute (normal mode)
+                    //     0x02: perform ethCall (i.e. use mimicCall to simulate the call)
+
+                    let isETHCall := eq(processFlags, 0x02)
+                    debugLog("ethCall", isETHCall)
+                    processTx(txDataOffset, resultPtr, transactionIndex, isETHCall, GAS_PRICE_PER_PUBDATA)
+                }
+                <!-- @endif -->
+                // Signal to the vm that the transaction execution is complete
+                setHook(VM_HOOK_TX_HAS_ENDED())
+                // Increment tx index within the system.
+                considerNewTx()
+            }
+            
+            // The bootloader doesn't have to pay anything
+            setPricePerPubdataByte(0)
+
+            // Resetting tx.origin and gasPrice to 0, so we don't pay for
+            // publishing them on-chain.
+            setTxOrigin(0)
+            setGasPrice(0)
+
+            // Transfering all the ETH received in the block to the operator
+            directETHTransfer(
+                selfbalance(),
+                OPERATOR_ADDRESS
+            )
+
+            // Hook that notifies that the operator should provide final information for the batch
+            setHook(VM_HOOK_FINAL_L2_STATE_INFO())
+
+            // Each batch typically ends with a special block which contains no transactions. 
+            // So we need to have this method to reflect it in the system contracts too.
+            //
+            // The reason is that as of now our node requires that each storage write (event, etc) belongs to a particular
+            // L2 block. In case a batch is sealed by timeout (i.e. the resources of the batch have not been exhaused, but we need
+            // to seal it to assure timely finality), we need to process sending funds to the operator *after* the last
+            // non-empty L2 block has been already sealed. We can not override old L2 blocks, so we need to create a new empty "fictive" block for it.
+            //
+            // The other reason why we need to set this block is so that in case of empty batch (i.e. the one which has no transactions), 
+            // the virtual block number as well as miniblock number are incremented.
+            setL2Block(transactionIndex)
+
+            callSystemContext({{RIGHT_PADDED_RESET_TX_NUMBER_IN_BLOCK_SELECTOR}})
+
+            publishTimestampDataToL1()
+
+            // Sending system logs (to be processed on L1)
+            sendToL1Native(true, chainedPriorityTxnHashLogKey(), mload(PRIORITY_TXS_L1_DATA_BEGIN_BYTE()))
+            sendToL1Native(true, numberOfLayer1TxsLogKey(), mload(add(PRIORITY_TXS_L1_DATA_BEGIN_BYTE(), 0x20)))
+            
+            l1MessengerPublishingCall()
         }
     }
 }
