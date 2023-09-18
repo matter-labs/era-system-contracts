@@ -4293,6 +4293,8 @@ dependencies = [
  "colored",
  "hex",
  "once_cell",
+ "serde",
+ "serde_json",
  "tracing",
  "tracing-subscriber",
  "vlog",

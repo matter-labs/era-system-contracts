@@ -44,3 +44,11 @@ function TEST_strLen() {
     testing_assertEq(getStrLen("1234567890123456789012345678901234"), 0, "over max length")
 }
 
+
+
+function TEST_simple_transaction() {
+    // We'll test the transaction from 0.json
+    let txDataOffset := testing_txDataOffset(0)
+    let innerTxDataOffset := add(txDataOffset, 0x20)
+    testing_assertEq(getGasPerPubdataByteLimit(innerTxDataOffset), 0xc350, "Invalid pubdata limit")
+}

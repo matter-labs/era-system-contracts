@@ -46,3 +46,9 @@ function testing_totalTests(tests) {
     storeTestHookParam(0, unoptimized(tests))
     setTestHook(nonOptimized(103))
 }
+
+// Returns txDataOffset for the index transaction.
+function testing_txDataOffset(index) -> txDataOffset {
+    let txPtr := add(TX_DESCRIPTION_BEGIN_BYTE(), mul(index, TX_DESCRIPTION_SIZE()))
+    txDataOffset := mload(add(txPtr, 0x20))
+}

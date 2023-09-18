@@ -15,6 +15,7 @@ use zksync_contracts::{
     SystemContractCode,
 };
 use zksync_state::{InMemoryStorage, StoragePtr, StorageView};
+use zksync_types::Transaction;
 use zksync_types::{block::legacy_miniblock_hash, Address, L1BatchNumber, MiniblockNumber, U256};
 use zksync_utils::bytecode::hash_bytecode;
 use zksync_utils::{bytes_to_be_words, u256_to_h256};
@@ -125,6 +126,11 @@ fn execute_internal_bootloader_test() {
 
         let custom_tracers = vec![Box::new(BootloaderTestTracer::new(test_result.clone()))
             as Box<dyn VmTracer<StorageView<InMemoryStorage>, HistoryDisabled>>];
+
+        // Let's insert transactions into slots. They are not executed, but the tests can run functions against them.
+        let json_str = include_str!("test_transactions/0.json");
+        let tx: Transaction = serde_json::from_str(json_str).unwrap();
+        vm.push_transaction(tx);
 
         vm.inspect(custom_tracers, VmExecutionMode::Bootloader);
 
