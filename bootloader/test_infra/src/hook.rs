@@ -25,6 +25,7 @@ pub(crate) enum TestVmHook {
     TestStart(String),
 }
 
+// Number of 32-bytes slots that are reserved for test hooks (passing information between bootloader test code and the VM).
 const TEST_HOOKS: u32 = 5;
 const TEST_HOOK_ENUM_POSITON: u32 = VM_HOOK_PARAMS_START_POSITION - 1;
 const TEST_HOOK_START: u32 = TEST_HOOK_ENUM_POSITON - TEST_HOOKS;
@@ -65,7 +66,7 @@ fn test_hook_as_int_or_hex(hook_param: U256) -> String {
     }
 }
 
-pub const fn heap_page_from_base(base: MemoryPage) -> MemoryPage {
+const fn heap_page_from_base(base: MemoryPage) -> MemoryPage {
     MemoryPage(base.0 + 2)
 }
 

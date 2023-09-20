@@ -11,12 +11,15 @@ use vm::{
     VmTracer,
 };
 use zksync_contracts::{
-    read_sys_contract_bytecode, read_zbin_bytecode, BaseSystemContracts, ContractLanguage,
-    SystemContractCode,
+    read_zbin_bytecode, BaseSystemContracts, ContractLanguage, SystemContractCode,
+    SystemContractsRepo,
 };
-use zksync_state::{InMemoryStorage, StoragePtr, StorageView};
-use zksync_types::Transaction;
+use zksync_state::{
+    InMemoryStorage, StoragePtr, StorageView, IN_MEMORY_STORAGE_DEFAULT_NETWORK_ID,
+};
+use zksync_types::system_contracts::get_system_smart_contracts_from_dir;
 use zksync_types::{block::legacy_miniblock_hash, Address, L1BatchNumber, MiniblockNumber, U256};
+use zksync_types::{L2ChainId, Transaction};
 use zksync_utils::bytecode::hash_bytecode;
 use zksync_utils::{bytes_to_be_words, u256_to_h256};
 
@@ -39,8 +42,11 @@ fn execute_internal_bootloader_test() {
         hash,
     };
 
-    // FIXME: this is still taking DefaultAccount from ZKSYNC_HOME directory.
-    let bytecode = read_sys_contract_bytecode("", "DefaultAccount", ContractLanguage::Sol);
+    let repo = SystemContractsRepo {
+        root: env::current_dir().unwrap().join("../../"),
+    };
+
+    let bytecode = repo.read_sys_contract_bytecode("", "DefaultAccount", ContractLanguage::Sol);
     let hash = hash_bytecode(&bytecode);
     let default_aa = SystemContractCode {
         code: bytes_to_be_words(bytecode),
@@ -54,17 +60,17 @@ fn execute_internal_bootloader_test() {
 
     let system_env = SystemEnv {
         zk_porter_available: false,
-        version: zksync_types::ProtocolVersionId::Version14,
+        version: zksync_types::ProtocolVersionId::latest(),
         base_system_smart_contracts: base_system_contract,
         gas_limit: 80_000_000,
         execution_mode: TxExecutionMode::VerifyExecute,
-        default_validation_computational_gas_limit: 80_000_000,
+        default_validation_computational_gas_limit: u32::MAX,
         chain_id: zksync_types::L2ChainId(299),
     };
 
     let mut l1_batch_env = L1BatchEnv {
         previous_batch_hash: None,
-        number: L1BatchNumber::from(13),
+        number: L1BatchNumber::from(1),
         timestamp: 14,
         l1_gas_price: 250_000_000,
         fair_l2_gas_price: 250_000_000,
@@ -81,9 +87,13 @@ fn execute_internal_bootloader_test() {
 
     // First - get the number of tests.
     let test_count = {
-        // FIXME: this is still taking System Contracts from ZKSYNC_HOME
         let storage: StoragePtr<StorageView<InMemoryStorage>> =
-            StorageView::new(InMemoryStorage::with_system_contracts(hash_bytecode)).to_rc_ptr();
+            StorageView::new(InMemoryStorage::with_custom_system_contracts_and_chain_id(
+                L2ChainId(IN_MEMORY_STORAGE_DEFAULT_NETWORK_ID),
+                hash_bytecode,
+                get_system_smart_contracts_from_dir(env::current_dir().unwrap().join("../../")),
+            ))
+            .to_rc_ptr();
 
         let mut vm = Vm::new(
             l1_batch_env.clone(),
@@ -111,7 +121,12 @@ fn execute_internal_bootloader_test() {
         println!("\n === Running test {}", test_id);
 
         let storage: StoragePtr<StorageView<InMemoryStorage>> =
-            StorageView::new(InMemoryStorage::with_system_contracts(hash_bytecode)).to_rc_ptr();
+            StorageView::new(InMemoryStorage::with_custom_system_contracts_and_chain_id(
+                L2ChainId(IN_MEMORY_STORAGE_DEFAULT_NETWORK_ID),
+                hash_bytecode,
+                get_system_smart_contracts_from_dir(env::current_dir().unwrap().join("../../")),
+            ))
+            .to_rc_ptr();
 
         // We are passing id of the test in location (0) where we normally put the operator.
         // This is then picked up by the testing framework.

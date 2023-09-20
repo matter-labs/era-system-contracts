@@ -125,7 +125,7 @@ let params = {
 };
 
 
-function extractFunctionNames(sourceCode: string): string[] {
+function extractTestFunctionNames(sourceCode: string): string[] {
     // Remove single-line comments
     sourceCode = sourceCode.replace(/\/\/[^\n]*/g, '');
 
@@ -217,11 +217,11 @@ async function main() {
     console.log('Preprocessing bootloader tests');
     const bootloaderTests = await renderFile('bootloader/tests/bootloader/bootloader_test.yul', {});
 
-    let testMethods = extractFunctionNames(bootloaderTests)
+    const testMethods = extractTestFunctionNames(bootloaderTests)
 
     console.log("Found tests: " + testMethods);
 
-    let testFramework = createTestFramework(testMethods);
+    const testFramework = createTestFramework(testMethods);
 
     const bootloaderTestUtils = await renderFile('bootloader/tests/utils/test_utils.yul', {});
 
