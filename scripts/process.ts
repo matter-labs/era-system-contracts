@@ -1,14 +1,19 @@
 const preprocess = require('preprocess');
 
-import { existsSync, mkdirSync, write, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { SYSTEM_CONTRACTS, getRevertSelector, getTransactionUtils } from './constants';
 import * as hre from 'hardhat';
 import { ethers } from 'ethers';
 import { renderFile } from 'template-file';
 import { utils } from 'zksync-web3';
 import { ForceDeployment } from './utils';
+import { join } from "path";
+
 const OUTPUT_DIR = 'bootloader/build';
 
+function path(...args: string[]): string {
+    return join(__dirname,...args)
+}
 
 function getSelector(contractName: string, method: string): string {
     const artifact = hre.artifacts.readArtifactSync(contractName);
@@ -166,10 +171,10 @@ async function main() {
         mkdirSync(OUTPUT_DIR);
     }
 
-    writeFileSync(`${OUTPUT_DIR}/proved_batch.yul`, provedBatchBootloader);
-    writeFileSync(`${OUTPUT_DIR}/playground_batch.yul`, playgroundBatchBootloader);
-    writeFileSync(`${OUTPUT_DIR}/gas_test.yul`, gasTestBootloader);
-    writeFileSync(`${OUTPUT_DIR}/fee_estimate.yul`, feeEstimationBootloader);
+    writeFileSync(path(`../${OUTPUT_DIR}/proved_batch.yul`), provedBatchBootloader);
+    writeFileSync(path(`../${OUTPUT_DIR}/playground_batch.yul`), playgroundBatchBootloader);
+    writeFileSync(path(`../${OUTPUT_DIR}/gas_test.yul`), gasTestBootloader);
+    writeFileSync(path(`../${OUTPUT_DIR}/fee_estimate.yul`), feeEstimationBootloader);
 
     console.log('Preprocessing done!');
 }
