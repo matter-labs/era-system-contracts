@@ -7,13 +7,12 @@ edition = "2021"
 
 [dependencies]
 
-vm = { path = "../../../../matter/zksync-2-dev/core/lib/vm" }
-zksync_types = {path = "../../../../matter/zksync-2-dev/core/lib/types" }
-zksync_contracts = { path = "../../../../matter/zksync-2-dev/core/lib/contracts"}
-zksync_utils = { path = "../../../../matter/zksync-2-dev/core/lib/utils"}
-zksync_state = { path = "../../../../matter/zksync-2-dev/core/lib/state"}
-vlog = { path = "../../../../matter/zksync-2-dev/core/lib/vlog"}
-
+vm = { git = "https://github.com/matter-labs/zksync-era.git", tag = "v7.0.0-rc0" }
+zksync_types = { git = "https://github.com/matter-labs/zksync-era.git", tag = "v7.0.0-rc0" }
+zksync_contracts = { git = "https://github.com/matter-labs/zksync-era.git", tag = "v7.0.0-rc0" }
+zksync_utils = { git = "https://github.com/matter-labs/zksync-era.git", tag = "v7.0.0-rc0" }
+zksync_state = { git = "https://github.com/matter-labs/zksync-era.git", tag = "v7.0.0-rc0" }
+vlog = { git = "https://github.com/matter-labs/zksync-era.git", tag = "v7.0.0-rc0" }
 
 colored = "2.0"
 hex = "0.4"
