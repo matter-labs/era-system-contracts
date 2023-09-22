@@ -93,3 +93,7 @@ enum SystemLogKey {
     NUMBER_OF_LAYER_1_TXS_KEY,
     EXPECTED_SYSTEM_CONTRACT_UPGRADE_TX_HASH
 }
+
+/// @dev The number of leaves in the L2->L1 log Merkle tree. 
+/// While formally a tree of any length is acceptable, the node supports only a constant length of 2048 leaves.
+uint256 constant L2_TO_L1_LOGS_MERKLE_TREE_LEAVES = 2048;
