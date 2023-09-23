@@ -14,8 +14,6 @@ jobs:
       - run: yarn
       - run: yarn install
       - run: yarn build
-      - run: yarn build
-      - run: ls contracts/
       - run: yarn preprocess
       - run: yarn compile-yul
 
