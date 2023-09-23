@@ -3,12 +3,11 @@ object "Bootloader" {
     }
     object "Bootloader_deployed" {
         code {
-            {{CODE_START_PLACEHOLDER}}
             /// @notice the address that will be the beneficiary of all the fees
             let OPERATOR_ADDRESS := mload(0)
 
             let GAS_PRICE_PER_PUBDATA := 0
-
+{{CODE_START_PLACEHOLDER}}
             // Initializing batch params
             {
                 /// @notice The hash of the previous batch
