@@ -11,8 +11,7 @@ jobs:
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: nightly-2023-04-17
-      - run: |
-        yarn
-        yarn install
-        yarn build
+      - run: yarn
+      - run: yarn install
+      - run: yarn build
 
