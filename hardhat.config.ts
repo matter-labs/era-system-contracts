@@ -1,12 +1,14 @@
 import '@nomiclabs/hardhat-solpp';
 import '@nomiclabs/hardhat-ethers';
 import '@matterlabs/hardhat-zksync-solc';
+import '@typechain/hardhat'
+
 
 const systemConfig = require('./SystemConfig.json');
 
 export default {
     zksolc: {
-        version: '1.3.11',
+        version: '1.3.14',
         compilerSource: 'binary',
         settings: {
             isSystem: true

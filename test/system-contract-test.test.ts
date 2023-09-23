@@ -2,7 +2,7 @@ import { Wallet, utils } from "zksync-web3";
 import * as hre from "hardhat";
 import { Deployer } from "@matterlabs/hardhat-zksync-deploy";
 
-import { TestSystemContract } from "../typechain-types/cache-zk/solpp-generated-contracts/test-contracts";
+import { TestSystemContract } from "../typechain-types/test-contracts";
 import { deployContractOnAddress } from "./utils/deployOnAnyAddress";
 import { BigNumber, ethers } from "ethers";
 
@@ -29,7 +29,7 @@ describe('System contracts tests', function () {
     });
 
     it('Test precompile call', async function () {
-        await testContract.testPrecompileCall();    
+        await testContract.testPrecompileCall();
     })
 
     it('Test mimicCall and setValueForNextCall', async function () {
@@ -42,7 +42,7 @@ describe('System contracts tests', function () {
     });
 
     it('Test onlySystemCall modifier', async function () {
-        await testContract.testOnlySystemModifier();    
+        await testContract.testOnlySystemModifier();
     });
 
     it('Test system mimicCall', async function () {
