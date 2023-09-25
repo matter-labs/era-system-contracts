@@ -2871,9 +2871,13 @@ object "Bootloader" {
                         let maxPriorityFeePerGas := getMaxPriorityFeePerGas(innerTxDataOffset)
                         assertEq(maxFeePerGas, maxPriorityFeePerGas, "EIP1559 params wrong")
 
+                        <!-- @if BOOTLOADER_TYPE!='playground_batch' -->
+
                         let from := getFrom(innerTxDataOffset)
                         let iseoa := isEOA(from)
                         assertEq(iseoa, true, "Only EIP-712 can use non-EOA")
+
+                        <!-- @endif -->
                         
                         // Here, for type 0 transactions the reserved0 field is used as a marker  
                         // whether the transaction should include chainId in its encoding.
@@ -2894,11 +2898,15 @@ object "Bootloader" {
                         let maxFeePerGas := getMaxFeePerGas(innerTxDataOffset)
                         let maxPriorityFeePerGas := getMaxPriorityFeePerGas(innerTxDataOffset)
                         assertEq(maxFeePerGas, maxPriorityFeePerGas, "EIP1559 params wrong")
+                        
+                        <!-- @if BOOTLOADER_TYPE!='playground_batch' -->
 
                         let from := getFrom(innerTxDataOffset)
                         let iseoa := isEOA(from)
                         assertEq(iseoa, true, "Only EIP-712 can use non-EOA")
 
+                        <!-- @endif -->
+                        
                         assertEq(lte(getGasPerPubdataByteLimit(innerTxDataOffset), MAX_L2_GAS_PER_PUBDATA()), 1, "Gas per pubdata is wrong")
                         assertEq(getPaymaster(innerTxDataOffset), 0, "paymaster non zero")
 
@@ -2917,10 +2925,14 @@ object "Bootloader" {
                         assertEq(lte(getGasPerPubdataByteLimit(innerTxDataOffset), MAX_L2_GAS_PER_PUBDATA()), 1, "Gas per pubdata is wrong")
                         assertEq(getPaymaster(innerTxDataOffset), 0, "paymaster non zero")
 
+                        <!-- @if BOOTLOADER_TYPE!='playground_batch' -->
+
                         let from := getFrom(innerTxDataOffset)
                         let iseoa := isEOA(from)
                         assertEq(iseoa, true, "Only EIP-712 can use non-EOA")
 
+                        <!-- @endif -->
+                        
                         <!-- @if BOOTLOADER_TYPE=='proved_block' -->
                         assertEq(gt(getFrom(innerTxDataOffset), MAX_SYSTEM_CONTRACT_ADDR()), 1, "from in kernel space")
                         <!-- @endif -->
