@@ -29,6 +29,9 @@ uint256 constant L2_TO_L1_LOG_SERIALIZE_SIZE = 88;
 /// @dev Actually equal to the `keccak256(new bytes(L2_TO_L1_LOG_SERIALIZE_SIZE))`
 bytes32 constant L2_L1_LOGS_TREE_DEFAULT_LEAF_HASH = 0x72abee45b59e344af8a6e520241c4744aff26ed411f4c4b00f8af09adada43ba;
 
+/// @dev The current version of state diff compression being used.
+uint256 constant STATE_DIFF_COMPRESSION_VERSION_NUMBER = 1;
+
 interface IL1Messenger {
     // Possibly in the future we will be able to track the messages sent to L1 with
     // some hooks in the VM. For now, it is much easier to track them with L2 events.

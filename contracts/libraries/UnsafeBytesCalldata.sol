@@ -41,4 +41,10 @@ library UnsafeBytesCalldata {
             result := calldataload(add(_bytes.offset, _start))
         }
     }
+
+    function readUint256(bytes calldata _bytes, uint256 _start) internal pure returns (uint256 result) {
+        assembly {
+            result := calldataload(add(_bytes.offset, _start))
+        }
+    }
 }

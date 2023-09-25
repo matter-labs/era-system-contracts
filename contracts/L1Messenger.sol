@@ -277,11 +277,21 @@ contract L1Messenger is IL1Messenger, ISystemContract {
 
         /// Check State Diffs
         /// encoding is as follows:
-        /// size of compressed state diffs in bytes (u32) || compressed state diffs || (# state diffs: intial + repeated) as u32 || encoded state diffs
-        /// commpressed state diffs: number of initial (u32) || initial writes (each 64 bytes) || repeated writes (each 40 bytes)
+        /// header (1 byte version, 2 bytes total len of compressed, 1 byte enumeration index size, 2 bytes number of initial writes)
+        /// body (N bytes of initial writes [32 byte derived key || compressed value], M bytes repeated writes [enumeration index || compressed value])
         /// encoded state diffs: [20bytes address][32bytes key][32bytes derived key][8bytes enum index][32bytes initial value][32bytes final value]
-        uint32 compressedStateDiffSize = uint32(bytes4(_totalL2ToL1PubdataAndStateDiffs[calldataPtr:calldataPtr + 4]));
-        calldataPtr += 4;
+        require(
+            uint256(uint8(bytes1(_totalL2ToL1PubdataAndStateDiffs[calldataPtr]))) ==
+                STATE_DIFF_COMPRESSION_VERSION_NUMBER,
+            "state diff compression version mismatch"
+        );
+        calldataPtr++;
+
+        uint24 compressedStateDiffSize = uint24(bytes3(_totalL2ToL1PubdataAndStateDiffs[calldataPtr:calldataPtr + 3]));
+        calldataPtr += 3;
+
+        uint8 enumerationIndexSize = uint8(bytes1(_totalL2ToL1PubdataAndStateDiffs[calldataPtr]));
+        calldataPtr++;
 
         bytes calldata compressedRepeatedStateDiffs = _totalL2ToL1PubdataAndStateDiffs[calldataPtr:calldataPtr +
             compressedStateDiffSize];
@@ -300,6 +310,7 @@ contract L1Messenger is IL1Messenger, ISystemContract {
 
         bytes32 stateDiffHash = COMPRESSOR_CONTRACT.verifyCompressedStateDiffs(
             numberOfStateDiffs,
+            enumerationIndexSize,
             stateDiffs,
             compressedRepeatedStateDiffs
         );

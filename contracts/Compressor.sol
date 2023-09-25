@@ -84,35 +84,66 @@ contract Compressor is ICompressor, ISystemContract {
     /// @dev repeated compressed diff: [8bytes enum index][32bytes final value]
     function verifyCompressedStateDiffs(
         uint256 _numberOfStateDiffs,
+        uint256 _enumerationIndexSize,
         bytes calldata _stateDiffs,
         bytes calldata _compressedStateDiffs
     ) external payable onlyCallFrom(address(L1_MESSENGER_CONTRACT)) returns (bytes32 stateDiffHash) {
-        uint256 numberOfInitialWrites = uint256(_compressedStateDiffs.readUint32(0));
-        // Save two pointers for initial and repeated storage diffs.
-        uint256 compInitialStateDiffPtr = 4;
-        uint256 compRepeatedStateDiffPtr = 4 + numberOfInitialWrites * 64;
+        uint256 numberOfInitialWrites = uint256(_compressedStateDiffs.readUint16(0));
 
+        uint256 stateDiffPtr = 2;
+        uint256 numInitialWritesProcessed = 0;
+
+        // Process initial writes
         for (uint256 i = 0; i < _numberOfStateDiffs * STATE_DIFF_ENTRY_SIZE; i += STATE_DIFF_ENTRY_SIZE) {
             bytes calldata stateDiff = _stateDiffs[i:i + STATE_DIFF_ENTRY_SIZE];
             uint64 enumIndex = stateDiff.readUint64(84);
-            bytes32 finalValue = stateDiff.readBytes32(124);
 
             if (enumIndex == 0) {
+                numInitialWritesProcessed++;
+                uint256 initValue = stateDiff.readUint256(92);
+                uint256 finalValue = stateDiff.readUint256(124);
                 bytes32 derivedKey = stateDiff.readBytes32(52);
-                require(derivedKey == _compressedStateDiffs.readBytes32(compInitialStateDiffPtr), "iw: initial key mismatch");
-                compInitialStateDiffPtr += 32;
-                require(finalValue == _compressedStateDiffs.readBytes32(compInitialStateDiffPtr), "iw: final value mismatch");
-                compInitialStateDiffPtr += 32;
-            } else {
-                require(enumIndex == _compressedStateDiffs.readUint64(compRepeatedStateDiffPtr), "rw: enum key mismatch");
-                compRepeatedStateDiffPtr += 8;
-                require(finalValue == _compressedStateDiffs.readBytes32(compRepeatedStateDiffPtr), "rw: final value mismatch");
-                compRepeatedStateDiffPtr += 32;
+                require(derivedKey == _compressedStateDiffs.readBytes32(stateDiffPtr), "iw: initial key mismatch");
+                stateDiffPtr += 32;
+                uint8 metadata = uint8(bytes1(_compressedStateDiffs[stateDiffPtr++]));
+                uint8 operation = metadata & OPERATION_BITMASK;
+                uint8 len = (metadata >> LENGTH_BITS_OFFSET) == 0 ? 32 : metadata >> LENGTH_BITS_OFFSET;
+                _verifyValueCompression(
+                    initValue,
+                    finalValue,
+                    operation,
+                    _compressedStateDiffs[stateDiffPtr:stateDiffPtr + len]
+                );
+                stateDiffPtr += len;
             }
         }
 
-        require(compInitialStateDiffPtr == 4 + numberOfInitialWrites * 64, "Incorrect number of initial storage diffs");
-        require(compRepeatedStateDiffPtr == _compressedStateDiffs.length, "Extra data in _compressedStateDiffs");
+        require(numInitialWritesProcessed == numberOfInitialWrites, "Incorrect number of initial storage diffs");
+
+        // Process repeated writes
+        for (uint256 i = 0; i < _numberOfStateDiffs * STATE_DIFF_ENTRY_SIZE; i += STATE_DIFF_ENTRY_SIZE) {
+            bytes calldata stateDiff = _stateDiffs[i:i + STATE_DIFF_ENTRY_SIZE];
+            uint64 enumIndex = stateDiff.readUint64(84);
+
+            if (enumIndex > 0) {
+                uint256 initValue = stateDiff.readUint256(92);
+                uint256 finalValue = stateDiff.readUint256(124);
+                require(enumIndex == _compressedStateDiffs.readUint32(stateDiffPtr), "rw: enum key mismatch");
+                stateDiffPtr += _enumerationIndexSize;
+                uint8 metadata = uint8(bytes1(_compressedStateDiffs[stateDiffPtr++]));
+                uint8 operation = metadata & OPERATION_BITMASK;
+                uint8 len = (metadata >> LENGTH_BITS_OFFSET) == 0 ? 32 : metadata >> LENGTH_BITS_OFFSET;
+                _verifyValueCompression(
+                    initValue,
+                    finalValue,
+                    operation,
+                    _compressedStateDiffs[stateDiffPtr:stateDiffPtr + len]
+                );
+                stateDiffPtr += len;
+            }
+        }
+
+        require(stateDiffPtr == _compressedStateDiffs.length, "Extra data in _compressedStateDiffs");
 
         stateDiffHash = EfficientCall.keccak(_stateDiffs);
     }
@@ -130,6 +161,31 @@ contract Compressor is ICompressor, ISystemContract {
             uint256 dictionaryLen = uint256(_rawCompressedData.readUint16(0));
             dictionary = _rawCompressedData[2:2 + dictionaryLen * 8];
             encodedData = _rawCompressedData[2 + dictionaryLen * 8:];
+        }
+    }
+
+    // Operation id mapping:
+    // 0 -> Nothing (32 bytes)
+    // 1 -> Add
+    // 2 -> Subtract
+    // 3 -> Transform (< 32 bytes)
+    function _verifyValueCompression(
+        uint256 _initialValue,
+        uint256 _finalValue,
+        uint256 _operation,
+        bytes calldata _compressedValue
+    ) internal pure {
+        uint256 convertedValue = uint256(bytes32(_compressedValue));
+        convertedValue >>= (256 - (_compressedValue.length * 8));
+
+        if (_operation == 0 || _operation == 3) {
+            require(uint256(bytes32(_compressedValue)) == _finalValue);
+        } else if (_operation == 1) {
+            require(_initialValue + uint256(bytes32(_compressedValue)) == _finalValue);
+        } else if (_operation == 2) {
+            require(_initialValue - uint256(bytes32(_compressedValue)) == _finalValue);
+        } else {
+            revert("unsupported operation");
         }
     }
 }
