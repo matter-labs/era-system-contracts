@@ -87,7 +87,7 @@ contract Compressor is ICompressor, ISystemContract {
         uint256 _enumerationIndexSize,
         bytes calldata _stateDiffs,
         bytes calldata _compressedStateDiffs
-    ) external payable onlyCallFrom(address(L1_MESSENGER_CONTRACT)) returns (bytes32 stateDiffHash) {
+    ) external payable returns (bytes32 stateDiffHash) {
         uint256 numberOfInitialWrites = uint256(_compressedStateDiffs.readUint16(0));
 
         uint256 stateDiffPtr = 2;
@@ -105,9 +105,10 @@ contract Compressor is ICompressor, ISystemContract {
                 bytes32 derivedKey = stateDiff.readBytes32(52);
                 require(derivedKey == _compressedStateDiffs.readBytes32(stateDiffPtr), "iw: initial key mismatch");
                 stateDiffPtr += 32;
-                uint8 metadata = uint8(bytes1(_compressedStateDiffs[stateDiffPtr++]));
+                uint8 metadata = uint8(bytes1(_compressedStateDiffs[stateDiffPtr]));
+                stateDiffPtr += 1;
                 uint8 operation = metadata & OPERATION_BITMASK;
-                uint8 len = (metadata >> LENGTH_BITS_OFFSET) == 0 ? 32 : metadata >> LENGTH_BITS_OFFSET;
+                uint8 len = operation == 0 ? 32 : metadata >> LENGTH_BITS_OFFSET;
                 _verifyValueCompression(
                     initValue,
                     finalValue,
@@ -130,9 +131,10 @@ contract Compressor is ICompressor, ISystemContract {
                 uint256 finalValue = stateDiff.readUint256(124);
                 require(enumIndex == _compressedStateDiffs.readUint32(stateDiffPtr), "rw: enum key mismatch");
                 stateDiffPtr += _enumerationIndexSize;
-                uint8 metadata = uint8(bytes1(_compressedStateDiffs[stateDiffPtr++]));
+                uint8 metadata = uint8(bytes1(_compressedStateDiffs[stateDiffPtr]));
+                stateDiffPtr += 1;
                 uint8 operation = metadata & OPERATION_BITMASK;
-                uint8 len = (metadata >> LENGTH_BITS_OFFSET) == 0 ? 32 : metadata >> LENGTH_BITS_OFFSET;
+                uint8 len = operation == 0 ? 32 : metadata >> LENGTH_BITS_OFFSET;
                 _verifyValueCompression(
                     initValue,
                     finalValue,
@@ -145,7 +147,7 @@ contract Compressor is ICompressor, ISystemContract {
 
         require(stateDiffPtr == _compressedStateDiffs.length, "Extra data in _compressedStateDiffs");
 
-        stateDiffHash = EfficientCall.keccak(_stateDiffs);
+        stateDiffHash = keccak256(_stateDiffs);
     }
 
     /// @notice Decode the raw compressed data into the dictionary and the encoded data.
@@ -179,11 +181,11 @@ contract Compressor is ICompressor, ISystemContract {
         convertedValue >>= (256 - (_compressedValue.length * 8));
 
         if (_operation == 0 || _operation == 3) {
-            require(uint256(bytes32(_compressedValue)) == _finalValue);
+            require(convertedValue == _finalValue);
         } else if (_operation == 1) {
-            require(_initialValue + uint256(bytes32(_compressedValue)) == _finalValue);
+            require(_initialValue + convertedValue == _finalValue);
         } else if (_operation == 2) {
-            require(_initialValue - uint256(bytes32(_compressedValue)) == _finalValue);
+            require(_initialValue - convertedValue == _finalValue);
         } else {
             revert("unsupported operation");
         }
