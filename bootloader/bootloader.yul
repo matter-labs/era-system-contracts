@@ -1468,7 +1468,7 @@ object "Bootloader" {
                             success,
                             // Since the paymaster will be refunded with reservedGas,
                             // it should know about it
-                            add(gasLeft, reservedGas),
+                            safeAdd(gasLeft, reservedGas),
                         ))
                         let gasSpentByPostOp := sub(gasBeforePostOp, gas())
 
