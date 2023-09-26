@@ -69,19 +69,37 @@ contract Compressor is ICompressor, ISystemContract {
 
     /// @notice Verifies that the compression of state diffs has been done correctly for the {_stateDiffs} param.
     /// @param _numberOfStateDiffs The number of state diffs being checked.
+    /// @param _enumerationIndexSize Number of bytes used to represent an enumeration index for repeated writes.
     /// @param _stateDiffs Encoded full state diff structs. See the first dev comment below for encoding.
     /// @param _compressedStateDiffs The compressed state diffs
     /// @dev We don't verify that the size of {_stateDiffs} is equivalent to {_numberOfStateDiffs} * STATE_DIFF_ENTRY_SIZE since that check is
     ///      done within the L1Messenger calling contract.
     /// @return stateDiffHash Hash of the encoded (uncompressed) state diffs to be committed to via system log.
-    /// @dev This check assumes that the ordering of state diffs in both {_stateDiffs} and {_compressedStateDiffs} are the same.
+    /// @dev This check assumes that the ordering of state diffs are sorted by (address, key) for the encoded state diffs and
+    ///      then the compressed are sorted the same but with all the initial writes coming before the repeated writes.
     /// @dev state diff:   [20bytes address][32bytes key][32bytes derived key][8bytes enum index][32bytes initial value][32bytes final value]
     /// @dev The compression format:
-    ///     - 4 bytes: number of initial storage changes
-    ///     - N bytes: initial storage changes
-    ///     - M bytes: repeated storage changes
-    /// @dev initial compressed diff: [32bytes derived key][32bytes final value]
-    /// @dev repeated compressed diff: [8bytes enum index][32bytes final value]
+    ///     - 2 bytes: number of initial writes
+    ///     - N bytes initial writes
+    ///         - 32 bytes derived key
+    ///         - 1 byte metadata: 
+    ///             - first 5 bits: length in bytes of compressed value
+    ///             - last 3 bits: operation
+    ///                 - 0 -> Nothing (32 bytes)
+    ///                 - 1 -> Add
+    ///                 - 2 -> Subtract
+    ///                 - 3 -> Transform (< 32 bytes)
+    ///         - Len Bytes: Compressed Value
+    ///     - M bytes repeated writes
+    ///         - {_enumerationIndexSize} bytes for enumeration index
+    ///         - 1 byte metadata: 
+    ///             - first 5 bits: length in bytes of compressed value
+    ///             - last 3 bits: operation
+    ///                 - 0 -> Nothing (32 bytes)
+    ///                 - 1 -> Add
+    ///                 - 2 -> Subtract
+    ///                 - 3 -> Transform (< 32 bytes)
+    ///         - Len Bytes: Compressed Value
     function verifyCompressedStateDiffs(
         uint256 _numberOfStateDiffs,
         uint256 _enumerationIndexSize,
@@ -166,11 +184,17 @@ contract Compressor is ICompressor, ISystemContract {
         }
     }
 
-    // Operation id mapping:
-    // 0 -> Nothing (32 bytes)
-    // 1 -> Add
-    // 2 -> Subtract
-    // 3 -> Transform (< 32 bytes)
+    /// @notice Verify value compression was done correct given initial value, final value, operation, and compressed value
+    /// @param _initialValue Previous value of key/enumeration index.
+    /// @param _finalValue Updated value of key/enumeration index.
+    /// @param _operation The operation that was performed on value.
+    /// @param _compressedValue The compressed value either representing the final value or difference between initial and final
+    ///                         value.
+    /// @dev Operation id mapping:
+    /// 0 -> Nothing (32 bytes)
+    /// 1 -> Add
+    /// 2 -> Subtract
+    /// 3 -> Transform (< 32 bytes)
     function _verifyValueCompression(
         uint256 _initialValue,
         uint256 _finalValue,
