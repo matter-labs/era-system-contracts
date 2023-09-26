@@ -1466,7 +1466,9 @@ object "Bootloader" {
                             paymaster,
                             txDataOffset,
                             success,
-                            gasLeft
+                            // Since the paymaster will be refunded with reservedGas,
+                            // it should know about it
+                            add(gasLeft, reservedGas),
                         ))
                         let gasSpentByPostOp := sub(gasBeforePostOp, gas())
 
