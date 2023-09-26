@@ -105,7 +105,7 @@ contract Compressor is ICompressor, ISystemContract {
         uint256 _enumerationIndexSize,
         bytes calldata _stateDiffs,
         bytes calldata _compressedStateDiffs
-    ) external payable returns (bytes32 stateDiffHash) {
+    ) external payable onlyCallFrom(address(L1_MESSENGER_CONTRACT)) returns (bytes32 stateDiffHash) {
         uint256 numberOfInitialWrites = uint256(_compressedStateDiffs.readUint16(0));
 
         uint256 stateDiffPtr = 2;
