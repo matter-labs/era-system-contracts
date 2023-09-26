@@ -106,7 +106,7 @@ contract Compressor is ICompressor, ISystemContract {
                 require(derivedKey == _compressedStateDiffs.readBytes32(stateDiffPtr), "iw: initial key mismatch");
                 stateDiffPtr += 32;
                 uint8 metadata = uint8(bytes1(_compressedStateDiffs[stateDiffPtr]));
-                stateDiffPtr += 1;
+                stateDiffPtr++;
                 uint8 operation = metadata & OPERATION_BITMASK;
                 uint8 len = operation == 0 ? 32 : metadata >> LENGTH_BITS_OFFSET;
                 _verifyValueCompression(
@@ -180,14 +180,16 @@ contract Compressor is ICompressor, ISystemContract {
         uint256 convertedValue = uint256(bytes32(_compressedValue));
         convertedValue >>= (256 - (_compressedValue.length * 8));
 
-        if (_operation == 0 || _operation == 3) {
-            require(convertedValue == _finalValue);
-        } else if (_operation == 1) {
-            require(_initialValue + convertedValue == _finalValue);
-        } else if (_operation == 2) {
-            require(_initialValue - convertedValue == _finalValue);
-        } else {
-            revert("unsupported operation");
+        unchecked {
+            if (_operation == 0 || _operation == 3) {
+                require(convertedValue == _finalValue, "transform or no compression: compressed and final mismatch");
+            } else if (_operation == 1) {
+                require(_initialValue + convertedValue == _finalValue, "add: initial plus converted not equal to final");
+            } else if (_operation == 2) {
+                require(_initialValue - convertedValue == _finalValue, "sub: initial minus converted not equal to final");
+            } else {
+                revert("unsupported operation");
+            }
         }
     }
 }
