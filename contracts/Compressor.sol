@@ -165,7 +165,7 @@ contract Compressor is ICompressor, ISystemContract {
 
         require(stateDiffPtr == _compressedStateDiffs.length, "Extra data in _compressedStateDiffs");
 
-        stateDiffHash = keccak256(_stateDiffs);
+        stateDiffHash = EfficientCall.keccak(_stateDiffs);
     }
 
     /// @notice Decode the raw compressed data into the dictionary and the encoded data.
