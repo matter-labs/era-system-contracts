@@ -109,7 +109,7 @@ contract Compressor is ICompressor, ISystemContract {
         // We do not enforce the operator to use the optimal, i.e. the minimally possible _enumerationIndexSize. 
         // We do enforce however, that the _enumerationIndexSize is not larger than 8 bytes long, which is the 
         // maximal ever possible size for enumeration index.
-        require(_enumerationIndexSize <= 8, "enumeration index size is too large");
+        require(_enumerationIndexSize <= MAX_ENUMERATION_INDEX_SIZE, "enumeration index size is too large");
 
         uint256 numberOfInitialWrites = uint256(_compressedStateDiffs.readUint16(0));
 
