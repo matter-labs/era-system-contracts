@@ -2947,6 +2947,12 @@ object "Bootloader" {
                     case 113 {                        
                         let paymaster := getPaymaster(innerTxDataOffset)
                         assertEq(or(gt(paymaster, MAX_SYSTEM_CONTRACT_ADDR()), iszero(paymaster)), 1, "paymaster in kernel space")
+
+                        if iszero(paymaster) {
+                            // Double checking that the paymasterInput is 0 if the paymaster is 0
+                            assertEq(getPaymasterInputBytesLength(innerTxDataOffset), 0, "paymasterInput non zero")
+                        }
+
                         <!-- @if BOOTLOADER_TYPE=='proved_batch' -->
                         assertEq(gt(getFrom(innerTxDataOffset), MAX_SYSTEM_CONTRACT_ADDR()), 1, "from in kernel space")
                         <!-- @endif -->
