@@ -77,7 +77,8 @@ bytes32 constant CREATE2_PREFIX = 0x2020dba91b30cc0006188af794c2fb30dd8520db7e2c
 /// @dev keccak256("zksyncCreate")
 bytes32 constant CREATE_PREFIX = 0x63bae3a9951d38e8a3fbb7b70909afc1200610fc5bc55ade242f815974674f23;
 
-uint256 constant STATE_DIFF_ENTRY_SIZE = 156;
+/// @dev Each state diff consists of 156 bytes of actual data and 116 bytes of unused padding, needed for circuit efficiency.
+uint256 constant STATE_DIFF_ENTRY_SIZE = 272;
 
 /// @dev While the "real" amount of pubdata that can be sent rarely exceeds the 110k - 120k, it is better to
 /// allow the operator to provide any reasonably large value in order to avoid unneeded constraints on the operator.
