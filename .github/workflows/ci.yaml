@@ -8,11 +8,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: nightly-2023-04-17
+          node-version: 18.18.0
       - run: yarn
-      - run: yarn install
       - run: yarn build
       - run: yarn preprocess
       - run: yarn compile-yul
