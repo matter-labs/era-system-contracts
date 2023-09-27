@@ -6,7 +6,6 @@ labels: bug
 assignees: ''
 ---
 
-
 ### 🐛 Bug Report
 
 #### 📝 Description
