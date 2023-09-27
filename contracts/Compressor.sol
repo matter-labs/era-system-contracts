@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import {ICompressor} from "./interfaces/ICompressor.sol";
+import {ICompressor, OPERATION_BITMASK, LENGTH_BITS_OFFSET, MAX_ENUMERATION_INDEX_SIZE} from "./interfaces/ICompressor.sol";
 import {ISystemContract} from "./interfaces/ISystemContract.sol";
 import {Utils} from "./libraries/Utils.sol";
 import {UnsafeBytesCalldata} from "./libraries/UnsafeBytesCalldata.sol";
