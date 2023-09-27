@@ -2,11 +2,12 @@
 
 pragma solidity ^0.8.0;
 
-import "./interfaces/IComplexUpgrader.sol";
+import {IComplexUpgrader} from "./interfaces/IComplexUpgrader.sol";
 import {FORCE_DEPLOYER} from "./Constants.sol";
 
 /**
  * @author Matter Labs
+ * @custom:security-contact security@matterlabs.dev
  * @notice Upgrader which should be used to perform complex multistep upgrades on L2. In case some custom logic for an upgrade is needed
  * this logic should be deployed into the user space and then this contract will delegatecall to the deployed contract.
  */
