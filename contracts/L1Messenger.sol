@@ -6,7 +6,7 @@ import "./interfaces/IL1Messenger.sol";
 import "./interfaces/ISystemContract.sol";
 import "./libraries/SystemContractHelper.sol";
 import "./libraries/EfficientCall.sol";
-import {SYSTEM_CONTEXT_CONTRACT, KNOWN_CODE_STORAGE_CONTRACT, COMPRESSOR_CONTRACT, STATE_DIFF_ENTRY_SIZE, SystemLogKey, MAX_ALLOWED_PUBDATA_PER_BATCH} from "./Constants.sol";
+import {SYSTEM_CONTEXT_CONTRACT, KNOWN_CODE_STORAGE_CONTRACT, COMPRESSOR_CONTRACT, STATE_DIFF_ENTRY_SIZE, SystemLogKey, MAX_ALLOWED_PUBDATA_PER_BATCH, L2_TO_L1_LOGS_MERKLE_TREE_LEAVES} from "./Constants.sol";
 
 /**
  * @author Matter Labs
@@ -200,12 +200,10 @@ contract L1Messenger is IL1Messenger, ISystemContract {
 
         /// Check logs
         uint32 numberOfL2ToL1Logs = uint32(bytes4(_totalL2ToL1PubdataAndStateDiffs[calldataPtr:calldataPtr + 4]));
+        require(numberOfL2ToL1Logs <= numberOfL2ToL1Logs, "Too many L2->L1 logs");
         calldataPtr += 4;
-        // 512 is used here to reflect the value passed in to construct the tree here https://github.com/matter-labs/zksync-2-dev/blob/20848f149b4b0e245fd87df4649b95d623132b98/core/lib/types/src/commitment.rs#L244
-        // This limit is based on the constraint on number of logs per batch.
-        uint256 l2ToL1LogsTreeLeaves = 512;
 
-        bytes32[] memory l2ToL1LogsTreeArray = new bytes32[](l2ToL1LogsTreeLeaves);
+        bytes32[] memory l2ToL1LogsTreeArray = new bytes32[](L2_TO_L1_LOGS_MERKLE_TREE_LEAVES);
         bytes32 reconstructedChainedLogsHash;
         for (uint256 i = 0; i < numberOfL2ToL1Logs; ++i) {
             bytes32 hashedLog = EfficientCall.keccak(
@@ -219,10 +217,10 @@ contract L1Messenger is IL1Messenger, ISystemContract {
             reconstructedChainedLogsHash == chainedLogsHash,
             "reconstructedChainedLogsHash is not equal to chainedLogsHash"
         );
-        for (uint256 i = numberOfL2ToL1Logs; i < l2ToL1LogsTreeLeaves; ++i) {
+        for (uint256 i = numberOfL2ToL1Logs; i < L2_TO_L1_LOGS_MERKLE_TREE_LEAVES; ++i) {
             l2ToL1LogsTreeArray[i] = L2_L1_LOGS_TREE_DEFAULT_LEAF_HASH;
         }
-        uint256 nodesOnCurrentLevel = l2ToL1LogsTreeLeaves;
+        uint256 nodesOnCurrentLevel = L2_TO_L1_LOGS_MERKLE_TREE_LEAVES;
         while (nodesOnCurrentLevel > 1) {
             nodesOnCurrentLevel /= 2;
             for (uint i = 0; i < nodesOnCurrentLevel; ++i) {
