@@ -2,11 +2,11 @@
 
 pragma solidity ^0.8.0;
 
-import "./interfaces/IKnownCodesStorage.sol";
-import "./interfaces/ISystemContract.sol";
-import "./libraries/Utils.sol";
-import "./libraries/SystemContractHelper.sol";
-import {BOOTLOADER_FORMAL_ADDRESS, COMPRESSOR_CONTRACT, L1_MESSENGER_CONTRACT} from "./Constants.sol";
+import {IKnownCodesStorage} from "./interfaces/IKnownCodesStorage.sol";
+import {ISystemContract} from "./interfaces/ISystemContract.sol";
+import {Utils} from "./libraries/Utils.sol";
+import {SystemContractHelper} from "./libraries/SystemContractHelper.sol";
+import {COMPRESSOR_CONTRACT, L1_MESSENGER_CONTRACT} from "./Constants.sol";
 
 /**
  * @author Matter Labs
@@ -58,16 +58,6 @@ contract KnownCodesStorage is IKnownCodesStorage, ISystemContract {
 
             emit MarkedAsKnown(_bytecodeHash, _shouldSendToL1);
         }
-    }
-
-    /// @notice Method used for burning a certain amount of gas
-    /// @param _gasToPay The number of gas to burn.
-    function _burnGas(uint32 _gasToPay) internal view {
-        bool precompileCallSuccess = SystemContractHelper.precompileCall(
-            0, // The precompile parameters are formal ones. We only need the precompile call to burn gas.
-            _gasToPay
-        );
-        require(precompileCallSuccess, "Failed to charge gas");
     }
 
     /// @notice Returns the marker stored for a bytecode hash. 1 means that the bytecode hash is known

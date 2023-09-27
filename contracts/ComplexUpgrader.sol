@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import "./interfaces/IComplexUpgrader.sol";
+import {IComplexUpgrader} from "./interfaces/IComplexUpgrader.sol";
 import {FORCE_DEPLOYER} from "./Constants.sol";
 
 /**

@@ -2,11 +2,24 @@
 
 pragma solidity ^0.8.0;
 
-import "./interfaces/ICompressor.sol";
-import "./interfaces/ISystemContract.sol";
-import "./Constants.sol";
-import "./libraries/Utils.sol";
-import "./libraries/UnsafeBytesCalldata.sol";
+import {ICompressor} from "./interfaces/ICompressor.sol";
+import {ISystemContract} from "./interfaces/ISystemContract.sol";
+import {Utils} from "./libraries/Utils.sol";
+import {UnsafeBytesCalldata} from "./libraries/UnsafeBytesCalldata.sol";
+import {EfficientCall} from "./libraries/EfficientCall.sol";
+import {
+    L1_MESSENGER_CONTRACT,
+    INITIAL_WRITE_STARTING_POSITION,
+    COMPRESSED_INITIAL_WRITE_SIZE,
+    STATE_DIFF_ENTRY_SIZE,
+    STATE_DIFF_ENUM_INDEX_OFFSET,
+    STATE_DIFF_FINAL_VALUE_OFFSET,
+    STATE_DIFF_DERIVED_KEY_OFFSET,
+    DERIVED_KEY_LENGTH,
+    VALUE_LENGTH,
+    ENUM_INDEX_LENGTH,
+    KNOWN_CODE_STORAGE_CONTRACT
+} from "./Constants.sol";
 
 /**
  * @author Matter Labs
@@ -75,7 +88,6 @@ contract Compressor is ICompressor, ISystemContract {
     ///      done within the L1Messenger calling contract.
     /// @return stateDiffHash Hash of the encoded (uncompressed) state diffs to be committed to via system log.
     /// @dev This check assumes that the ordering of state diffs in both {_stateDiffs} and {_compressedStateDiffs} are the same.
-    /// @dev state diff:   [20bytes address][32bytes key][32bytes derived key][8bytes enum index][32bytes initial value][32bytes final value]
     /// @dev The compression format:
     ///     - 4 bytes: number of initial storage changes
     ///     - N bytes: initial storage changes
@@ -89,29 +101,29 @@ contract Compressor is ICompressor, ISystemContract {
     ) external payable onlyCallFrom(address(L1_MESSENGER_CONTRACT)) returns (bytes32 stateDiffHash) {
         uint256 numberOfInitialWrites = uint256(_compressedStateDiffs.readUint32(0));
         // Save two pointers for initial and repeated storage diffs.
-        uint256 compInitialStateDiffPtr = 4;
-        uint256 compRepeatedStateDiffPtr = 4 + numberOfInitialWrites * 64;
+        uint256 compInitialStateDiffPtr = INITIAL_WRITE_STARTING_POSITION;
+        uint256 compRepeatedStateDiffPtr = compInitialStateDiffPtr + numberOfInitialWrites * COMPRESSED_INITIAL_WRITE_SIZE;
 
         for (uint256 i = 0; i < _numberOfStateDiffs * STATE_DIFF_ENTRY_SIZE; i += STATE_DIFF_ENTRY_SIZE) {
             bytes calldata stateDiff = _stateDiffs[i:i + STATE_DIFF_ENTRY_SIZE];
-            uint64 enumIndex = stateDiff.readUint64(84);
-            bytes32 finalValue = stateDiff.readBytes32(124);
+            uint64 enumIndex = stateDiff.readUint64(STATE_DIFF_ENUM_INDEX_OFFSET);
+            bytes32 finalValue = stateDiff.readBytes32(STATE_DIFF_FINAL_VALUE_OFFSET);
 
             if (enumIndex == 0) {
-                bytes32 derivedKey = stateDiff.readBytes32(52);
+                bytes32 derivedKey = stateDiff.readBytes32(STATE_DIFF_DERIVED_KEY_OFFSET);
                 require(derivedKey == _compressedStateDiffs.readBytes32(compInitialStateDiffPtr), "iw: initial key mismatch");
-                compInitialStateDiffPtr += 32;
+                compInitialStateDiffPtr += DERIVED_KEY_LENGTH;
                 require(finalValue == _compressedStateDiffs.readBytes32(compInitialStateDiffPtr), "iw: final value mismatch");
-                compInitialStateDiffPtr += 32;
+                compInitialStateDiffPtr += VALUE_LENGTH;
             } else {
                 require(enumIndex == _compressedStateDiffs.readUint64(compRepeatedStateDiffPtr), "rw: enum key mismatch");
-                compRepeatedStateDiffPtr += 8;
+                compRepeatedStateDiffPtr += ENUM_INDEX_LENGTH;
                 require(finalValue == _compressedStateDiffs.readBytes32(compRepeatedStateDiffPtr), "rw: final value mismatch");
-                compRepeatedStateDiffPtr += 32;
+                compRepeatedStateDiffPtr += VALUE_LENGTH;
             }
         }
 
-        require(compInitialStateDiffPtr == 4 + numberOfInitialWrites * 64, "Incorrect number of initial storage diffs");
+        require(compInitialStateDiffPtr == INITIAL_WRITE_STARTING_POSITION + numberOfInitialWrites * COMPRESSED_INITIAL_WRITE_SIZE, "Incorrect number of initial storage diffs");
         require(compRepeatedStateDiffPtr == _compressedStateDiffs.length, "Extra data in _compressedStateDiffs");
 
         stateDiffHash = EfficientCall.keccak(_stateDiffs);

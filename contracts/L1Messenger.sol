@@ -2,11 +2,20 @@
 
 pragma solidity ^0.8.0;
 
-import "./interfaces/IL1Messenger.sol";
-import "./interfaces/ISystemContract.sol";
-import "./libraries/SystemContractHelper.sol";
-import "./libraries/EfficientCall.sol";
-import {SYSTEM_CONTEXT_CONTRACT, KNOWN_CODE_STORAGE_CONTRACT, COMPRESSOR_CONTRACT, STATE_DIFF_ENTRY_SIZE, SystemLogKey, MAX_ALLOWED_PUBDATA_PER_BATCH, L2_TO_L1_LOGS_MERKLE_TREE_LEAVES} from "./Constants.sol";
+import {IL1Messenger, L2ToL1Log, L2_L1_LOGS_TREE_DEFAULT_LEAF_HASH, L2_TO_L1_LOG_SERIALIZE_SIZE} from "./interfaces/IL1Messenger.sol";
+import {ISystemContract} from "./interfaces/ISystemContract.sol";
+import {SystemContractHelper} from "./libraries/SystemContractHelper.sol";
+import {EfficientCall} from "./libraries/EfficientCall.sol";
+import {Utils} from "./libraries/Utils.sol";
+import {
+    SystemLogKey,
+    SYSTEM_CONTEXT_CONTRACT,
+    KNOWN_CODE_STORAGE_CONTRACT,
+    COMPRESSOR_CONTRACT,
+    STATE_DIFF_ENTRY_SIZE,
+    MAX_ALLOWED_PUBDATA_PER_BATCH,
+    L2_TO_L1_LOGS_MERKLE_TREE_LEAVES
+} from "./Constants.sol";
 
 /**
  * @author Matter Labs
@@ -147,13 +156,6 @@ contract L1Messenger is IL1Messenger, ISystemContract {
             keccakGasCost(64) +
             gasSpentOnMessageHashing;
         SystemContractHelper.burnGas(Utils.safeCastToU32(gasToPay));
-        // Call precompile to burn gas to cover the cost of publishing pubdata to L1.
-        uint256 precompileParams = SystemContractHelper.packPrecompileParams(0, 0, 0, 0, 0);
-        bool precompileCallSuccess = SystemContractHelper.precompileCall(
-            precompileParams,
-            Utils.safeCastToU32(gasToPay)
-        );
-        require(precompileCallSuccess, "Failed to burn gas");
 
         emit L1MessageSent(msg.sender, hash, _message);
     }
@@ -223,7 +225,7 @@ contract L1Messenger is IL1Messenger, ISystemContract {
         uint256 nodesOnCurrentLevel = L2_TO_L1_LOGS_MERKLE_TREE_LEAVES;
         while (nodesOnCurrentLevel > 1) {
             nodesOnCurrentLevel /= 2;
-            for (uint i = 0; i < nodesOnCurrentLevel; ++i) {
+            for (uint256 i = 0; i < nodesOnCurrentLevel; ++i) {
                 l2ToL1LogsTreeArray[i] = keccak256(
                     abi.encode(l2ToL1LogsTreeArray[2 * i], l2ToL1LogsTreeArray[2 * i + 1])
                 );
@@ -281,7 +283,7 @@ contract L1Messenger is IL1Messenger, ISystemContract {
         uint32 compressedStateDiffSize = uint32(bytes4(_totalL2ToL1PubdataAndStateDiffs[calldataPtr:calldataPtr + 4]));
         calldataPtr += 4;
 
-        bytes calldata compressedRepeatedStateDiffs = _totalL2ToL1PubdataAndStateDiffs[calldataPtr:calldataPtr +
+        bytes calldata compressedStateDiffs = _totalL2ToL1PubdataAndStateDiffs[calldataPtr:calldataPtr +
             compressedStateDiffSize];
         calldataPtr += compressedStateDiffSize;
 
@@ -299,7 +301,7 @@ contract L1Messenger is IL1Messenger, ISystemContract {
         bytes32 stateDiffHash = COMPRESSOR_CONTRACT.verifyCompressedStateDiffs(
             numberOfStateDiffs,
             stateDiffs,
-            compressedRepeatedStateDiffs
+            compressedStateDiffs
         );
 
         /// Check for calldata strict format
