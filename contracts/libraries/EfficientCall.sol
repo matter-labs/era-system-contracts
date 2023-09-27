@@ -8,6 +8,7 @@ import {SHA256_SYSTEM_CONTRACT, KECCAK256_SYSTEM_CONTRACT, MSG_VALUE_SYSTEM_CONT
 
 /**
  * @author Matter Labs
+ * @custom:security-contact security@matterlabs.dev
  * @notice This library is used to perform ultra-efficient calls using zkEVM-specific features.
  * @dev EVM calls always accept a memory slice as input and return a memory slice as output.
  * Therefore, even if the user has a ready-made calldata slice, they still need to copy it to memory

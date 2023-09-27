@@ -23,6 +23,7 @@ import {
 
 /**
  * @author Matter Labs
+ * @custom:security-contact security@matterlabs.dev
  * @notice Contract with code pertaining to compression for zkEVM; at the moment this is used for bytecode compression
  * and state diff compression validation.
  * @dev Every deployed bytecode/published state diffs in zkEVM should be publicly restorable from the L1 data availability.

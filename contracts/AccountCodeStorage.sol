@@ -8,6 +8,7 @@ import {DEPLOYER_SYSTEM_CONTRACT, NONCE_HOLDER_SYSTEM_CONTRACT, CURRENT_MAX_PREC
 
 /**
  * @author Matter Labs
+ * @custom:security-contact security@matterlabs.dev
  * @notice The storage of this contract serves as a mapping for the code hashes of the 32-byte account addresses.
  * @dev Code hash is not strictly a hash, it's a structure where the first byte denotes the version of the hash,
  * the second byte denotes whether the contract is constructed, and the next two bytes denote the length in 32-byte words.

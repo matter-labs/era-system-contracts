@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 
 /**
  * @author Matter Labs
+ * @custom:security-contact security@matterlabs.dev
  * @dev The library provides a set of functions that help read data from calldata bytes.
  * @dev Each of the functions accepts the `bytes calldata` and the offset where data should be read and returns a value of a certain type.
  *

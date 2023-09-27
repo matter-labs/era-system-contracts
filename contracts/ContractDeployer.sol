@@ -13,6 +13,7 @@ import {ISystemContract} from "./interfaces/ISystemContract.sol";
 
 /**
  * @author Matter Labs
+ * @custom:security-contact security@matterlabs.dev
  * @notice System smart contract that is responsible for deploying other smart contracts on zkSync.
  * @dev The contract is responsible for generating the address of the deployed smart contract,
  * incrementing the deployment nonce and making sure that the constructor is never called twice in a contract.

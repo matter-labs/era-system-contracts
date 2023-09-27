@@ -58,6 +58,7 @@ enum Global {
 
 /**
  * @author Matter Labs
+ * @custom:security-contact security@matterlabs.dev
  * @notice Library used for accessing zkEVM-specific opcodes, needed for the development
  * of system contracts.
  * @dev While this library will be eventually available to public, some of the provided

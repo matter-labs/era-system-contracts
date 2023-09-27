@@ -9,6 +9,7 @@ import {IMailbox} from "./interfaces/IMailbox.sol";
 
 /**
  * @author Matter Labs
+ * @custom:security-contact security@matterlabs.dev
  * @notice Native ETH contract.
  * @dev It does NOT provide interfaces for personal interaction with tokens like `transfer`, `approve`, and `transferFrom`.
  * Instead, this contract is used by the bootloader and `MsgValueSimulator`/`ContractDeployer` system contracts
