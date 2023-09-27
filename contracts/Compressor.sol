@@ -118,6 +118,7 @@ contract Compressor is ICompressor, ISystemContract {
 
         // Process initial writes
         for (uint256 i = 0; i < _numberOfStateDiffs * STATE_DIFF_ENTRY_SIZE; i += STATE_DIFF_ENTRY_SIZE) {
+            bytes calldata stateDiff = _stateDiffs[i:i + STATE_DIFF_ENTRY_SIZE];
             uint64 enumIndex = stateDiff.readUint64(84);
             if (enumIndex != 0) {
                 // It is a repeated write, so we skip it.
@@ -126,7 +127,6 @@ contract Compressor is ICompressor, ISystemContract {
 
             numInitialWritesProcessed++;
 
-            bytes calldata stateDiff = _stateDiffs[i:i + STATE_DIFF_ENTRY_SIZE];
             bytes32 derivedKey = stateDiff.readBytes32(52);
             uint256 initValue = stateDiff.readUint256(92);
             uint256 finalValue = stateDiff.readUint256(124);
@@ -150,12 +150,12 @@ contract Compressor is ICompressor, ISystemContract {
 
         // Process repeated writes
         for (uint256 i = 0; i < _numberOfStateDiffs * STATE_DIFF_ENTRY_SIZE; i += STATE_DIFF_ENTRY_SIZE) {
+            bytes calldata stateDiff = _stateDiffs[i:i + STATE_DIFF_ENTRY_SIZE];
             uint64 enumIndex = stateDiff.readUint64(84);
             if (enumIndex == 0) {
                 continue;
             }
 
-            bytes calldata stateDiff = _stateDiffs[i:i + STATE_DIFF_ENTRY_SIZE];
             uint256 initValue = stateDiff.readUint256(92);
             uint256 finalValue = stateDiff.readUint256(124);
             uint256 compressedEnumIndex = _sliceToUint256(_compressedStateDiffs[stateDiffPtr:stateDiffPtr + _enumerationIndexSize]);
