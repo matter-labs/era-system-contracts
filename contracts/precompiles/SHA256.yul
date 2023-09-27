@@ -1,5 +1,6 @@
 /**
  * @author Matter Labs
+ * @custom:security-contact security@matterlabs.dev
  * @notice The contract used to emulate EVM's sha256 precompile.
  * @dev It accepts the data to be hashed, pad it by the specification 
  * and uses `precompileCall` to call the zkEVM built-in precompiles.

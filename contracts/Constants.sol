@@ -2,17 +2,17 @@
 
 pragma solidity ^0.8.0;
 
-import "./interfaces/IAccountCodeStorage.sol";
-import "./interfaces/INonceHolder.sol";
-import "./interfaces/IContractDeployer.sol";
-import "./interfaces/IKnownCodesStorage.sol";
-import "./interfaces/IImmutableSimulator.sol";
-import "./interfaces/IEthToken.sol";
-import "./interfaces/IL1Messenger.sol";
-import "./interfaces/ISystemContext.sol";
-import "./interfaces/ICompressor.sol";
-import "./interfaces/IComplexUpgrader.sol";
-import "./BootloaderUtilities.sol";
+import {IAccountCodeStorage}  from "./interfaces/IAccountCodeStorage.sol";
+import {INonceHolder} from "./interfaces/INonceHolder.sol";
+import {IContractDeployer} from "./interfaces/IContractDeployer.sol";
+import {IKnownCodesStorage} from "./interfaces/IKnownCodesStorage.sol";
+import {IImmutableSimulator} from "./interfaces/IImmutableSimulator.sol";
+import {IEthToken} from "./interfaces/IEthToken.sol";
+import {IL1Messenger} from "./interfaces/IL1Messenger.sol";
+import {ISystemContext} from "./interfaces/ISystemContext.sol";
+import {ICompressor} from "./interfaces/ICompressor.sol";
+import {IComplexUpgrader} from "./interfaces/IComplexUpgrader.sol";
+import {IBootloaderUtilities} from "./interfaces/IBootloaderUtilities.sol";
 
 /// @dev All the system contracts introduced by zkSync have their addresses
 /// started from 2^15 in order to avoid collision with Ethereum precompiles.
@@ -55,7 +55,7 @@ address constant KECCAK256_SYSTEM_CONTRACT = address(SYSTEM_CONTRACTS_OFFSET + 0
 
 ISystemContext constant SYSTEM_CONTEXT_CONTRACT = ISystemContext(payable(address(SYSTEM_CONTRACTS_OFFSET + 0x0b)));
 
-BootloaderUtilities constant BOOTLOADER_UTILITIES = BootloaderUtilities(address(SYSTEM_CONTRACTS_OFFSET + 0x0c));
+IBootloaderUtilities constant BOOTLOADER_UTILITIES = IBootloaderUtilities(address(SYSTEM_CONTRACTS_OFFSET + 0x0c));
 
 address constant EVENT_WRITER_CONTRACT = address(SYSTEM_CONTRACTS_OFFSET + 0x0d);
 
@@ -91,5 +91,33 @@ enum SystemLogKey {
     PREV_BATCH_HASH_KEY,
     CHAINED_PRIORITY_TXN_HASH_KEY,
     NUMBER_OF_LAYER_1_TXS_KEY,
-    EXPECTED_SYSTEM_CONTRACT_UPGRADE_TX_HASH
+    EXPECTED_SYSTEM_CONTRACT_UPGRADE_TX_HASH_KEY
 }
+
+/// @dev The number of leaves in the L2->L1 log Merkle tree. 
+/// While formally a tree of any length is acceptable, the node supports only a constant length of 2048 leaves.
+uint256 constant L2_TO_L1_LOGS_MERKLE_TREE_LEAVES = 2048;
+
+/// @dev The length of the derived key in bytes inside compressed state diffs.
+uint256 constant DERIVED_KEY_LENGTH = 32;
+/// @dev The length of the enum index in bytes inside compressed state diffs.
+uint256 constant ENUM_INDEX_LENGTH = 8;
+/// @dev The length of value in bytes inside compressed state diffs.
+uint256 constant VALUE_LENGTH = 32;
+
+/// @dev The length of the compressed initial storage write in bytes.
+uint256 constant COMPRESSED_INITIAL_WRITE_SIZE = DERIVED_KEY_LENGTH + VALUE_LENGTH;
+/// @dev The length of the compressed repeated storage write in bytes.
+uint256 constant COMPRESSED_REPEATED_WRITE_SIZE = ENUM_INDEX_LENGTH + VALUE_LENGTH;
+
+/// @dev The position from which the initial writes start in the compressed state diffs.
+uint256 constant INITIAL_WRITE_STARTING_POSITION = 4;
+
+/// @dev Each storage diffs consists of the following elements:
+/// [20bytes address][32bytes key][32bytes derived key][8bytes enum index][32bytes initial value][32bytes final value]
+/// @dev The offset of the deriived key in a storage diff.
+uint256 constant STATE_DIFF_DERIVED_KEY_OFFSET = 52;
+/// @dev The offset of the enum index in a storage diff.
+uint256 constant STATE_DIFF_ENUM_INDEX_OFFSET = 84;
+/// @dev The offset of the final value in a storage diff.
+uint256 constant STATE_DIFF_FINAL_VALUE_OFFSET = 124;

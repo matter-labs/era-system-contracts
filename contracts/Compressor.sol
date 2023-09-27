@@ -2,14 +2,28 @@
 
 pragma solidity ^0.8.0;
 
-import "./interfaces/ICompressor.sol";
-import "./interfaces/ISystemContract.sol";
-import "./Constants.sol";
-import "./libraries/Utils.sol";
-import "./libraries/UnsafeBytesCalldata.sol";
+import {ICompressor} from "./interfaces/ICompressor.sol";
+import {ISystemContract} from "./interfaces/ISystemContract.sol";
+import {Utils} from "./libraries/Utils.sol";
+import {UnsafeBytesCalldata} from "./libraries/UnsafeBytesCalldata.sol";
+import {EfficientCall} from "./libraries/EfficientCall.sol";
+import {
+    L1_MESSENGER_CONTRACT,
+    INITIAL_WRITE_STARTING_POSITION,
+    COMPRESSED_INITIAL_WRITE_SIZE,
+    STATE_DIFF_ENTRY_SIZE,
+    STATE_DIFF_ENUM_INDEX_OFFSET,
+    STATE_DIFF_FINAL_VALUE_OFFSET,
+    STATE_DIFF_DERIVED_KEY_OFFSET,
+    DERIVED_KEY_LENGTH,
+    VALUE_LENGTH,
+    ENUM_INDEX_LENGTH,
+    KNOWN_CODE_STORAGE_CONTRACT
+} from "./Constants.sol";
 
 /**
  * @author Matter Labs
+ * @custom:security-contact security@matterlabs.dev
  * @notice Contract with code pertaining to compression for zkEVM; at the moment this is used for bytecode compression
  * and state diff compression validation.
  * @dev Every deployed bytecode/published state diffs in zkEVM should be publicly restorable from the L1 data availability.

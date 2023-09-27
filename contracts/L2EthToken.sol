@@ -5,11 +5,11 @@ pragma solidity ^0.8.0;
 import {IEthToken} from "./interfaces/IEthToken.sol";
 import {ISystemContract} from "./interfaces/ISystemContract.sol";
 import {MSG_VALUE_SYSTEM_CONTRACT, DEPLOYER_SYSTEM_CONTRACT, BOOTLOADER_FORMAL_ADDRESS, L1_MESSENGER_CONTRACT} from "./Constants.sol";
-import {SystemContractHelper} from "./libraries/SystemContractHelper.sol";
 import {IMailbox} from "./interfaces/IMailbox.sol";
 
 /**
  * @author Matter Labs
+ * @custom:security-contact security@matterlabs.dev
  * @notice Native ETH contract.
  * @dev It does NOT provide interfaces for personal interaction with tokens like `transfer`, `approve`, and `transferFrom`.
  * Instead, this contract is used by the bootloader and `MsgValueSimulator`/`ContractDeployer` system contracts
@@ -17,7 +17,7 @@ import {IMailbox} from "./interfaces/IMailbox.sol";
  */
 contract L2EthToken is IEthToken, ISystemContract {
     /// @notice The balances of the users.
-    mapping(address => uint256) balance;
+    mapping(address => uint256) internal balance;
 
     /// @notice The total amount of tokens that have been minted.
     uint256 public override totalSupply;

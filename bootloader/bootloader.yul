@@ -9,7 +9,12 @@ object "Bootloader" {
 
             // While we definitely cannot control the gas price on L1,
             // we need to check the operator does not provide any absurd numbers there
-            function MAX_ALLOWED_GAS_PRICE() -> ret {
+            function MAX_ALLOWED_L1_GAS_PRICE() -> ret {
+                // 100k gwei
+                ret := 100000000000000
+            }
+
+            function MAX_ALLOWED_FAIR_L2_GAS_PRICE() -> ret {
                 // 10k gwei
                 ret := 10000000000000
             }
@@ -17,11 +22,11 @@ object "Bootloader" {
             /// @dev This method ensures that the prices provided by the operator
             /// are not absurdly high
             function validateOperatorProvidedPrices(l1GasPrice, fairL2GasPrice) {
-                if gt(l1GasPrice, MAX_ALLOWED_GAS_PRICE()) {
+                if gt(l1GasPrice, MAX_ALLOWED_L1_GAS_PRICE()) {
                     assertionError("L1 gas price too high")
                 }
 
-                if gt(fairL2GasPrice, MAX_ALLOWED_GAS_PRICE()) {
+                if gt(fairL2GasPrice, MAX_ALLOWED_FAIR_L2_GAS_PRICE()) {
                     assertionError("L2 fair gas price too high")
                 }
             }
@@ -558,7 +563,7 @@ object "Bootloader" {
                 // We set the L2 block info for this particular transaction
                 setL2Block(transactionIndex)
 
-                let innerTxDataOffset := add(txDataOffset, 0x20)
+                let innerTxDataOffset := add(txDataOffset, 32)
 
                 // By default we assume that the transaction has failed.
                 mstore(resultPtr, 0)
@@ -632,45 +637,15 @@ object "Bootloader" {
                     }
             }
 
-            /// @dev Checks whether the code hash of the system context contract is correct and updates it if needed.
-            /// @dev The bootloader implementation strictly relies of the ability of the system context contract to work with the 
-            /// L2 blocks. However, the old system context did not support the correspodning interface at all. Usually we upgrade system context
-            /// via an upgrade transaction, but in this case the transaction won't be even processed, because of failure to create an L2 block.
-            function upgradeSystemContextIfNeeded() {
-                let expectedCodeHash := {{SYSTEM_CONTEXT_EXPECTED_CODE_HASH}}
-                
-                let actualCodeHash := extcodehash(SYSTEM_CONTEXT_ADDR())
-                if iszero(eq(expectedCodeHash, actualCodeHash)) {
-                    // Preparing the calldata to upgrade the SystemContext contract
-                    {{UPGRADE_SYSTEM_CONTEXT_CALLDATA}}
-                    
-                    // We'll use a mimicCall to simulate the correct sender.
-                    let success := mimicCallOnlyResult(
-                        CONTRACT_DEPLOYER_ADDR(),
-                        FORCE_DEPLOYER(), 
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0
-                    )
-
-                    if iszero(success) {
-                        assertionError("system context upgrade fail")
-                    }
-                }
-            }
-
             /// @dev Calculates the canonical hash of the L1->L2 transaction that will be
             /// sent to L1 as a message to the L1 contract that a certain operation has been processed.
             function getCanonicalL1TxHash(txDataOffset) -> ret {
                 // Putting the correct value at the `txDataOffset` just in case, since 
                 // the correctness of this value is not part of the system invariants.
                 // Note, that the correct ABI encoding of the Transaction structure starts with 0x20
-                mstore(txDataOffset, 0x20)
+                mstore(txDataOffset, 32)
 
-                let innerTxDataOffset := add(txDataOffset, 0x20)
+                let innerTxDataOffset := add(txDataOffset, 32)
                 let dataLength := safeAdd(32, getDataLength(innerTxDataOffset), "qev")
 
                 debugLog("HASH_OFFSET", innerTxDataOffset)
@@ -685,7 +660,7 @@ object "Bootloader" {
             /// The operator will be paid at the end of the batch.
             function ensurePayment(txDataOffset, gasPrice) {
                 // Skipping the first 0x20 byte in the encoding of the transaction.
-                let innerTxDataOffset := add(txDataOffset, 0x20)
+                let innerTxDataOffset := add(txDataOffset, 32)
                 let from := getFrom(innerTxDataOffset)
                 let requiredETH := safeMul(getGasLimit(innerTxDataOffset), gasPrice, "lal")
 
@@ -804,7 +779,7 @@ object "Bootloader" {
                 // 0x20 || context_len || context_bytes...
                 let returnlen := returndatasize()
                 // The minimal allowed returndatasize is 64: magicValue || offset
-                if lt(returnlen, 0x40) {
+                if lt(returnlen, 64) {
                     revertWithReason(
                         PAYMASTER_RETURNED_INVALID_CONTEXT(),
                         0
@@ -816,7 +791,7 @@ object "Bootloader" {
                 // but it is so in fee estimation and we want to preserve as many operations as 
                 // in the original operation.
                 {
-                    returndatacopy(0, 0, 0x20)
+                    returndatacopy(0, 0, 32)
                     let magic := mload(0)
 
                     let isMagicCorrect := eq(magic, {{SUCCESSFUL_PAYMASTER_VALIDATION_MAGIC_VALUE}})
@@ -873,14 +848,14 @@ object "Bootloader" {
                     )
                 }
 
-                if gt(add(returnedContextOffset, add(0x20, returnedContextLen)), returnlen) {
+                if gt(add(returnedContextOffset, add(32, returnedContextLen)), returnlen) {
                     revertWithReason(
                         PAYMASTER_RETURNED_INVALID_CONTEXT(),
                         0
                     )
                 }
 
-                returndatacopy(PAYMASTER_CONTEXT_BEGIN_BYTE(), returnedContextOffset, add(0x20, returnedContextLen))
+                returndatacopy(PAYMASTER_CONTEXT_BEGIN_BYTE(), returnedContextOffset, add(32, returnedContextLen))
             }
 
             /// @dev The function responsible for processing L1->L2 transactions.
@@ -903,7 +878,7 @@ object "Bootloader" {
                 setPricePerPubdataByte(gasPerPubdata)
 
                 // Skipping the first formal 0x20 byte
-                let innerTxDataOffset := add(txDataOffset, 0x20) 
+                let innerTxDataOffset := add(txDataOffset, 32)
 
                 let gasLimitForTx, reservedGas := getGasLimitForTx(
                     innerTxDataOffset, 
@@ -994,13 +969,13 @@ object "Bootloader" {
 
                 // Sending the L2->L1 log so users will be able to prove transaction execution result on L1.
                 sendL2LogUsingL1Messenger(true, canonicalL1TxHash, success)
-                 
+
                 if isPriorityOp {
                     // Update priority txs L1 data
-                    mstore(0x00, mload(PRIORITY_TXS_L1_DATA_BEGIN_BYTE()))
-                    mstore(0x20, canonicalL1TxHash)
-                    mstore(PRIORITY_TXS_L1_DATA_BEGIN_BYTE(), keccak256(0x00, 0x40))
-                    mstore(add(PRIORITY_TXS_L1_DATA_BEGIN_BYTE(), 0x20), add(mload(add(PRIORITY_TXS_L1_DATA_BEGIN_BYTE(), 0x20)), 1))
+                    mstore(0, mload(PRIORITY_TXS_L1_DATA_BEGIN_BYTE()))
+                    mstore(32, canonicalL1TxHash)
+                    mstore(PRIORITY_TXS_L1_DATA_BEGIN_BYTE(), keccak256(0, 64))
+                    mstore(add(PRIORITY_TXS_L1_DATA_BEGIN_BYTE(), 32), add(mload(add(PRIORITY_TXS_L1_DATA_BEGIN_BYTE(), 32)), 1))
                 }   
             }
 
@@ -1031,7 +1006,7 @@ object "Bootloader" {
             /// @return canonicalL1TxHash The hash of processed L1->L2 transaction
             /// @return gasUsedOnPreparation The number of L2 gas used in the preparation stage
             function l1TxPreparation(txDataOffset) -> canonicalL1TxHash, gasUsedOnPreparation {
-                let innerTxDataOffset := add(txDataOffset, 0x20)
+                let innerTxDataOffset := add(txDataOffset, 32)
                 
                 let gasBeforePreparation := gas()
                 debugLog("gasBeforePreparation", gasBeforePreparation)
@@ -1176,7 +1151,7 @@ object "Bootloader" {
                     totalGasLimit := operatorTrustedGasLimit
                 }
 
-                let txEncodingLen := safeAdd(0x20, getDataLength(innerTxDataOffset), "lsh")
+                let txEncodingLen := safeAdd(32, getDataLength(innerTxDataOffset), "lsh")
 
                 let operatorOverheadForTransaction := getVerifiedOperatorOverheadForTx(
                     transactionIndex,
@@ -1323,7 +1298,7 @@ object "Bootloader" {
                 setGasPrice(gasPrice)
                 
                 // Skipping the first 0x20 word of the ABI-encoding
-                let innerTxDataOffset := add(txDataOffset, 0x20)
+                let innerTxDataOffset := add(txDataOffset, 32)
                 debugLog("Starting validation", 0)
 
                 accountValidateTx(txDataOffset)
@@ -1344,7 +1319,7 @@ object "Bootloader" {
                 txDataOffset
             ) -> success {
                 // Skipping the first word of the ABI-encoding encoding
-                let innerTxDataOffset := add(txDataOffset, 0x20)
+                let innerTxDataOffset := add(txDataOffset, 32)
                 let from := getFrom(innerTxDataOffset)
 
                 debugLog("Executing L2 tx", 0)
@@ -1440,7 +1415,7 @@ object "Bootloader" {
 
                 finalRefund := 0
 
-                let innerTxDataOffset := add(txDataOffset, 0x20)
+                let innerTxDataOffset := add(txDataOffset, 32)
 
                 let paymaster := getPaymaster(innerTxDataOffset)
                 let refundRecipient := 0
@@ -1461,7 +1436,9 @@ object "Bootloader" {
                             paymaster,
                             txDataOffset,
                             success,
-                            gasLeft
+                            // Since the paymaster will be refunded with reservedGas,
+                            // it should know about it
+                            safeAdd(gasLeft, reservedGas, "jkl"),
                         ))
                         let gasSpentByPostOp := sub(gasBeforePostOp, gas())
 
@@ -1662,7 +1639,7 @@ object "Bootloader" {
                 txDataOffset
             ) -> success {
                 // Skipping the first word of the ABI encoding of the struct
-                let innerTxDataOffset := add(txDataOffset, 0x20)
+                let innerTxDataOffset := add(txDataOffset, 32)
                 let from := getFrom(innerTxDataOffset)
                 let gasPrice := getMaxFeePerGas(innerTxDataOffset)
 
@@ -1734,7 +1711,7 @@ object "Bootloader" {
                 txDataOffset,
                 resultPtr
             ) {
-                let innerTxDataOffset := add(txDataOffset, 0x20)
+                let innerTxDataOffset := add(txDataOffset, 32)
                 let to := getTo(innerTxDataOffset)
                 let from := getFrom(innerTxDataOffset)
                 
@@ -1968,6 +1945,7 @@ object "Bootloader" {
                     )
                 }
 
+                // This method returns AccountAbstractVersion enum.
                 // Currently only two versions are supported: 1 or 0, which basically 
                 // mean whether the contract is an account or not.
                 if iszero(supportedVersion) {
@@ -2047,7 +2025,7 @@ object "Bootloader" {
                 mstore(add(txDataWithHashesOffset, 64), 96)
 
                 let calldataPtr := prependSelector(txDataWithHashesOffset, selector)
-                let innerTxDataOffst := add(txDataOffset, 0x20)
+                let innerTxDataOffst := add(txDataOffset, 32)
 
                 let len := getDataLength(innerTxDataOffst)
 
@@ -2071,7 +2049,7 @@ object "Bootloader" {
             /// @dev Calculates and saves the explorer hash and the suggested signed hash for the transaction.
             function saveTxHashes(txDataOffset) {
                 let calldataPtr := prependSelector(txDataOffset, {{GET_TX_HASHES_SELECTOR}})
-                let innerTxDataOffst := add(txDataOffset, 0x20)
+                let innerTxDataOffst := add(txDataOffset, 32)
 
                 let len := getDataLength(innerTxDataOffst)
 
@@ -2136,7 +2114,7 @@ object "Bootloader" {
                 // The length of selector + the first 7 fields (with context len) + context itself.
                 let preTxLen := add(228, paddedContextLen)
 
-                let innerTxDataOffset := add(txDataOffset, 0x20)
+                let innerTxDataOffset := add(txDataOffset, 32)
                 let calldataPtr := sub(innerTxDataOffset, preTxLen)
 
                 {
@@ -2220,7 +2198,7 @@ object "Bootloader" {
             /// this method also enforces that the nonce has been marked as used.
             function accountValidateTx(txDataOffset) {
                 // Skipping the first 0x20 word of the ABI-encoding of the struct
-                let innerTxDataOffst := add(txDataOffset, 0x20)
+                let innerTxDataOffst := add(txDataOffset, 32)
                 let from := getFrom(innerTxDataOffst)
                 ensureAccount(from)
 
@@ -2266,7 +2244,7 @@ object "Bootloader" {
                 // `SHOULD_ENSURE_CORRECT_RETURNED_MAGIC` is false. It is never false in production
                 // but it is so in fee estimation and we want to preserve as many operations as 
                 // in the original operation.
-                returndatacopy(0, 0, 0x20)
+                returndatacopy(0, 0, 32)
                 let returnedValue := mload(0)
                 let isMagicCorrect := eq(returnedValue, {{SUCCESSFUL_ACCOUNT_VALIDATION_MAGIC_VALUE}})
 
@@ -2397,7 +2375,7 @@ object "Bootloader" {
                 isConstructorCall,
                 isSystemCall
             ) -> ret {
-                let dataStart := add(dataPtr, 0x20)
+                let dataStart := add(dataPtr, 32)
                 let dataLength := mload(dataPtr)
 
                 // Skip dataOffset and memoryPage, because they are always zeros
@@ -2500,7 +2478,7 @@ object "Bootloader" {
                 // First slot (only last 4 bytes) -- selector
                 mstore(ptr, {{PUBLISH_PUBDATA_SELECTOR}})
                 // Second slot -- offset
-                mstore(add(ptr, 32), 0x20)
+                mstore(add(ptr, 32), 32)
                 setHook(VM_HOOK_PUBDATA_REQUESTED())
                 // Third slot -- length of pubdata
                 let len := mload(add(ptr, 64))
@@ -2858,13 +2836,20 @@ object "Bootloader" {
                 if gt(reservedDynamicLength, 0) {
                     assertionError("non-empty reservedDynamic")
                 }
-
                 let txType := getTxType(innerTxDataOffset)
                 switch txType
                     case 0 {
                         let maxFeePerGas := getMaxFeePerGas(innerTxDataOffset)
                         let maxPriorityFeePerGas := getMaxPriorityFeePerGas(innerTxDataOffset)
                         assertEq(maxFeePerGas, maxPriorityFeePerGas, "EIP1559 params wrong")
+
+                        <!-- @if BOOTLOADER_TYPE!='playground_batch' -->
+
+                        let from := getFrom(innerTxDataOffset)
+                        let iseoa := isEOA(from)
+                        assertEq(iseoa, true, "Only EIP-712 can use non-EOA")
+
+                        <!-- @endif -->
                         
                         // Here, for type 0 transactions the reserved0 field is used as a marker  
                         // whether the transaction should include chainId in its encoding.
@@ -2885,7 +2870,15 @@ object "Bootloader" {
                         let maxFeePerGas := getMaxFeePerGas(innerTxDataOffset)
                         let maxPriorityFeePerGas := getMaxPriorityFeePerGas(innerTxDataOffset)
                         assertEq(maxFeePerGas, maxPriorityFeePerGas, "EIP1559 params wrong")
+                        
+                        <!-- @if BOOTLOADER_TYPE!='playground_batch' -->
 
+                        let from := getFrom(innerTxDataOffset)
+                        let iseoa := isEOA(from)
+                        assertEq(iseoa, true, "Only EIP-712 can use non-EOA")
+
+                        <!-- @endif -->
+                        
                         assertEq(lte(getGasPerPubdataByteLimit(innerTxDataOffset), MAX_L2_GAS_PER_PUBDATA()), 1, "Gas per pubdata is wrong")
                         assertEq(getPaymaster(innerTxDataOffset), 0, "paymaster non zero")
 
@@ -2904,7 +2897,15 @@ object "Bootloader" {
                         assertEq(lte(getGasPerPubdataByteLimit(innerTxDataOffset), MAX_L2_GAS_PER_PUBDATA()), 1, "Gas per pubdata is wrong")
                         assertEq(getPaymaster(innerTxDataOffset), 0, "paymaster non zero")
 
-                        <!-- @if BOOTLOADER_TYPE=='proved_batch' -->
+                        <!-- @if BOOTLOADER_TYPE!='playground_batch' -->
+
+                        let from := getFrom(innerTxDataOffset)
+                        let iseoa := isEOA(from)
+                        assertEq(iseoa, true, "Only EIP-712 can use non-EOA")
+
+                        <!-- @endif -->
+                        
+                        <!-- @if BOOTLOADER_TYPE=='proved_block' -->
                         assertEq(gt(getFrom(innerTxDataOffset), MAX_SYSTEM_CONTRACT_ADDR()), 1, "from in kernel space")
                         <!-- @endif -->
                         
@@ -2918,6 +2919,12 @@ object "Bootloader" {
                     case 113 {                        
                         let paymaster := getPaymaster(innerTxDataOffset)
                         assertEq(or(gt(paymaster, MAX_SYSTEM_CONTRACT_ADDR()), iszero(paymaster)), 1, "paymaster in kernel space")
+
+                        if iszero(paymaster) {
+                            // Double checking that the paymasterInput is 0 if the paymaster is 0
+                            assertEq(getPaymasterInputBytesLength(innerTxDataOffset), 0, "paymasterInput non zero")
+                        }
+
                         <!-- @if BOOTLOADER_TYPE=='proved_batch' -->
                         assertEq(gt(getFrom(innerTxDataOffset), MAX_SYSTEM_CONTRACT_ADDR()), 1, "from in kernel space")
                         <!-- @endif -->
@@ -3054,11 +3061,11 @@ object "Bootloader" {
             /// This method checks that the transaction's structure is correct
             /// and tightly packed
             function validateAbiEncoding(txDataOffset) -> ret {
-                if iszero(eq(mload(txDataOffset), 0x20)) {
+                if iszero(eq(mload(txDataOffset), 32)) {
                     assertionError("Encoding offset")
                 }
 
-                let innerTxDataOffset := add(txDataOffset, 0x20)
+                let innerTxDataOffset := add(txDataOffset, 32)
 
                 let fromValue := getFrom(innerTxDataOffset)
                 if iszero(validateAddress(fromValue)) {
@@ -3655,11 +3662,6 @@ object "Bootloader" {
 
                 validateOperatorProvidedPrices(L1_GAS_PRICE, FAIR_L2_GAS_PRICE)
 
-                // This implementation of the bootloader relies on the correct version of the SystemContext
-                // and it can not be upgraded via a standard upgrade transaction, but needs to ensure 
-                // correctness itself before any transaction is executed. 
-                upgradeSystemContextIfNeeded()
-
                 let baseFee := 0
 
                 <!-- @if BOOTLOADER_TYPE=='proved_batch' -->
@@ -3707,11 +3709,11 @@ object "Bootloader" {
 
             // At the COMPRESSED_BYTECODES_BEGIN_BYTE() the pointer to the newest bytecode to be published 
             // is stored.
-            mstore(COMPRESSED_BYTECODES_BEGIN_BYTE(), add(COMPRESSED_BYTECODES_BEGIN_BYTE(), 0x20))
+            mstore(COMPRESSED_BYTECODES_BEGIN_BYTE(), add(COMPRESSED_BYTECODES_BEGIN_BYTE(), 32))
 
             // At start storing keccak256("") as `chainedPriorityTxsHash` and 0 as `numberOfLayer1Txs`
             mstore(PRIORITY_TXS_L1_DATA_BEGIN_BYTE(), EMPTY_STRING_KECCAK())
-            mstore(add(PRIORITY_TXS_L1_DATA_BEGIN_BYTE(), 0x20), 0)
+            mstore(add(PRIORITY_TXS_L1_DATA_BEGIN_BYTE(), 32), 0)
 
             // Iterating through transaction descriptions
             let transactionIndex := 0 
@@ -3733,7 +3735,7 @@ object "Bootloader" {
                     break
                 }                
 
-                let txDataOffset := mload(add(txPtr, 0x20))
+                let txDataOffset := mload(add(txPtr, 32))
 
                 // We strongly enforce the positions of transactions
                 if iszero(eq(currentExpectedTxOffset, txDataOffset)) {
@@ -3754,7 +3756,7 @@ object "Bootloader" {
                     assertionError("currentExpectedTxOffset too high")
                 }
 
-                validateTypedTxStructure(add(txDataOffset, 0x20))
+                validateTypedTxStructure(add(txDataOffset, 32))
     
                 <!-- @if BOOTLOADER_TYPE=='proved_batch' -->
                 {
@@ -3820,7 +3822,7 @@ object "Bootloader" {
 
             // Sending system logs (to be processed on L1)
             sendToL1Native(true, chainedPriorityTxnHashLogKey(), mload(PRIORITY_TXS_L1_DATA_BEGIN_BYTE()))
-            sendToL1Native(true, numberOfLayer1TxsLogKey(), mload(add(PRIORITY_TXS_L1_DATA_BEGIN_BYTE(), 0x20)))
+            sendToL1Native(true, numberOfLayer1TxsLogKey(), mload(add(PRIORITY_TXS_L1_DATA_BEGIN_BYTE(), 32)))
             
             l1MessengerPublishingCall()
         }
