@@ -10,10 +10,12 @@
     "ethers": "^5.7.0",
     "hardhat": "^2.11.0",
     "preprocess": "^3.2.0",
-    "zksync-web3": "^0.13.0"
+    "zksync-web3": "^0.14.3"
   },
   "devDependencies": {
+    "@matterlabs/hardhat-zksync-chai-matchers": "^0.1.4",
     "@matterlabs/hardhat-zksync-solc": "^0.4.2",
+    "@nomicfoundation/hardhat-chai-matchers": "^1.0.3",
     "@nomiclabs/hardhat-ethers": "^2.0.6",
     "@typechain/ethers-v5": "^10.0.0",
     "@types/chai": "^4.3.1",
