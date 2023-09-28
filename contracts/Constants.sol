@@ -24,6 +24,8 @@ uint160 constant MAX_SYSTEM_CONTRACT_ADDRESS = 0xffff; // 2^16 - 1
 
 address constant ECRECOVER_SYSTEM_CONTRACT = address(0x01);
 address constant SHA256_SYSTEM_CONTRACT = address(0x02);
+address constant ECADD_SYSTEM_CONTRACT = address(0x06);
+address constant ECMUL_SYSTEM_CONTRACT = address(0x07);
 
 /// @dev The current maximum deployed precompile address.
 /// Note: currently only two precompiles are deployed:
