@@ -56,6 +56,20 @@ object "EcMul" {
             //                      HELPER FUNCTIONS
             // ////////////////////////////////////////////////////////////////
 
+            /// @dev Executes the `precompileCall` opcode.
+            function precompileCall(precompileParams, gasToBurn) -> ret {
+                // Compiler simulation for calling `precompileCall` opcode
+                ret := verbatim_2i_1o("precompile", precompileParams, gasToBurn)
+            }
+
+            /// @notice Burns remaining gas until revert.
+            /// @dev This function is used to burn gas in the case of a failed precompile call.
+            function burnGas() {
+                // Precompiles that do not have a circuit counterpart
+                // will burn the provided gas by calling this function.
+                precompileCall(0, gas())
+            }
+
             /// @notice Retrieves the highest half of the multiplication result.
             /// @param multiplicand The value to multiply.
             /// @param multiplier The multiplier.
@@ -367,7 +381,7 @@ object "EcMul" {
             let x := calldataload(0)
             let y := calldataload(32)
             if iszero(affinePointCoordinatesAreOnFieldOrder(x, y)) {
-                invalid()
+                burnGas()
             }
             let scalar := calldataload(64)
 
@@ -381,7 +395,7 @@ object "EcMul" {
 
             // Ensure that the point is in the curve (Y^2 = X^3 + 3).
             if iszero(affinePointIsOnCurve(m_x, m_y)) {
-                invalid()
+                burnGas()
             }
 
             if eq(scalar, 0) {
