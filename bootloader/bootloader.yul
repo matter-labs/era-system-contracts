@@ -80,12 +80,6 @@ object "Bootloader" {
                 ret := {{MAX_GAS_PER_TRANSACTION}}
             }
 
-            /// @dev The maximum number of pubdata bytes that can be published with one
-            /// L1 batch
-            function MAX_PUBDATA_PER_BATCH() -> ret {
-                ret := {{MAX_PUBDATA_PER_BATCH}}
-            }
-
             /// @dev The number of L1 gas needed to be spent for
             /// L1 byte. While a single pubdata byte costs `16` gas, 
             /// we demand at least 17 to cover up for the costs of additional
@@ -346,10 +340,11 @@ object "Bootloader" {
             }
 
             /// @dev Slots needed to store L1 Messenger pubdata.
-            /// There are 3 additional slots needed: one for L1Messengers' function signature,
-            /// one for such function input (calldata) array offset, one for length of the array
+            /// @dev Note that are many more these than the maximal pubdata in batch, since 
+            /// it needs to also accomodate uncompressed state diffs that are required for the state diff
+            /// compression verification.
             function OPERATOR_PROVIDED_L1_MESSENGER_PUBDATA_SLOTS() -> ret {
-                ret := add(ceilDiv(MAX_PUBDATA_PER_BATCH(), 32), 3)
+                ret := {{OPERATOR_PROVIDED_L1_MESSENGER_PUBDATA_SLOTS}}
             }
 
             /// @dev The slot right after the last slot of the L1 Messenger pubdata memory area.
