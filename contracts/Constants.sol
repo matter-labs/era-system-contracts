@@ -24,6 +24,8 @@ uint160 constant MAX_SYSTEM_CONTRACT_ADDRESS = 0xffff; // 2^16 - 1
 
 address constant ECRECOVER_SYSTEM_CONTRACT = address(0x01);
 address constant SHA256_SYSTEM_CONTRACT = address(0x02);
+address constant ECADD_SYSTEM_CONTRACT = address(0x06);
+address constant ECMUL_SYSTEM_CONTRACT = address(0x07);
 
 /// @dev The current maximum deployed precompile address.
 /// Note: currently only two precompiles are deployed:
@@ -80,8 +82,8 @@ bytes32 constant CREATE_PREFIX = 0x63bae3a9951d38e8a3fbb7b70909afc1200610fc5bc55
 /// @dev Each state diff consists of 156 bytes of actual data and 116 bytes of unused padding, needed for circuit efficiency.
 uint256 constant STATE_DIFF_ENTRY_SIZE = 272;
 
-/// @dev While the "real" amount of pubdata that can be sent rarely exceeds the 110k - 120k, it is better to 
-/// allow the operator to provide any reasonably large value in order to avoid unneeded constraints on the operator.  
+/// @dev While the "real" amount of pubdata that can be sent rarely exceeds the 110k - 120k, it is better to
+/// allow the operator to provide any reasonably large value in order to avoid unneeded constraints on the operator.
 uint256 constant MAX_ALLOWED_PUBDATA_PER_BATCH = 520000;
 
 enum SystemLogKey {

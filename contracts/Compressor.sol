@@ -2,7 +2,7 @@
 
 pragma solidity ^0.8.0;
 
-import {ICompressor} from "./interfaces/ICompressor.sol";
+import {ICompressor, OPERATION_BITMASK, LENGTH_BITS_OFFSET, MAX_ENUMERATION_INDEX_SIZE} from "./interfaces/ICompressor.sol";
 import {ISystemContract} from "./interfaces/ISystemContract.sol";
 import {Utils} from "./libraries/Utils.sol";
 import {UnsafeBytesCalldata} from "./libraries/UnsafeBytesCalldata.sol";
@@ -83,49 +83,113 @@ contract Compressor is ICompressor, ISystemContract {
 
     /// @notice Verifies that the compression of state diffs has been done correctly for the {_stateDiffs} param.
     /// @param _numberOfStateDiffs The number of state diffs being checked.
+    /// @param _enumerationIndexSize Number of bytes used to represent an enumeration index for repeated writes.
     /// @param _stateDiffs Encoded full state diff structs. See the first dev comment below for encoding.
     /// @param _compressedStateDiffs The compressed state diffs
     /// @dev We don't verify that the size of {_stateDiffs} is equivalent to {_numberOfStateDiffs} * STATE_DIFF_ENTRY_SIZE since that check is
     ///      done within the L1Messenger calling contract.
     /// @return stateDiffHash Hash of the encoded (uncompressed) state diffs to be committed to via system log.
-    /// @dev This check assumes that the ordering of state diffs in both {_stateDiffs} and {_compressedStateDiffs} are the same.
+    /// @dev This check assumes that the ordering of state diffs are sorted by (address, key) for the encoded state diffs and
+    ///      then the compressed are sorted the same but with all the initial writes coming before the repeated writes.
+    /// @dev state diff:   [20bytes address][32bytes key][32bytes derived key][8bytes enum index][32bytes initial value][32bytes final value]
     /// @dev The compression format:
-    ///     - 4 bytes: number of initial storage changes
-    ///     - N bytes: initial storage changes
-    ///     - M bytes: repeated storage changes
-    /// @dev initial compressed diff: [32bytes derived key][32bytes final value]
-    /// @dev repeated compressed diff: [8bytes enum index][32bytes final value]
+    ///     - 2 bytes: number of initial writes
+    ///     - N bytes initial writes
+    ///         - 32 bytes derived key
+    ///         - 1 byte metadata: 
+    ///             - first 5 bits: length in bytes of compressed value
+    ///             - last 3 bits: operation
+    ///                 - 0 -> Nothing (32 bytes)
+    ///                 - 1 -> Add
+    ///                 - 2 -> Subtract
+    ///                 - 3 -> Transform (< 32 bytes)
+    ///         - Len Bytes: Compressed Value
+    ///     - M bytes repeated writes
+    ///         - {_enumerationIndexSize} bytes for enumeration index
+    ///         - 1 byte metadata: 
+    ///             - first 5 bits: length in bytes of compressed value
+    ///             - last 3 bits: operation
+    ///                 - 0 -> Nothing (32 bytes)
+    ///                 - 1 -> Add
+    ///                 - 2 -> Subtract
+    ///                 - 3 -> Transform (< 32 bytes)
+    ///         - Len Bytes: Compressed Value
     function verifyCompressedStateDiffs(
         uint256 _numberOfStateDiffs,
+        uint256 _enumerationIndexSize,
         bytes calldata _stateDiffs,
         bytes calldata _compressedStateDiffs
     ) external payable onlyCallFrom(address(L1_MESSENGER_CONTRACT)) returns (bytes32 stateDiffHash) {
-        uint256 numberOfInitialWrites = uint256(_compressedStateDiffs.readUint32(0));
-        // Save two pointers for initial and repeated storage diffs.
-        uint256 compInitialStateDiffPtr = INITIAL_WRITE_STARTING_POSITION;
-        uint256 compRepeatedStateDiffPtr = compInitialStateDiffPtr + numberOfInitialWrites * COMPRESSED_INITIAL_WRITE_SIZE;
+        // We do not enforce the operator to use the optimal, i.e. the minimally possible _enumerationIndexSize. 
+        // We do enforce however, that the _enumerationIndexSize is not larger than 8 bytes long, which is the 
+        // maximal ever possible size for enumeration index.
+        require(_enumerationIndexSize <= MAX_ENUMERATION_INDEX_SIZE, "enumeration index size is too large");
 
+        uint256 numberOfInitialWrites = uint256(_compressedStateDiffs.readUint16(0));
+
+        uint256 stateDiffPtr = 2;
+        uint256 numInitialWritesProcessed = 0;
+
+        // Process initial writes
         for (uint256 i = 0; i < _numberOfStateDiffs * STATE_DIFF_ENTRY_SIZE; i += STATE_DIFF_ENTRY_SIZE) {
             bytes calldata stateDiff = _stateDiffs[i:i + STATE_DIFF_ENTRY_SIZE];
-            uint64 enumIndex = stateDiff.readUint64(STATE_DIFF_ENUM_INDEX_OFFSET);
-            bytes32 finalValue = stateDiff.readBytes32(STATE_DIFF_FINAL_VALUE_OFFSET);
-
-            if (enumIndex == 0) {
-                bytes32 derivedKey = stateDiff.readBytes32(STATE_DIFF_DERIVED_KEY_OFFSET);
-                require(derivedKey == _compressedStateDiffs.readBytes32(compInitialStateDiffPtr), "iw: initial key mismatch");
-                compInitialStateDiffPtr += DERIVED_KEY_LENGTH;
-                require(finalValue == _compressedStateDiffs.readBytes32(compInitialStateDiffPtr), "iw: final value mismatch");
-                compInitialStateDiffPtr += VALUE_LENGTH;
-            } else {
-                require(enumIndex == _compressedStateDiffs.readUint64(compRepeatedStateDiffPtr), "rw: enum key mismatch");
-                compRepeatedStateDiffPtr += ENUM_INDEX_LENGTH;
-                require(finalValue == _compressedStateDiffs.readBytes32(compRepeatedStateDiffPtr), "rw: final value mismatch");
-                compRepeatedStateDiffPtr += VALUE_LENGTH;
+            uint64 enumIndex = stateDiff.readUint64(84);
+            if (enumIndex != 0) {
+                // It is a repeated write, so we skip it.
+                continue;
             }
+
+            numInitialWritesProcessed++;
+
+            bytes32 derivedKey = stateDiff.readBytes32(52);
+            uint256 initValue = stateDiff.readUint256(92);
+            uint256 finalValue = stateDiff.readUint256(124);
+            require(derivedKey == _compressedStateDiffs.readBytes32(stateDiffPtr), "iw: initial key mismatch");            
+            stateDiffPtr += 32;
+
+            uint8 metadata = uint8(bytes1(_compressedStateDiffs[stateDiffPtr]));
+            stateDiffPtr++;
+            uint8 operation = metadata & OPERATION_BITMASK;
+            uint8 len = operation == 0 ? 32 : metadata >> LENGTH_BITS_OFFSET;
+            _verifyValueCompression(
+                initValue,
+                finalValue,
+                operation,
+                _compressedStateDiffs[stateDiffPtr:stateDiffPtr + len]
+            );
+            stateDiffPtr += len;
         }
 
-        require(compInitialStateDiffPtr == INITIAL_WRITE_STARTING_POSITION + numberOfInitialWrites * COMPRESSED_INITIAL_WRITE_SIZE, "Incorrect number of initial storage diffs");
-        require(compRepeatedStateDiffPtr == _compressedStateDiffs.length, "Extra data in _compressedStateDiffs");
+        require(numInitialWritesProcessed == numberOfInitialWrites, "Incorrect number of initial storage diffs");
+
+        // Process repeated writes
+        for (uint256 i = 0; i < _numberOfStateDiffs * STATE_DIFF_ENTRY_SIZE; i += STATE_DIFF_ENTRY_SIZE) {
+            bytes calldata stateDiff = _stateDiffs[i:i + STATE_DIFF_ENTRY_SIZE];
+            uint64 enumIndex = stateDiff.readUint64(84);
+            if (enumIndex == 0) {
+                continue;
+            }
+
+            uint256 initValue = stateDiff.readUint256(92);
+            uint256 finalValue = stateDiff.readUint256(124);
+            uint256 compressedEnumIndex = _sliceToUint256(_compressedStateDiffs[stateDiffPtr:stateDiffPtr + _enumerationIndexSize]);
+            require(enumIndex == compressedEnumIndex, "rw: enum key mismatch");
+            stateDiffPtr += _enumerationIndexSize;
+
+            uint8 metadata = uint8(bytes1(_compressedStateDiffs[stateDiffPtr]));
+            stateDiffPtr += 1;
+            uint8 operation = metadata & OPERATION_BITMASK;
+            uint8 len = operation == 0 ? 32 : metadata >> LENGTH_BITS_OFFSET;
+            _verifyValueCompression(
+                initValue,
+                finalValue,
+                operation,
+                _compressedStateDiffs[stateDiffPtr:stateDiffPtr + len]
+            );
+            stateDiffPtr += len;
+        }
+
+        require(stateDiffPtr == _compressedStateDiffs.length, "Extra data in _compressedStateDiffs");
 
         stateDiffHash = EfficientCall.keccak(_stateDiffs);
     }
@@ -144,5 +208,47 @@ contract Compressor is ICompressor, ISystemContract {
             dictionary = _rawCompressedData[2:2 + dictionaryLen * 8];
             encodedData = _rawCompressedData[2 + dictionaryLen * 8:];
         }
+    }
+
+    /// @notice Verify value compression was done correct given initial value, final value, operation, and compressed value
+    /// @param _initialValue Previous value of key/enumeration index.
+    /// @param _finalValue Updated value of key/enumeration index.
+    /// @param _operation The operation that was performed on value.
+    /// @param _compressedValue The slice of calldata with compressed value either representing the final 
+    /// value or difference between initial and final value. It should be of arbitrary length less than or equal to 32 bytes.
+    /// @dev It is the responsibility of the caller of this function to ensure that the `_compressedValue` has length no longer than 32 bytes.
+    /// @dev Operation id mapping:
+    /// 0 -> Nothing (32 bytes)
+    /// 1 -> Add
+    /// 2 -> Subtract
+    /// 3 -> Transform (< 32 bytes)
+    function _verifyValueCompression(
+        uint256 _initialValue,
+        uint256 _finalValue,
+        uint256 _operation,
+        bytes calldata _compressedValue
+    ) internal pure {
+        uint256 convertedValue = _sliceToUint256(_compressedValue);
+
+        unchecked {
+            if (_operation == 0 || _operation == 3) {
+                require(convertedValue == _finalValue, "transform or no compression: compressed and final mismatch");
+            } else if (_operation == 1) {
+                require(_initialValue + convertedValue == _finalValue, "add: initial plus converted not equal to final");
+            } else if (_operation == 2) {
+                require(_initialValue - convertedValue == _finalValue, "sub: initial minus converted not equal to final");
+            } else {
+                revert("unsupported operation");
+            }
+        }
+    }
+
+    /// @notice Converts a calldata slice into uint256. It is the responsibility of the caller to ensure that
+    /// the _calldataSlice has length no longer than 32 bytes
+    /// @param _calldataSlice The calldata slice to convert to uint256
+    /// @return number The uint256 representation of the calldata slice
+    function _sliceToUint256(bytes calldata _calldataSlice) internal pure returns (uint256 number) {
+        number = uint256(bytes32(_calldataSlice));
+        number >>= (256 - (_calldataSlice.length * 8));
     }
 }
