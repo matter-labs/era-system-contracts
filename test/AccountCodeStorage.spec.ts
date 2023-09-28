@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { AccountCodeStorage } from '../../typechain';
+import { AccountCodeStorage } from '../typechain';
 import { DEPLOYER_SYSTEM_CONTRACT_ADDRESS, EMPTY_STRING_KECCAK } from './shared/constants';
 import { Wallet } from 'zksync-web3';
 import { getWallets, deployContract } from './shared/utils';
@@ -8,7 +8,7 @@ import { network, ethers } from 'hardhat';
 describe('AccountCodeStorage tests', function () {
     let wallet: Wallet;
     let accountCodeStorage: AccountCodeStorage;
-    let deployerAccount: ethers.Signer
+    let deployerAccount: ethers.Signer;
 
     const CONSTRUCTING_BYTECODE_HASH = '0x0101FFFFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF';
     const CONSTRUCTED_BYTECODE_HASH = '0x0100FFFFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF';
@@ -22,7 +22,7 @@ describe('AccountCodeStorage tests', function () {
             method: 'hardhat_impersonateAccount',
             params: [DEPLOYER_SYSTEM_CONTRACT_ADDRESS]
         });
-        deployerAccount = await ethers.getSigner(DEPLOYER_SYSTEM_CONTRACT_ADDRESS)
+        deployerAccount = await ethers.getSigner(DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
     });
 
     after(async () => {
@@ -30,7 +30,7 @@ describe('AccountCodeStorage tests', function () {
             method: 'hardhat_stopImpersonatingAccount',
             params: [DEPLOYER_SYSTEM_CONTRACT_ADDRESS]
         });
-    })
+    });
 
     describe('storeAccountConstructingCodeHash', function () {
         it('non-deployer failed to call', async () => {
@@ -147,7 +147,6 @@ describe('AccountCodeStorage tests', function () {
             );
         });
 
-        // TODO: maybe mock nonce holder
         it('EOA with non-zero nonce', async () => {
             // This address at least deployed this contract
             expect(await accountCodeStorage.getCodeHash(wallet.address)).to.be.eq(EMPTY_STRING_KECCAK);
@@ -214,7 +213,6 @@ describe('AccountCodeStorage tests', function () {
         });
     });
 });
-
 
 // Utility function to unset code hash for the specified address.
 // Deployer system contract should be impersonated

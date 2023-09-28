@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { Compressor, MockKnownCodesStorageFactory } from '../../typechain';
+import { Compressor, MockKnownCodesStorageFactory } from '../typechain';
 import {
     BOOTLOADER_FORMAL_ADDRESS,
     KNOWN_CODE_STORAGE_CONTRACT_ADDRESS,
@@ -10,9 +10,8 @@ import { Wallet } from 'zksync-web3';
 import { getWallets, deployContract, getCode, loadArtifact, setCode } from './shared/utils';
 import { network, ethers } from 'hardhat';
 import * as zksync from 'zksync-web3';
-import {BigNumber, BytesLike} from 'ethers';
+import { BigNumber, BytesLike } from 'ethers';
 
-// TODO: mock l1 messanger?
 describe('Compressor tests', function () {
     let wallet: Wallet;
     let compressor: Compressor;
@@ -179,7 +178,7 @@ describe('Compressor tests', function () {
 
     describe('verifyCompressedStateDiffs', function () {
         it('non l1 messenger failed to call', async () => {
-            await expect(compressor.verifyCompressedStateDiffs(0, 8,'0x', '0x0000')).to.be.revertedWith(
+            await expect(compressor.verifyCompressedStateDiffs(0, 8, '0x', '0x0000')).to.be.revertedWith(
                 'Inappropriate caller'
             );
         });
@@ -197,7 +196,9 @@ describe('Compressor tests', function () {
             stateDiffs[0].key = '0x1234567890123456789012345678901234567890123456789012345678901233';
             let compressedStateDiffs = compressStateDiffs(9, stateDiffs);
             await expect(
-                compressor.connect(l1Messenger).verifyCompressedStateDiffs(1, 9, encodedStateDiffs, compressedStateDiffs)
+                compressor
+                    .connect(l1Messenger)
+                    .verifyCompressedStateDiffs(1, 9, encodedStateDiffs, compressedStateDiffs)
             ).to.be.revertedWith('enumeration index size is too large');
         });
 
@@ -214,7 +215,9 @@ describe('Compressor tests', function () {
             stateDiffs[0].key = '0x1234567890123456789012345678901234567890123456789012345678901233';
             let compressedStateDiffs = compressStateDiffs(4, stateDiffs);
             await expect(
-                compressor.connect(l1Messenger).verifyCompressedStateDiffs(1, 4, encodedStateDiffs, compressedStateDiffs)
+                compressor
+                    .connect(l1Messenger)
+                    .verifyCompressedStateDiffs(1, 4, encodedStateDiffs, compressedStateDiffs)
             ).to.be.revertedWith('iw: initial key mismatch');
         });
 
@@ -231,7 +234,9 @@ describe('Compressor tests', function () {
             stateDiffs[0].index = 2;
             let compressedStateDiffs = compressStateDiffs(8, stateDiffs);
             await expect(
-                compressor.connect(l1Messenger).verifyCompressedStateDiffs(1, 8, encodedStateDiffs, compressedStateDiffs)
+                compressor
+                    .connect(l1Messenger)
+                    .verifyCompressedStateDiffs(1, 8, encodedStateDiffs, compressedStateDiffs)
             ).to.be.revertedWith('rw: enum key mismatch');
         });
 
@@ -254,7 +259,9 @@ describe('Compressor tests', function () {
             stateDiffs[1].finalValue = TWO_IN_256.sub(1);
             let compressedStateDiffs = compressStateDiffs(3, stateDiffs);
             await expect(
-                compressor.connect(l1Messenger).verifyCompressedStateDiffs(2, 3, encodedStateDiffs, compressedStateDiffs)
+                compressor
+                    .connect(l1Messenger)
+                    .verifyCompressedStateDiffs(2, 3, encodedStateDiffs, compressedStateDiffs)
             ).to.be.revertedWith('transform or no compression: compressed and final mismatch');
         });
 
@@ -277,7 +284,9 @@ describe('Compressor tests', function () {
             stateDiffs[1].finalValue = BigNumber.from(0);
             let compressedStateDiffs = compressStateDiffs(1, stateDiffs);
             await expect(
-                compressor.connect(l1Messenger).verifyCompressedStateDiffs(2, 1, encodedStateDiffs, compressedStateDiffs)
+                compressor
+                    .connect(l1Messenger)
+                    .verifyCompressedStateDiffs(2, 1, encodedStateDiffs, compressedStateDiffs)
             ).to.be.revertedWith('transform or no compression: compressed and final mismatch');
         });
 
@@ -294,7 +303,9 @@ describe('Compressor tests', function () {
             stateDiffs[0].finalValue = TWO_IN_256.div(2);
             let compressedStateDiffs = compressStateDiffs(1, stateDiffs);
             await expect(
-                compressor.connect(l1Messenger).verifyCompressedStateDiffs(1, 1, encodedStateDiffs, compressedStateDiffs)
+                compressor
+                    .connect(l1Messenger)
+                    .verifyCompressedStateDiffs(1, 1, encodedStateDiffs, compressedStateDiffs)
             ).to.be.revertedWith('add: initial plus converted not equal to final');
         });
 
@@ -311,7 +322,9 @@ describe('Compressor tests', function () {
             stateDiffs[0].finalValue = TWO_IN_256.div(4).sub(1);
             let compressedStateDiffs = compressStateDiffs(1, stateDiffs);
             await expect(
-                compressor.connect(l1Messenger).verifyCompressedStateDiffs(1, 1, encodedStateDiffs, compressedStateDiffs)
+                compressor
+                    .connect(l1Messenger)
+                    .verifyCompressedStateDiffs(1, 1, encodedStateDiffs, compressedStateDiffs)
             ).to.be.revertedWith('sub: initial minus converted not equal to final');
         });
 
@@ -326,11 +339,13 @@ describe('Compressor tests', function () {
             ];
             let encodedStateDiffs = encodeStateDiffs(stateDiffs);
             let compressedStateDiffs = compressStateDiffs(1, stateDiffs);
-            let compressedStateDiffsCharArray = compressedStateDiffs.split('')
-            compressedStateDiffsCharArray[2 + 4 + 64 + 1] = 'f'
-            compressedStateDiffs = compressedStateDiffsCharArray.join('')
+            let compressedStateDiffsCharArray = compressedStateDiffs.split('');
+            compressedStateDiffsCharArray[2 + 4 + 64 + 1] = 'f';
+            compressedStateDiffs = compressedStateDiffsCharArray.join('');
             await expect(
-                compressor.connect(l1Messenger).verifyCompressedStateDiffs(1, 1, encodedStateDiffs, compressedStateDiffs)
+                compressor
+                    .connect(l1Messenger)
+                    .verifyCompressedStateDiffs(1, 1, encodedStateDiffs, compressedStateDiffs)
             ).to.be.revertedWith('unsupported operation');
         });
 
@@ -347,20 +362,20 @@ describe('Compressor tests', function () {
                     index: 121,
                     initValue: TWO_IN_256.sub(1),
                     finalValue: BigNumber.from(0)
-                },
+                }
             ];
             let encodedStateDiffs = encodeStateDiffs(stateDiffs);
-            stateDiffs.push(
-                {
-                    key: '0x0234567890123456789012345678901234567890123456789012345678901231',
-                    index: 0,
-                    initValue: BigNumber.from(0),
-                    finalValue: BigNumber.from(1)
-                }
-            )
+            stateDiffs.push({
+                key: '0x0234567890123456789012345678901234567890123456789012345678901231',
+                index: 0,
+                initValue: BigNumber.from(0),
+                finalValue: BigNumber.from(1)
+            });
             let compressedStateDiffs = compressStateDiffs(1, stateDiffs);
             await expect(
-                compressor.connect(l1Messenger).verifyCompressedStateDiffs(2, 1, encodedStateDiffs, compressedStateDiffs)
+                compressor
+                    .connect(l1Messenger)
+                    .verifyCompressedStateDiffs(2, 1, encodedStateDiffs, compressedStateDiffs)
             ).to.be.revertedWith('Incorrect number of initial storage diffs');
         });
 
@@ -377,20 +392,20 @@ describe('Compressor tests', function () {
                     index: 121,
                     initValue: TWO_IN_256.sub(1),
                     finalValue: BigNumber.from(0)
-                },
+                }
             ];
             let encodedStateDiffs = encodeStateDiffs(stateDiffs);
-            stateDiffs.push(
-                {
-                    key: '0x0234567890123456789012345678901234567890123456789012345678901231',
-                    index: 1,
-                    initValue: BigNumber.from(0),
-                    finalValue: BigNumber.from(1)
-                }
-            )
+            stateDiffs.push({
+                key: '0x0234567890123456789012345678901234567890123456789012345678901231',
+                index: 1,
+                initValue: BigNumber.from(0),
+                finalValue: BigNumber.from(1)
+            });
             let compressedStateDiffs = compressStateDiffs(1, stateDiffs);
             await expect(
-                compressor.connect(l1Messenger).verifyCompressedStateDiffs(2, 1, encodedStateDiffs, compressedStateDiffs)
+                compressor
+                    .connect(l1Messenger)
+                    .verifyCompressedStateDiffs(2, 1, encodedStateDiffs, compressedStateDiffs)
             ).to.be.revertedWith('Extra data in _compressedStateDiffs');
         });
 
@@ -402,19 +417,19 @@ describe('Compressor tests', function () {
                     key: '0x1234567890123456789012345678901234567890123456789012345678901230',
                     index: 0,
                     initValue: BigNumber.from('0x1234567890123456789012345678901234567890123456789012345678901231'),
-                    finalValue: BigNumber.from('0x1234567890123456789012345678901234567890123456789012345678901230'),
+                    finalValue: BigNumber.from('0x1234567890123456789012345678901234567890123456789012345678901230')
                 },
                 {
                     key: '0x1234567890123456789012345678901234567890123456789012345678901232',
                     index: 1,
                     initValue: TWO_IN_256.sub(1),
-                    finalValue: BigNumber.from(1),
+                    finalValue: BigNumber.from(1)
                 },
                 {
                     key: '0x1234567890123456789012345678901234567890123456789012345678901234',
                     index: 0,
                     initValue: TWO_IN_256.div(2),
-                    finalValue: BigNumber.from(1),
+                    finalValue: BigNumber.from(1)
                 },
                 {
                     key: '0x1234567890123456789012345678901234567890123456789012345678901236',
@@ -480,34 +495,36 @@ function compressStateDiffs(enumerationIndexSize: number, stateDiffs: StateDiff[
     let initial = [];
     let repeated = [];
     for (const stateDiff of stateDiffs) {
-        const addition = stateDiff.finalValue.sub(stateDiff.initValue).add(TWO_IN_256).mod(TWO_IN_256)
-        const subtraction = stateDiff.initValue.sub(stateDiff.finalValue).add(TWO_IN_256).mod(TWO_IN_256)
-        let op = 3
-        let min = stateDiff.finalValue
+        const addition = stateDiff.finalValue.sub(stateDiff.initValue).add(TWO_IN_256).mod(TWO_IN_256);
+        const subtraction = stateDiff.initValue.sub(stateDiff.finalValue).add(TWO_IN_256).mod(TWO_IN_256);
+        let op = 3;
+        let min = stateDiff.finalValue;
         if (addition.lt(min)) {
-            min = addition
-            op = 1
+            min = addition;
+            op = 1;
         }
         if (subtraction.lt(min)) {
-            min = subtraction
-            op = 2
+            min = subtraction;
+            op = 2;
         }
         if (min.gte(BigNumber.from(2).pow(248))) {
-            min = stateDiff.finalValue
-            op = 0
+            min = stateDiff.finalValue;
+            op = 0;
         }
-        let len = 0
-        let minHex = min.eq(0) ? '0x' : min.toHexString()
+        let len = 0;
+        let minHex = min.eq(0) ? '0x' : min.toHexString();
         if (op > 0) {
-            len = (minHex.length - 2) / 2
+            len = (minHex.length - 2) / 2;
         }
-        let metadata = (len << 3) + op
-        let enumerationIndexType = 'uint' + (enumerationIndexSize * 8).toString()
+        let metadata = (len << 3) + op;
+        let enumerationIndexType = 'uint' + (enumerationIndexSize * 8).toString();
         if (stateDiff.index === 0) {
             num_initial += 1;
             initial.push(ethers.utils.solidityPack(['bytes32', 'uint8', 'bytes'], [stateDiff.key, metadata, minHex]));
         } else {
-            repeated.push(ethers.utils.solidityPack([enumerationIndexType, 'uint8', 'bytes'], [stateDiff.index, metadata, minHex]));
+            repeated.push(
+                ethers.utils.solidityPack([enumerationIndexType, 'uint8', 'bytes'], [stateDiff.index, metadata, minHex])
+            );
         }
     }
     return ethers.utils.hexlify(

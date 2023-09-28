@@ -1,8 +1,6 @@
 import { expect } from 'chai';
-import { ImmutableSimulator } from '../../typechain';
-import {
-    DEPLOYER_SYSTEM_CONTRACT_ADDRESS
-} from './shared/constants';
+import { ImmutableSimulator } from '../typechain';
+import { DEPLOYER_SYSTEM_CONTRACT_ADDRESS } from './shared/constants';
 import { Wallet } from 'zksync-web3';
 import { getWallets, deployContract } from './shared/utils';
 import { network, ethers } from 'hardhat';
@@ -58,7 +56,6 @@ describe('ImmutableSimulator tests', function () {
         });
     });
 
-    // TODO: more cases?
     describe('getImmutable', function () {
         it('zero', async () => {
             expect(await immutableSimulator.getImmutable(RANDOM_ADDRESS, 333)).to.be.eq(ethers.constants.HashZero);

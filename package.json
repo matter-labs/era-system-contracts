@@ -42,7 +42,7 @@
     ]
   },
   "scripts": {
-    "test": "zk f mocha test/system-contract-test.test.ts",
+    "test": "hardhat test --network zkSyncTestNode",
     "build": "hardhat compile",
     "clean": "hardhat clean",
     "fmt": "prettier --config prettier.js --write contracts/*.sol contracts/**/*.sol",

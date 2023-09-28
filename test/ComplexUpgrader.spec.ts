@@ -1,8 +1,6 @@
 import { expect } from 'chai';
-import { ComplexUpgrader, DummyUpgrade } from '../../typechain';
-import {
-    FORCE_DEPLOYER_ADDRESS
-} from './shared/constants';
+import { ComplexUpgrader, DummyUpgrade } from '../typechain';
+import { FORCE_DEPLOYER_ADDRESS } from './shared/constants';
 import { Wallet } from 'zksync-web3';
 import { getWallets, deployContract } from './shared/utils';
 import { network, ethers } from 'hardhat';

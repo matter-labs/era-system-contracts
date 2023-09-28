@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { BootloaderUtilities } from '../../typechain';
+import { BootloaderUtilities } from '../typechain';
 import { Wallet } from 'zksync-web3';
 import { getWallets, deployContract } from './shared/utils';
 import { ethers } from 'hardhat';
@@ -16,7 +16,6 @@ describe('BootloaderUtilities tests', function () {
         bootloaderUtilities = (await deployContract('BootloaderUtilities')) as BootloaderUtilities;
     });
 
-    // TODO: stolen from the integration test
     describe('EIP-712 transaction', function () {
         it('check hashes', async () => {
             const eip712Tx = await wallet.populateTransaction({
