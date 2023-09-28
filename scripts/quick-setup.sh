@@ -19,4 +19,6 @@ cargo install --git https://github.com/matter-labs/era-test-node.git --locked --
 
 yarn
 yarn build
-era_test_node run > /dev/null 2>&1 & yarn test
+era_test_node run > /dev/null 2>&1 & export TEST_NODE_PID=$!
+yarn test
+kill $TEST_NODE_PID
