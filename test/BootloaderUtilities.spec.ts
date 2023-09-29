@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { BootloaderUtilities } from '../typechain';
+import { BootloaderUtilities } from '../typechain-types';
 import { Wallet } from 'zksync-web3';
 import { getWallets, deployContract } from './shared/utils';
 import { ethers } from 'hardhat';

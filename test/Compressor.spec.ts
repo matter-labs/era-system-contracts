@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { Compressor, MockKnownCodesStorage__factory } from '../typechain';
+import { Compressor, MockKnownCodesStorage__factory } from '../typechain-types';
 import {
     BOOTLOADER_FORMAL_ADDRESS,
     KNOWN_CODE_STORAGE_CONTRACT_ADDRESS,

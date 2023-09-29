@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { AccountCodeStorage } from '../typechain';
+import { AccountCodeStorage } from '../typechain-types';
 import { DEPLOYER_SYSTEM_CONTRACT_ADDRESS, EMPTY_STRING_KECCAK } from './shared/constants';
 import { Wallet } from 'zksync-web3';
 import { getWallets, deployContract } from './shared/utils';

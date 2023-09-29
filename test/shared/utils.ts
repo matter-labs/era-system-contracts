@@ -6,7 +6,7 @@ import * as hre from 'hardhat';
 import * as zksync from 'zksync-web3';
 import { ZkSyncArtifact } from '@matterlabs/hardhat-zksync-deploy/dist/types';
 import { DEPLOYER_SYSTEM_CONTRACT_ADDRESS } from './constants';
-import { ContractDeployer__factory } from '../../typechain';
+import { ContractDeployer__factory } from '../../typechain-types';
 
 const RICH_WALLETS = [
     {

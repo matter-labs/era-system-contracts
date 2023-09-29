@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { ComplexUpgrader, DummyUpgrade } from '../typechain';
+import { ComplexUpgrader, DummyUpgrade } from '../typechain-types';
 import { FORCE_DEPLOYER_ADDRESS } from './shared/constants';
 import { Wallet } from 'zksync-web3';
 import { getWallets, deployContract } from './shared/utils';

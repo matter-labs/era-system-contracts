@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { ImmutableSimulator } from '../typechain';
+import { ImmutableSimulator } from '../typechain-types';
 import { DEPLOYER_SYSTEM_CONTRACT_ADDRESS } from './shared/constants';
 import { Wallet } from 'zksync-web3';
 import { getWallets, deployContract } from './shared/utils';
