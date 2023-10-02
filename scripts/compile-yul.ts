@@ -63,9 +63,9 @@ function preparePaths(path: string, files: string[], outputDirName: string | nul
         })
         .join(' ');
     const outputDir = outputDirName || files[0];
-    let absolutePathSources = `${process.env.ZKSYNC_HOME}/etc/system-contracts/${path}`;
-
-    let absolutePathArtifacts = `${process.env.ZKSYNC_HOME}/etc/system-contracts/${path}/artifacts`;
+    // This script is located in `system-contracts/scripts`, so we get one directory back.
+    const absolutePathSources = `${__dirname}/../${path}`; 
+    const absolutePathArtifacts = `${__dirname}/../${path}/artifacts`;
 
     return new CompilerPaths(filePaths, outputDir, absolutePathSources, absolutePathArtifacts);
 }

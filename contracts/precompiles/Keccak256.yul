@@ -7,7 +7,9 @@
  * @dev Thus keccak256 precompile circuit operates over padded data to perform efficient sponge round computation.
  */
 object "Keccak256" {
-    code { }
+    code {
+        return(0, 0)
+    }
     object "Keccak256_deployed" {
         code {
             ////////////////////////////////////////////////////////////////

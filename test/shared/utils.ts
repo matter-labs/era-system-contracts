@@ -1,5 +1,6 @@
 import { Provider, Contract, Wallet } from 'zksync-web3';
 import { Deployer } from '@matterlabs/hardhat-zksync-deploy';
+import { readYulBytecode } from '../../scripts/utils';
 import { ethers, network } from 'hardhat';
 import { BytesLike } from 'ethers';
 import * as hre from 'hardhat';
@@ -7,6 +8,7 @@ import * as zksync from 'zksync-web3';
 import { ZkSyncArtifact } from '@matterlabs/hardhat-zksync-deploy/dist/types';
 import { DEPLOYER_SYSTEM_CONTRACT_ADDRESS } from './constants';
 import { ContractDeployer__factory } from '../../typechain-types';
+import { Language } from '../../scripts/constants';
 
 const RICH_WALLETS = [
     {
@@ -32,6 +34,16 @@ export const provider = new Provider((hre.network.config as any).url);
 const wallet = new Wallet(RICH_WALLETS[0].privateKey, provider);
 const deployer = new Deployer(hre, wallet);
 
+export async function callFallback(contract: Contract, data: string) {
+    // `eth_Call` revert is not parsed by ethers, so we send 
+    // transaction to catch the error and use `eth_Call` to the return data.
+    await contract.fallback({data});
+    return contract.provider.call({
+        to: contract.address,
+        data
+    });
+}
+
 export function getWallets(): Wallet[] {
     let wallets = [];
     for (let i = 0; i < RICH_WALLETS.length; i++) {
@@ -49,6 +61,27 @@ export async function deployContract(name: string, constructorArguments?: any[] 
     return await deployer.deploy(artifact, constructorArguments);
 }
 
+export async function deployContractYul(codeName: string, path: string): Promise<Contract> {
+    const bytecode = readYulBytecode({
+        codeName,
+        path,
+        lang: Language.Yul,
+        address: '0x0000000000000000000000000000000000000000'
+    });
+    return await deployer.deploy({
+        bytecode,
+        factoryDeps: {},
+        sourceMapping: '',
+        _format: '',
+        contractName: '',
+        sourceName: '',
+        abi: [],
+        deployedBytecode: bytecode,
+        linkReferences: {},
+        deployedLinkReferences: {}
+    }, []);
+}
+
 export async function publishBytecode(bytecode: BytesLike) {
     await wallet.sendTransaction({
         type: 113,
@@ -59,7 +92,6 @@ export async function publishBytecode(bytecode: BytesLike) {
             gasPerPubdata: 50000
         }
     });
-}
 
 export async function getCode(address: string): Promise<string> {
     return await provider.getCode(address);
