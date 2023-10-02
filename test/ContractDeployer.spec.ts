@@ -34,6 +34,9 @@ describe('ContractDeployer tests', function () {
     const AA_VERSION_1 = 1;
     const NONCE_ORDERING_SEQUENTIAL = 0;
     const NONCE_ORDERING_ARBITRARY = 1;
+    const SALT_1 = '0x' + Math.round(Math.random() * 0xFFFFFFFF).toString(16).padStart(64, '0')
+    const SALT_2 = '0x' + Math.round(Math.random() * 0xFFFFFFFF).toString(16).padStart(64, '0')
+    const SALT_3 = '0x' + Math.round(Math.random() * 0xFFFFFFFF).toString(16).padStart(64, '0')
 
     let _contractDeployerCode: string;
 
@@ -319,12 +322,12 @@ describe('ContractDeployer tests', function () {
             let expectedAddress = utils.create2Address(
                 wallet.address,
                 utils.hashBytecode(deployableArtifact.bytecode),
-                '0x1234567891234567891234512222122167891123456789123456787654323456',
+                SALT_1,
                 '0xdeadbeef'
             );
             await expect(
                 contractDeployer.create2Account(
-                    '0x1234567891234567891234512222122167891123456789123456787654323456',
+                    SALT_1,
                     utils.hashBytecode(deployableArtifact.bytecode),
                     '0xdeadbeef',
                     AA_VERSION_NONE
@@ -342,7 +345,7 @@ describe('ContractDeployer tests', function () {
         it('already deployed failed', async () => {
             await expect(
                 contractDeployer.create2Account(
-                    '0x1234567891234567891234512222122167891123456789123456787654323456',
+                    SALT_1,
                     utils.hashBytecode(deployableArtifact.bytecode),
                     '0xdeadbeef',
                     AA_VERSION_NONE
@@ -354,12 +357,12 @@ describe('ContractDeployer tests', function () {
             let expectedAddress = utils.create2Address(
                 wallet.address,
                 utils.hashBytecode(deployableArtifact.bytecode),
-                ethers.constants.HashZero,
+                SALT_2,
                 '0x'
             );
             await expect(
                 contractDeployer.create2Account(
-                    ethers.constants.HashZero,
+                    SALT_2,
                     utils.hashBytecode(deployableArtifact.bytecode),
                     '0x',
                     AA_VERSION_NONE,
@@ -422,12 +425,12 @@ describe('ContractDeployer tests', function () {
             let expectedAddress = utils.create2Address(
                 wallet.address,
                 utils.hashBytecode(deployableArtifact.bytecode),
-                '0x1234567891234567891234512222122167891123456789123456787654323456',
+                SALT_3,
                 '0xab'
             );
             await expect(
                 contractDeployer.create2(
-                    '0x1234567891234567891234512222122167891123456789123456787654323456',
+                    SALT_3,
                     utils.hashBytecode(deployableArtifact.bytecode),
                     '0xab'
                 )
