@@ -35,9 +35,9 @@ const wallet = new Wallet(RICH_WALLETS[0].privateKey, provider);
 const deployer = new Deployer(hre, wallet);
 
 export async function callFallback(contract: Contract, data: string) {
-    // `eth_Call` revert is not parsed by ethers, so we send 
+    // `eth_Call` revert is not parsed by ethers, so we send
     // transaction to catch the error and use `eth_Call` to the return data.
-    await contract.fallback({data});
+    await contract.fallback({ data });
     return contract.provider.call({
         to: contract.address,
         data
@@ -68,18 +68,21 @@ export async function deployContractYul(codeName: string, path: string): Promise
         lang: Language.Yul,
         address: '0x0000000000000000000000000000000000000000'
     });
-    return await deployer.deploy({
-        bytecode,
-        factoryDeps: {},
-        sourceMapping: '',
-        _format: '',
-        contractName: '',
-        sourceName: '',
-        abi: [],
-        deployedBytecode: bytecode,
-        linkReferences: {},
-        deployedLinkReferences: {}
-    }, []);
+    return await deployer.deploy(
+        {
+            bytecode,
+            factoryDeps: {},
+            sourceMapping: '',
+            _format: '',
+            contractName: '',
+            sourceName: '',
+            abi: [],
+            deployedBytecode: bytecode,
+            linkReferences: {},
+            deployedLinkReferences: {}
+        },
+        []
+    );
 }
 
 export async function publishBytecode(bytecode: BytesLike) {
@@ -103,7 +106,7 @@ export async function setCode(address: string, bytecode: BytesLike) {
     // TODO: think about factoryDeps with eth_sendTransaction
     try {
         // publish bytecode in a separate tx
-        await publishBytecode(bytecode)
+        await publishBytecode(bytecode);
     } catch {}
 
     await network.provider.request({

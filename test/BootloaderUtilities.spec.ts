@@ -5,7 +5,7 @@ import { getWallets, deployContract } from './shared/utils';
 import { ethers } from 'hardhat';
 import * as zksync from 'zksync-web3';
 import { hashBytecode, serialize } from 'zksync-web3/build/src/utils';
-import { TransactionData, signedTxToTransactionData } from './shared/transactions'
+import { TransactionData, signedTxToTransactionData } from './shared/transactions';
 
 describe('BootloaderUtilities tests', function () {
     let wallet: Wallet;
