@@ -8,11 +8,7 @@
  */
 object "Keccak256" {
     code {
-        // On zkSync contract constructor is expected to return array of immutables (see ContractDeployer)
-        // Return empty array for immutables, for contract to be deployable.
-        mstore(0, 32)
-        mstore(32, 0)
-        return(0, 64)
+        return(0, 0)
     }
     object "Keccak256_deployed" {
         code {
