@@ -7,7 +7,13 @@
  * @dev Thus keccak256 precompile circuit operates over padded data to perform efficient sponge round computation.
  */
 object "Keccak256" {
-    code { }
+    code {
+        // On zkSync contract constructor is expected to return array of immutables (see ContractDeployer)
+        // Return empty array for immutables, for contract to be deployable.
+        mstore(0, 32)
+        mstore(32, 0)
+        return(0, 64)
+    }
     object "Keccak256_deployed" {
         code {
             ////////////////////////////////////////////////////////////////

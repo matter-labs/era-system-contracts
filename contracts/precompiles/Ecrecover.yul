@@ -5,7 +5,13 @@
  * @dev It uses `precompileCall` to call the zkEVM built-in precompiles.
  */
 object "Ecrecover" {
-    code { }
+    code {
+        // On zkSync contract constructor is expected to return array of immutables (see ContractDeployer)
+        // Return empty array for immutables, for contract to be deployable.
+        mstore(0, 32)
+        mstore(32, 0)
+        return(0, 64)
+    }
     object "Ecrecover_deployed" {
         code {
             ////////////////////////////////////////////////////////////////
