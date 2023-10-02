@@ -92,6 +92,7 @@ export async function publishBytecode(bytecode: BytesLike) {
             gasPerPubdata: 50000
         }
     });
+}
 
 export async function getCode(address: string): Promise<string> {
     return await provider.getCode(address);
