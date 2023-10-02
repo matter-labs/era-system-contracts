@@ -1,5 +1,6 @@
 import { Provider, Contract, Wallet } from 'zksync-web3';
 import { Deployer } from '@matterlabs/hardhat-zksync-deploy';
+import { readYulBytecode } from '../../scripts/utils';
 import { ethers, network } from 'hardhat';
 import { BytesLike } from 'ethers';
 import * as hre from 'hardhat';
@@ -7,6 +8,7 @@ import * as zksync from 'zksync-web3';
 import { ZkSyncArtifact } from '@matterlabs/hardhat-zksync-deploy/dist/types';
 import { DEPLOYER_SYSTEM_CONTRACT_ADDRESS } from './constants';
 import { ContractDeployer__factory } from '../../typechain-types';
+import { Language } from '../../scripts/constants';
 
 const RICH_WALLETS = [
     {
@@ -47,6 +49,27 @@ export async function loadArtifact(name: string): Promise<ZkSyncArtifact> {
 export async function deployContract(name: string, constructorArguments?: any[] | undefined): Promise<Contract> {
     const artifact = await loadArtifact(name);
     return await deployer.deploy(artifact, constructorArguments);
+}
+
+export async function deployContractYul(codeName: string, path: string): Promise<Contract> {
+    const bytecode = readYulBytecode({
+        codeName,
+        path,
+        lang: Language.Yul,
+        address: '0x0000000000000000000000000000000000000000'
+    });
+    return await deployer.deploy({
+        bytecode,
+        factoryDeps: {},
+        sourceMapping: '',
+        _format: '',
+        contractName: '',
+        sourceName: '',
+        abi: [],
+        deployedBytecode: bytecode,
+        linkReferences: {},
+        deployedLinkReferences: {}
+    }, []);
 }
 
 export async function getCode(address: string): Promise<string> {
