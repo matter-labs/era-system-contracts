@@ -45,7 +45,7 @@ contract AccountCodeStorage is IAccountCodeStorage {
     /// but checks whether the bytecode hash corresponds to the constructed smart contract.
     function storeAccountConstructedCodeHash(address _address, bytes32 _hash) external override onlyDeployer {
         // Check that code hash corresponds to the deploying smart contract
-        require(Utils.isContractConstructed(_hash), "Code hash is not for a contract on constructor");
+        require(Utils.isContractConstructed(_hash), "Code hash is not for a constructed contract");
         _storeCodeHash(_address, _hash);
     }
 

@@ -6,7 +6,9 @@
  * The rest of the data is passed via calldata without copying.
  */
 object "EventWriter" {
-    code { }
+    code {
+        return(0, 0)
+    }
     object "EventWriter_deployed" {
         code {
             ////////////////////////////////////////////////////////////////

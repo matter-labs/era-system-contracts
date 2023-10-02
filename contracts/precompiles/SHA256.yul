@@ -7,7 +7,9 @@
  * @dev Thus sha256 precompile circuit operates over padded data to perform efficient sponge round computation.
  */
 object "SHA256" {
-    code { }
+    code {
+        return(0, 0)
+    }
     object "SHA256_deployed" {
         code {
             ////////////////////////////////////////////////////////////////
