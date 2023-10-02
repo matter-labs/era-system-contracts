@@ -49,6 +49,18 @@ export async function deployContract(name: string, constructorArguments?: any[] 
     return await deployer.deploy(artifact, constructorArguments);
 }
 
+export async function publishBytecode(bytecode: BytesLike) {
+    await wallet.sendTransaction({
+        type: 113,
+        to: ethers.constants.AddressZero,
+        data: '0x',
+        customData: {
+            factoryDeps: [bytecode],
+            gasPerPubdata: 50000
+        }
+    });
+}
+
 export async function getCode(address: string): Promise<string> {
     return await provider.getCode(address);
 }
@@ -58,15 +70,7 @@ export async function setCode(address: string, bytecode: BytesLike) {
     // TODO: think about factoryDeps with eth_sendTransaction
     try {
         // publish bytecode in a separate tx
-        await wallet.sendTransaction({
-            type: 113,
-            to: ethers.constants.AddressZero,
-            data: '0x',
-            customData: {
-                factoryDeps: [bytecode],
-                gasPerPubdata: 50000
-            }
-        });
+        await publishBytecode(bytecode)
     } catch {}
 
     await network.provider.request({
