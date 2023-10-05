@@ -4,21 +4,22 @@ import { exec as _exec, spawn as _spawn } from 'child_process';
 
 import { getZksolcUrl, saltFromUrl } from '@matterlabs/hardhat-zksync-solc';
 import { getCompilersDir } from 'hardhat/internal/util/global-dir';
+import path from 'path';
 
-
-const COMPILER_VERSION = 'v1.3.14';
+const COMPILER_VERSION = '1.3.14';
 const IS_COMPILER_PRE_RELEASE = false;
 
 async function compilerLocation(): Promise<string> {
     const compilersCache = await getCompilersDir();
+
+    let salt = '';
+
     if (IS_COMPILER_PRE_RELEASE) {
         const url = getZksolcUrl('https://github.com/matter-labs/zksolc-prerelease', hre.config.zksolc.version);
-        const salt = saltFromUrl(url);
-        return compilersCache + "/zksolc/zksolc-" + hre.config.zksolc.version + ":" + salt;
-    } else {
-        return compilersCache + "/zksolc/zksolc-" + COMPILER_VERSION
-
+        salt = saltFromUrl(url);
     }
+
+    return path.join(compilersCache, 'zksolc', `zksolc-v${COMPILER_VERSION}${salt ? '-' : ''}${salt}`);
 }
 
 // executes a command in a new shell
@@ -62,9 +63,9 @@ function preparePaths(path: string, files: string[], outputDirName: string | nul
         })
         .join(' ');
     const outputDir = outputDirName || files[0];
-    let absolutePathSources = `${path}`;
-
-    let absolutePathArtifacts = `${path}/artifacts`;
+    // This script is located in `system-contracts/scripts`, so we get one directory back.
+    const absolutePathSources = `${__dirname}/../${path}`; 
+    const absolutePathArtifacts = `${__dirname}/../${path}/artifacts`;
 
     return new CompilerPaths(filePaths, outputDir, absolutePathSources, absolutePathArtifacts);
 }
