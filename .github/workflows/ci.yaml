@@ -10,10 +10,13 @@ jobs:
       - uses: actions/checkout@v3
         with:
           node-version: 18.18.0
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: nightly-2023-04-17
       - run: yarn
       - run: yarn build
       - run: yarn preprocess
       - run: yarn compile-yul
       # Test bootloader
-      - run: cd booloader/test_infra && cargo run
+      - run: ci_run bash -c "cd booloader/test_infra && cargo run"
 
