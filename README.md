@@ -13,8 +13,8 @@ To keep the zero-knowledge circuits as simple as possible and enable simple exte
 These are privileged special-purpose contracts that instantiate some recurring actions on the protocol level. Some of the
 most commonly used contracts:
 
-`ContractDeployer` This contract is used to deploy new smart contracts. Its job is to make sure that the bytecode for each deployed 
-contract is known. This contract also defines the derivation address. Whenever a contract is deployed, a ContractDeployed 
+`ContractDeployer` This contract is used to deploy new smart contracts. Its job is to make sure that the bytecode for each deployed
+contract is known. This contract also defines the derivation address. Whenever a contract is deployed, a ContractDeployed
 event is emitted.
 
 `L1Messenger` This contract is used to send messages from zkSync to Ethereum. For each message sent, the L1MessageSent event is emitted.
@@ -23,20 +23,18 @@ event is emitted.
 the deployment nonce are stored in a single place) and also for the ease of the operator.
 
 `Bootloader` For greater extensibility and to lower the overhead, some parts of the protocol (e.g. account abstraction rules) were
-moved to an ephemeral contract called a bootloader. 
+moved to an ephemeral contract called a bootloader.
 
-We call it ephemeral because it is not physically deployed and cannot be called, but it has a formal address that is used 
+We call it ephemeral because it is not physically deployed and cannot be called, but it has a formal address that is used
 on msg.sender, when it calls other contracts.
 
 ## Building
 
 This repository is used as a submodule of the [zksync-2-dev](https://github.com/matter-labs/zksync-2-dev).
 
-Compile the solidity contracts: `yarn build`
+Build the solidity contracts: `yarn build`
 
-Run the bootloader preprocessor: `yarn preprocess`
-
-Compile the yul contracts: `yarn hardhat run ./scripts/compile-yul.ts`
+Build the yul contracts: `yarn build-yul`
 
 ## Update Process
 
@@ -48,7 +46,7 @@ Here is an overview of the release process of the system contracts which is aime
 
 The `main` branch contains the latest code that is ready to be deployed into production. It reflects the most stable and audited version of the protocol.
 
-### `dev` branch 
+### `dev` branch
 
 The `dev` branch is for active development & the latest code changes. Whenever a new PR with system contract changes is created it should be based on the `dev` branch.
 
