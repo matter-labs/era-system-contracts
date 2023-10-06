@@ -13,4 +13,5 @@ yarn-error.log*
 .yarn/
 .yarnrc.yml
 
+.vscode
 target/
