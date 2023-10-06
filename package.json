@@ -49,7 +49,7 @@
     "preprocess-yul": "rm -rf ./bootloader/build && yarn ts-node scripts/process.ts",
     "deploy-preimages": "ts-node scripts/deploy-preimages.ts",
     "compile-yul": "ts-node scripts/compile-yul.ts",
-    "build-yul": "yarn preprocess && yarn compile-yul",
+    "build-yul": "yarn preprocess-yul && yarn compile-yul",
     "calculate-hashes" : "ts-node scripts/calculate-hashes.ts"
   }
 }
