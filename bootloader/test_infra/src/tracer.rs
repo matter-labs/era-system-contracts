@@ -5,7 +5,7 @@ use colored::Colorize;
 use once_cell::sync::OnceCell;
 use vm::{
     DynTracer, ExecutionEndTracer, ExecutionProcessing, Halt, HistoryMode, SimpleMemory,
-    VmExecutionResultAndLogs, VmTracer,
+    TracerExecutionStatus, TracerExecutionStopReason, VmExecutionResultAndLogs, VmTracer,
 };
 use zksync_state::{StoragePtr, WriteStorage};
 use zksync_types::zkevm_test_harness::zk_evm::tracing::{BeforeExecutionData, VmLocalStateData};
@@ -73,15 +73,15 @@ impl<S, H: HistoryMode> DynTracer<S, H> for BootloaderTestTracer {
 }
 
 impl<H: HistoryMode> ExecutionEndTracer<H> for BootloaderTestTracer {
-    fn should_stop_execution(&self) -> bool {
+    fn should_stop_execution(&self) -> TracerExecutionStatus {
         if let Some(TestResult {
             test_name: _,
             result: Err(_),
         }) = self.test_result.get()
         {
-            return true;
+            return TracerExecutionStatus::Stop(TracerExecutionStopReason::Finish);
         }
-        return false;
+        return TracerExecutionStatus::Continue;
     }
 }
 

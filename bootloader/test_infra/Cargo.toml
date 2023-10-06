@@ -7,12 +7,12 @@ edition = "2021"
 
 [dependencies]
 
-vm = { git = "https://github.com/matter-labs/zksync-era.git", tag = "v7.0.0-rc0" }
-zksync_types = { git = "https://github.com/matter-labs/zksync-era.git", tag = "v7.0.0-rc0" }
-zksync_contracts = { git = "https://github.com/matter-labs/zksync-era.git", tag = "v7.0.0-rc0" }
-zksync_utils = { git = "https://github.com/matter-labs/zksync-era.git", tag = "v7.0.0-rc0" }
-zksync_state = { git = "https://github.com/matter-labs/zksync-era.git", tag = "v7.0.0-rc0" }
-vlog = { git = "https://github.com/matter-labs/zksync-era.git", tag = "v7.0.0-rc0" }
+vm = { git = "https://github.com/matter-labs/zksync-era.git", branch = "mmzk_1006_fix_tracer" }
+zksync_types = { git = "https://github.com/matter-labs/zksync-era.git", branch = "mmzk_1006_fix_tracer" }
+zksync_contracts = { git = "https://github.com/matter-labs/zksync-era.git", branch = "mmzk_1006_fix_tracer" }
+zksync_utils = { git = "https://github.com/matter-labs/zksync-era.git", branch = "mmzk_1006_fix_tracer" }
+zksync_state = { git = "https://github.com/matter-labs/zksync-era.git", branch = "mmzk_1006_fix_tracer" }
+vlog = { git = "https://github.com/matter-labs/zksync-era.git", branch = "mmzk_1006_fix_tracer" }
 
 colored = "2.0"
 hex = "0.4"

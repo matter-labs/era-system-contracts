@@ -575,7 +575,6 @@ dependencies = [
  "iana-time-zone",
  "js-sys",
  "num-traits",
- "rustc-serialize",
  "serde",
  "wasm-bindgen",
  "windows-targets",
@@ -1080,6 +1079,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "77c90badedccf4105eca100756a0b1289e191f6fcbdadd3cee1d2f614f97da8f"
 
 [[package]]
+name = "dtoa"
+version = "1.0.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dcbb2bf8e87535c23f7a8a321e364ce21462d0ff10cb6407820e8e96dfff6653"
+
+[[package]]
 name = "ecdsa"
 version = "0.14.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1118,6 +1123,15 @@ dependencies = [
  "sec1",
  "subtle",
  "zeroize",
+]
+
+[[package]]
+name = "elsa"
+version = "1.9.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "714f766f3556b44e7e4776ad133fcc3445a489517c25c704ace411bb14790194"
+dependencies = [
+ "stable_deref_trait",
 ]
 
 [[package]]
@@ -2116,6 +2130,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "linkme"
+version = "0.3.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9f948366ad5bb46b5514ba7a7a80643726eef08b06632592699676748c8bc33b"
+dependencies = [
+ "linkme-impl",
+]
+
+[[package]]
+name = "linkme-impl"
+version = "0.3.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bc28438cad73dcc90ff3466fc329a9252b1b8ba668eb0d5668ba97088cf4eef0"
+dependencies = [
+ "proc-macro2 1.0.66",
+ "quote 1.0.33",
+ "syn 2.0.31",
+]
+
+[[package]]
 name = "linux-raw-sys"
 version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2952,6 +2986,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "prometheus-client"
+version = "0.21.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c99afa9a01501019ac3a14d71d9f94050346f55ca471ce90c799a15c58f61e2"
+dependencies = [
+ "dtoa",
+ "itoa",
+ "parking_lot 0.12.1",
+ "prometheus-client-derive-encode",
+]
+
+[[package]]
+name = "prometheus-client-derive-encode"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "440f724eba9f6996b75d63681b0a92b06947f1457076d503a4d2e2c8f56442b8"
+dependencies = [
+ "proc-macro2 1.0.66",
+ "quote 1.0.33",
+ "syn 2.0.31",
+]
+
+[[package]]
 name = "pulldown-cmark"
 version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3420,12 +3477,6 @@ name = "rustc-hex"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3e75f6a532d0fd9f7f13144f392b6ad56a32696bfcd9c78f797f16bbb6f072d6"
-
-[[package]]
-name = "rustc-serialize"
-version = "0.3.24"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dcf128d1287d2ea9d80910b5f1120d0b8eede3fbf1abe91c40d39ea7d51e6fda"
 
 [[package]]
 name = "rustc_version"
@@ -4091,6 +4142,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "stable_deref_trait"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
+
+[[package]]
 name = "static_assertions"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4734,9 +4791,31 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "49874b5167b65d7193b8aba1567f5c7d93d001cafc34600cee003eda787e483f"
 
 [[package]]
+name = "vise"
+version = "0.1.0"
+source = "git+https://github.com/matter-labs/vise.git?rev=9d097ab747b037b6e62504df1db5b975425b6bdd#9d097ab747b037b6e62504df1db5b975425b6bdd"
+dependencies = [
+ "elsa",
+ "linkme",
+ "once_cell",
+ "prometheus-client",
+ "vise-macros",
+]
+
+[[package]]
+name = "vise-macros"
+version = "0.1.0"
+source = "git+https://github.com/matter-labs/vise.git?rev=9d097ab747b037b6e62504df1db5b975425b6bdd#9d097ab747b037b6e62504df1db5b975425b6bdd"
+dependencies = [
+ "proc-macro2 1.0.66",
+ "quote 1.0.33",
+ "syn 2.0.31",
+]
+
+[[package]]
 name = "vlog"
 version = "0.1.0"
-source = "git+https://github.com/matter-labs/zksync-era.git?tag=v7.0.0-rc0#a43bc402a204ac92fb74ad348b68f61e24d7a84a"
+source = "git+https://github.com/matter-labs/zksync-era.git?branch=mmzk_1006_fix_tracer#45ef51edf1617c90bf293e75db3171275c496950"
 dependencies = [
  "chrono",
  "sentry",
@@ -4748,15 +4827,15 @@ dependencies = [
 [[package]]
 name = "vm"
 version = "0.1.0"
-source = "git+https://github.com/matter-labs/zksync-era.git?tag=v7.0.0-rc0#a43bc402a204ac92fb74ad348b68f61e24d7a84a"
+source = "git+https://github.com/matter-labs/zksync-era.git?branch=mmzk_1006_fix_tracer#45ef51edf1617c90bf293e75db3171275c496950"
 dependencies = [
  "anyhow",
  "hex",
  "itertools",
- "metrics",
  "once_cell",
  "thiserror",
  "tracing",
+ "vise",
  "zk_evm",
  "zksync_config",
  "zksync_contracts",
@@ -5154,7 +5233,7 @@ dependencies = [
 [[package]]
 name = "zksync_basic_types"
 version = "0.1.0"
-source = "git+https://github.com/matter-labs/zksync-era.git?tag=v7.0.0-rc0#a43bc402a204ac92fb74ad348b68f61e24d7a84a"
+source = "git+https://github.com/matter-labs/zksync-era.git?branch=mmzk_1006_fix_tracer#45ef51edf1617c90bf293e75db3171275c496950"
 dependencies = [
  "serde",
  "web3",
@@ -5163,8 +5242,9 @@ dependencies = [
 [[package]]
 name = "zksync_config"
 version = "0.1.0"
-source = "git+https://github.com/matter-labs/zksync-era.git?tag=v7.0.0-rc0#a43bc402a204ac92fb74ad348b68f61e24d7a84a"
+source = "git+https://github.com/matter-labs/zksync-era.git?branch=mmzk_1006_fix_tracer#45ef51edf1617c90bf293e75db3171275c496950"
 dependencies = [
+ "anyhow",
  "bigdecimal",
  "envy",
  "hex",
@@ -5181,7 +5261,7 @@ dependencies = [
 [[package]]
 name = "zksync_contracts"
 version = "0.1.0"
-source = "git+https://github.com/matter-labs/zksync-era.git?tag=v7.0.0-rc0#a43bc402a204ac92fb74ad348b68f61e24d7a84a"
+source = "git+https://github.com/matter-labs/zksync-era.git?branch=mmzk_1006_fix_tracer#45ef51edf1617c90bf293e75db3171275c496950"
 dependencies = [
  "envy",
  "ethabi",
@@ -5195,7 +5275,7 @@ dependencies = [
 [[package]]
 name = "zksync_crypto"
 version = "0.1.0"
-source = "git+https://github.com/matter-labs/zksync-era.git?tag=v7.0.0-rc0#a43bc402a204ac92fb74ad348b68f61e24d7a84a"
+source = "git+https://github.com/matter-labs/zksync-era.git?branch=mmzk_1006_fix_tracer#45ef51edf1617c90bf293e75db3171275c496950"
 dependencies = [
  "base64 0.13.1",
  "blake2 0.10.6",
@@ -5210,14 +5290,13 @@ dependencies = [
 [[package]]
 name = "zksync_dal"
 version = "0.1.0"
-source = "git+https://github.com/matter-labs/zksync-era.git?tag=v7.0.0-rc0#a43bc402a204ac92fb74ad348b68f61e24d7a84a"
+source = "git+https://github.com/matter-labs/zksync-era.git?branch=mmzk_1006_fix_tracer#45ef51edf1617c90bf293e75db3171275c496950"
 dependencies = [
  "anyhow",
  "bigdecimal",
  "bincode",
  "hex",
  "itertools",
- "metrics",
  "num 0.3.1",
  "once_cell",
  "serde",
@@ -5227,6 +5306,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "tracing",
+ "vise",
  "zksync_config",
  "zksync_contracts",
  "zksync_health_check",
@@ -5237,7 +5317,7 @@ dependencies = [
 [[package]]
 name = "zksync_health_check"
 version = "0.1.0"
-source = "git+https://github.com/matter-labs/zksync-era.git?tag=v7.0.0-rc0#a43bc402a204ac92fb74ad348b68f61e24d7a84a"
+source = "git+https://github.com/matter-labs/zksync-era.git?branch=mmzk_1006_fix_tracer#45ef51edf1617c90bf293e75db3171275c496950"
 dependencies = [
  "async-trait",
  "futures",
@@ -5250,7 +5330,7 @@ dependencies = [
 [[package]]
 name = "zksync_mini_merkle_tree"
 version = "0.1.0"
-source = "git+https://github.com/matter-labs/zksync-era.git?tag=v7.0.0-rc0#a43bc402a204ac92fb74ad348b68f61e24d7a84a"
+source = "git+https://github.com/matter-labs/zksync-era.git?branch=mmzk_1006_fix_tracer#45ef51edf1617c90bf293e75db3171275c496950"
 dependencies = [
  "once_cell",
  "zksync_basic_types",
@@ -5260,13 +5340,14 @@ dependencies = [
 [[package]]
 name = "zksync_state"
 version = "0.1.0"
-source = "git+https://github.com/matter-labs/zksync-era.git?tag=v7.0.0-rc0#a43bc402a204ac92fb74ad348b68f61e24d7a84a"
+source = "git+https://github.com/matter-labs/zksync-era.git?branch=mmzk_1006_fix_tracer#45ef51edf1617c90bf293e75db3171275c496950"
 dependencies = [
  "anyhow",
  "metrics",
  "mini-moka",
  "tokio",
  "tracing",
+ "vise",
  "zksync_dal",
  "zksync_storage",
  "zksync_types",
@@ -5276,24 +5357,24 @@ dependencies = [
 [[package]]
 name = "zksync_storage"
 version = "0.1.0"
-source = "git+https://github.com/matter-labs/zksync-era.git?tag=v7.0.0-rc0#a43bc402a204ac92fb74ad348b68f61e24d7a84a"
+source = "git+https://github.com/matter-labs/zksync-era.git?branch=mmzk_1006_fix_tracer#45ef51edf1617c90bf293e75db3171275c496950"
 dependencies = [
- "metrics",
  "num_cpus",
+ "once_cell",
  "rocksdb",
  "tracing",
+ "vise",
 ]
 
 [[package]]
 name = "zksync_types"
 version = "0.1.0"
-source = "git+https://github.com/matter-labs/zksync-era.git?tag=v7.0.0-rc0#a43bc402a204ac92fb74ad348b68f61e24d7a84a"
+source = "git+https://github.com/matter-labs/zksync-era.git?branch=mmzk_1006_fix_tracer#45ef51edf1617c90bf293e75db3171275c496950"
 dependencies = [
  "blake2 0.10.6",
  "chrono",
  "codegen 0.1.0",
  "ethereum-types 0.12.1",
- "metrics",
  "num 0.3.1",
  "num_enum",
  "once_cell",
@@ -5316,11 +5397,10 @@ dependencies = [
 [[package]]
 name = "zksync_utils"
 version = "0.1.0"
-source = "git+https://github.com/matter-labs/zksync-era.git?tag=v7.0.0-rc0#a43bc402a204ac92fb74ad348b68f61e24d7a84a"
+source = "git+https://github.com/matter-labs/zksync-era.git?branch=mmzk_1006_fix_tracer#45ef51edf1617c90bf293e75db3171275c496950"
 dependencies = [
  "anyhow",
  "bigdecimal",
- "envy",
  "futures",
  "hex",
  "itertools",
