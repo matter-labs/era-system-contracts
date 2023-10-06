@@ -18,7 +18,5 @@ jobs:
       - run: yarn preprocess
       - run: yarn compile-yul
       # Test bootloader
-      - run: ls
-      - run: pwd
-      - run: bash -c "cd booloader/test_infra && cargo run"
+      - run: "cd bootloader/test_infra && cargo run"
 
