@@ -32,6 +32,7 @@ jobs:
             typechain-types
 
   test:
+    needs: [build]
     runs-on: ubuntu-latest
 
     steps:
