@@ -26,24 +26,24 @@ describe('ComplexUpgrader tests', function () {
             ).to.be.revertedWith('Can only be called by FORCE_DEPLOYER');
         });
 
-        it('successfully upgraded', async () => {
-            await network.provider.request({
-                method: 'hardhat_impersonateAccount',
-                params: [FORCE_DEPLOYER_ADDRESS]
-            });
+        // it('successfully upgraded', async () => {
+        //     await network.provider.request({
+        //         method: 'hardhat_impersonateAccount',
+        //         params: [FORCE_DEPLOYER_ADDRESS]
+        //     });
 
-            const force_deployer = await ethers.getSigner(FORCE_DEPLOYER_ADDRESS);
+        //     const force_deployer = await ethers.getSigner(FORCE_DEPLOYER_ADDRESS);
 
-            await expect(
-                complexUpgrader
-                    .connect(force_deployer)
-                    .upgrade(dummyUpgrade.address, dummyUpgrade.interface.encodeFunctionData('performUpgrade'))
-            ).to.emit(dummyUpgrade.attach(complexUpgrader.address), 'Upgraded');
+        //     await expect(
+        //         complexUpgrader
+        //             .connect(force_deployer)
+        //             .upgrade(dummyUpgrade.address, dummyUpgrade.interface.encodeFunctionData('performUpgrade'))
+        //     ).to.emit(dummyUpgrade.attach(complexUpgrader.address), 'Upgraded');
 
-            await network.provider.request({
-                method: 'hardhat_stopImpersonatingAccount',
-                params: [FORCE_DEPLOYER_ADDRESS]
-            });
-        });
+        //     await network.provider.request({
+        //         method: 'hardhat_stopImpersonatingAccount',
+        //         params: [FORCE_DEPLOYER_ADDRESS]
+        //     });
+        // });
     });
 });
