@@ -13,3 +13,4 @@ jobs:
       - run: yarn
       - run: yarn build
       - run: yarn build-yul
+      - run: yarn calculate-hashes --check-only
