@@ -53,6 +53,8 @@ const getHashes = (
 };
 
 const main = async () => {
+  const checkOnly = process.argv.includes("--check-only");
+
   const bootloaderSourceCode = readFileAsHexString(
     BOOTLOADER_SOURCE_CODE_PATH,
     "Failed to read Bootloader source code. Make sure to run `yarn build-yul` before you run this script!"
@@ -92,10 +94,19 @@ const main = async () => {
   const oldSystemContractsHashes = fs.readFileSync(OUTPUT_FILE_PATH, "utf8");
 
   if (oldSystemContractsHashes === newSystemContractsHashes) {
-    console.log("SystemContractsHashes.json is up to date");
+    console.log(
+      "Calculated hashes match the hashes in the SystemContractsHashes.json file."
+    );
     return;
+  } else if (checkOnly) {
+    console.error(
+      "Calculated hashes differ from the hashes in the SystemContractsHashes.json file. Exiting..."
+    );
+    process.exit(1);
   } else {
-    console.log("SystemContractsHashes.json is outdated. Updating...");
+    console.log(
+      "Calculated hashes differ from the hashes in the SystemContractsHashes.json file. Updating..."
+    );
 
     fs.writeFileSync(OUTPUT_FILE_PATH, newSystemContractsHashes);
     console.log("Update finished. New hashes:");
