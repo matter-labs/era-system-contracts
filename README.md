@@ -33,11 +33,7 @@ used on msg.sender, when it calls other contracts.
 
 This repository is used as a submodule of the [zksync-2-dev](https://github.com/matter-labs/zksync-2-dev).
 
-Compile the solidity contracts: `yarn build`
-
-Run the bootloader preprocessor: `yarn preprocess`
-
-Compile the yul contracts: `yarn hardhat run ./scripts/compile-yul.ts`
+Compile the solidity and yul contracts: `yarn build`
 
 ## Update Process
 
