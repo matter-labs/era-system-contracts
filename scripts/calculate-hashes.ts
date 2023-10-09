@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import fs from "fs";
+import { readFileSync, writeFileSync } from "fs";
 import { hashBytecode } from "zksync-web3/build/src/utils";
 
 type Hashes = {
@@ -22,7 +22,7 @@ const OUTPUT_FILE_PATH = "./SystemContractsHashes.json";
 
 const readFileAsHexString = (path: string, errorMessage: string): string => {
   try {
-    return "0x" + fs.readFileSync(path, "hex");
+    return "0x" + readFileSync(path, "hex");
   } catch {
     throw new Error(errorMessage);
   }
@@ -30,7 +30,7 @@ const readFileAsHexString = (path: string, errorMessage: string): string => {
 
 const loadBytecodeFromJson = (path: string, errorMessage: string): string => {
   try {
-    const jsonFile = fs.readFileSync(path, "utf8");
+    const jsonFile = readFileSync(path, "utf8");
     return JSON.parse(jsonFile).bytecode;
   } catch {
     throw new Error(errorMessage);
@@ -91,7 +91,7 @@ const main = async () => {
     2
   );
 
-  const oldSystemContractsHashes = fs.readFileSync(OUTPUT_FILE_PATH, "utf8");
+  const oldSystemContractsHashes = readFileSync(OUTPUT_FILE_PATH, "utf8");
 
   if (oldSystemContractsHashes === newSystemContractsHashes) {
     console.log(
@@ -108,7 +108,7 @@ const main = async () => {
       "Calculated hashes differ from the hashes in the SystemContractsHashes.json file. Updating..."
     );
 
-    fs.writeFileSync(OUTPUT_FILE_PATH, newSystemContractsHashes);
+    writeFileSync(OUTPUT_FILE_PATH, newSystemContractsHashes);
     console.log("Update finished. New hashes:");
     console.log(newSystemContractsHashes);
   }

@@ -50,6 +50,6 @@
     "deploy-preimages": "ts-node scripts/deploy-preimages.ts",
     "compile-yul": "ts-node scripts/compile-yul.ts",
     "build-yul": "yarn preprocess-yul && yarn compile-yul",
-    "calculate-hashes" : "ts-node scripts/calculate-hashes.ts"
+    "calculate-hashes": "ts-node scripts/calculate-hashes.ts"
   }
 }
