@@ -4,7 +4,7 @@ import { hashBytecode } from "zksync-web3/build/src/utils";
 
 type Hashes = {
   sourceCodeHash: string;
-  byteCodeHash: string;
+  bytecodeHash: string;
 };
 
 type SystemContractsHashes = {
@@ -45,7 +45,7 @@ const getHashes = (
   try {
     return {
       sourceCodeHash: ethers.utils.sha256(sourceCode),
-      byteCodeHash: ethers.utils.hexlify(hashBytecode(bytecode)),
+      bytecodeHash: ethers.utils.hexlify(hashBytecode(bytecode)),
     };
   } catch {
     throw new Error(errorMessage);
