@@ -1,6 +1,7 @@
+import * as hre from 'hardhat';
+
 import { ethers } from 'ethers';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
-import * as hre from 'hardhat';
 import { renderFile } from 'template-file';
 import { utils } from 'zksync-web3';
 import { SYSTEM_CONTRACTS, getRevertSelector, getTransactionUtils } from './constants';

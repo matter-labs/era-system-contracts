@@ -1,9 +1,10 @@
+import * as hre from 'hardhat';
+
 import { Deployer } from '@matterlabs/hardhat-zksync-deploy';
 import { Command } from 'commander';
 import { BigNumber, ethers } from 'ethers';
 import { formatUnits, parseUnits } from 'ethers/lib/utils';
 import * as fs from 'fs';
-import * as hre from 'hardhat';
 import * as path from 'path';
 import { Provider, Wallet } from 'zksync-web3';
 import { hashBytecode } from 'zksync-web3/build/src/utils';

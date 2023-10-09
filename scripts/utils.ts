@@ -1,7 +1,8 @@
+import * as hre from 'hardhat';
+
 import { Deployer } from '@matterlabs/hardhat-zksync-deploy';
 import { BigNumber, BigNumberish, BytesLike, ethers } from 'ethers';
 import * as fs from 'fs';
-import * as hre from 'hardhat';
 import { hashBytecode } from 'zksync-web3/build/src/utils';
 import { Language, SYSTEM_CONTRACTS, YulContractDescrption } from './constants';
 
