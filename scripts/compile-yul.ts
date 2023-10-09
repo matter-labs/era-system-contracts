@@ -1,8 +1,8 @@
 import * as hre from 'hardhat';
-import * as fs from 'fs';
-import { exec as _exec, spawn as _spawn } from 'child_process';
 
 import { getZksolcUrl, saltFromUrl } from '@matterlabs/hardhat-zksync-solc';
+import { spawn as _spawn } from 'child_process';
+import * as fs from 'fs';
 import { getCompilersDir } from 'hardhat/internal/util/global-dir';
 import path from 'path';
 
@@ -40,7 +40,7 @@ export async function compileYul(path: string, files: string[], outputDirName: s
         console.log(`No test files provided in folder ${path}.`);
         return;
     }
-    let paths = preparePaths(path, files, outputDirName);
+    const paths = preparePaths(path, files, outputDirName);
 
     const zksolcLocation = await compilerLocation();
     await spawn(
@@ -49,22 +49,21 @@ export async function compileYul(path: string, files: string[], outputDirName: s
 }
 
 export async function compileYulFolder(path: string) {
-    let files: string[] = (await fs.promises.readdir(path)).filter((fn) => fn.endsWith('.yul'));
+    const files: string[] = (await fs.promises.readdir(path)).filter((fn) => fn.endsWith('.yul'));
     for (const file of files) {
         await compileYul(path, [file], `${file}`);
     }
 }
 
-
 function preparePaths(path: string, files: string[], outputDirName: string | null): CompilerPaths {
     const filePaths = files
-        .map((val, _) => {
+        .map((val) => {
             return `sources/${val}`;
         })
         .join(' ');
     const outputDir = outputDirName || files[0];
     // This script is located in `system-contracts/scripts`, so we get one directory back.
-    const absolutePathSources = `${__dirname}/../${path}`; 
+    const absolutePathSources = `${__dirname}/../${path}`;
     const absolutePathArtifacts = `${__dirname}/../${path}/artifacts`;
 
     return new CompilerPaths(filePaths, outputDir, absolutePathSources, absolutePathArtifacts);
@@ -82,7 +81,6 @@ class CompilerPaths {
         this.absolutePathArtifacts = absolutePathArtifacts;
     }
 }
-
 
 async function main() {
     await compileYulFolder('contracts');

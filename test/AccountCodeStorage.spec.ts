@@ -8,10 +8,10 @@ import { deployContract, getWallets } from './shared/utils';
 describe('AccountCodeStorage tests', function () {
     let wallet: Wallet;
     let accountCodeStorage: AccountCodeStorage;
-    let deployerAccount: ethers.Signer;
+    // let deployerAccount: ethers.Signer;
 
     const CONSTRUCTING_BYTECODE_HASH = '0x0101FFFFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF';
-    const CONSTRUCTED_BYTECODE_HASH = '0x0100FFFFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF';
+    // const CONSTRUCTED_BYTECODE_HASH = '0x0100FFFFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF';
     const RANDOM_ADDRESS = '0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef';
 
     before(async () => {
@@ -22,7 +22,7 @@ describe('AccountCodeStorage tests', function () {
             method: 'hardhat_impersonateAccount',
             params: [DEPLOYER_SYSTEM_CONTRACT_ADDRESS]
         });
-        deployerAccount = await ethers.getSigner(DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
+        // deployerAccount = await ethers.getSigner(DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
     });
 
     after(async () => {
@@ -214,12 +214,12 @@ describe('AccountCodeStorage tests', function () {
     });
 });
 
-// Utility function to unset code hash for the specified address.
-// Deployer system contract should be impersonated
-async function unsetCodeHash(accountCodeStorage: AccountCodeStorage, address: string) {
-    const deployerAccount = await ethers.getImpersonatedSigner(DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
+// // Utility function to unset code hash for the specified address.
+// // Deployer system contract should be impersonated
+// async function unsetCodeHash(accountCodeStorage: AccountCodeStorage, address: string) {
+//     const deployerAccount = await ethers.getImpersonatedSigner(DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
 
-    await accountCodeStorage
-        .connect(deployerAccount)
-        .storeAccountConstructedCodeHash(address, ethers.constants.HashZero);
-}
+//     await accountCodeStorage
+//         .connect(deployerAccount)
+//         .storeAccountConstructedCodeHash(address, ethers.constants.HashZero);
+// }
