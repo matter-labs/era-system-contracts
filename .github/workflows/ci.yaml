@@ -85,10 +85,8 @@ jobs:
             contracts/precompiles/artifacts
             bootloader/build
 
-
       - name: Run tests
         run: yarn test
-
 
   test_bootloader:
     needs: [build, lint]
@@ -115,7 +113,6 @@ jobs:
             contracts/artifacts
             contracts/precompiles/artifacts
             bootloader/build
-
 
       - name: Run bootloader tests
         run: "cd bootloader/test_infra && cargo run"

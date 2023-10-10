@@ -154,7 +154,7 @@ function extractTestFunctionNames(sourceCode: string): string[] {
 
     const regexPatterns = [/function\s+(TEST\w+)/g];
 
-    let results: string[] = [];
+    const results: string[] = [];
     for (const pattern of regexPatterns) {
         let match;
         while ((match = pattern.exec(sourceCode)) !== null) {
