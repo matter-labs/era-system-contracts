@@ -53,7 +53,7 @@ audited version of the protocol.
 The `dev` branch is for active development & the latest code changes. Whenever a new PR with system contract changes is
 created it should be based on the `dev` branch.
 
-### Creating a new release:
+### Creating a new release
 
 Whenever a new release is planned, a new branch named `release-vX-<name>` should be created off the `dev` branch, where
 `X` represents the release version, and `<name>` is a short descriptive name for the release. The PR with the new
@@ -64,7 +64,7 @@ Once the audit for the release branch is complete and all the fixes from the aud
 changes into the `dev` branch. Once the release is final and merged into the `main` branch, the `main` branch should be
 merged back into the `dev` branch to keep it up-to-date.
 
-### Updating Unaudited Code:
+### Updating Unaudited Code
 
 Since scripts, READMEs, etc., are code that is not subject to audits, these are to be merged directly into the `main`
 branch. The rest of the release branches as well as the `dev` branch should merge `main` to synchronize with these
