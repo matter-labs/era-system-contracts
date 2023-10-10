@@ -73,6 +73,8 @@ jobs:
 
   test_bootloader:
     needs: [build]
+    runs-on: ubuntu-latest
+    
     steps:
       - name: Checkout the repository
         uses: actions/checkout@v3
