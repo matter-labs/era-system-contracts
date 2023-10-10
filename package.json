@@ -57,8 +57,8 @@
     "lint": "yarn lint:sol && yarn lint:ts && yarn prettier:check",
     "lint:ts": "eslint .",
     "lint:sol": "solhint 'contracts/**/*.sol'",
-    "prettier:check": "prettier --check **/*.{json,md,sol,ts,yaml}",
-    "prettier:write": "prettier --write **/*.{json,md,sol,ts,yaml}",
+    "prettier:check": "prettier --check **/*.{js,json,md,sol,ts,yaml}",
+    "prettier:write": "prettier --write **/*.{js,json,md,sol,ts,yaml}",
     "preprocess:yul": "rm -rf ./bootloader/build && yarn ts-node scripts/process.ts",
     "test": "hardhat test --network zkSyncTestNode"
   }
