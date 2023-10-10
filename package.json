@@ -48,11 +48,11 @@
   "scripts": {
     "build": "yarn build:sol && yarn build:yul",
     "build:sol": "hardhat compile",
-    "build:yul": "yarn preprocess:yul && yarn compile:yul",
+    "build:yul": "yarn preprocess:yul && yarn compile-yul",
     "clean": "yarn clean:sol && yarn clean:yul",
     "clean:sol": "hardhat clean",
     "clean:yul": "rm -rf ./bootloader/build ./bootloader/tests/artifacts ./contracts/artifacts ./contracts/precompiles/artifacts",
-    "compile:yul": "ts-node scripts/compile-yul.ts",
+    "compile-yul": "ts-node scripts/compile-yul.ts",
     "deploy-preimages": "ts-node scripts/deploy-preimages.ts",
     "lint": "yarn lint:sol && yarn lint:ts && yarn prettier:check",
     "lint:ts": "eslint .",
