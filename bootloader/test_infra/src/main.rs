@@ -27,9 +27,7 @@ mod hook;
 mod test_count_tracer;
 mod tracer;
 
-/// Executes the "internal transfer test" of the bootloader -- the test that
-/// returns the amount of gas needed to perform and internal transfer, assuming no gas price
-/// per pubdata, i.e. under assumption that the refund will not touch any new slots.
+// Executes bootloader unittests.
 fn execute_internal_bootloader_test() {
     let test_location = env::current_dir()
         .unwrap()
@@ -62,10 +60,10 @@ fn execute_internal_bootloader_test() {
         zk_porter_available: false,
         version: zksync_types::ProtocolVersionId::latest(),
         base_system_smart_contracts: base_system_contract,
-        gas_limit: 80_000_000,
+        gas_limit: u32::MAX,
         execution_mode: TxExecutionMode::VerifyExecute,
         default_validation_computational_gas_limit: u32::MAX,
-        chain_id: zksync_types::L2ChainId(299),
+        chain_id: zksync_types::L2ChainId::from(299),
     };
 
     let mut l1_batch_env = L1BatchEnv {
@@ -81,7 +79,7 @@ fn execute_internal_bootloader_test() {
             number: 1,
             timestamp: 15,
             prev_block_hash: legacy_miniblock_hash(MiniblockNumber(0)),
-            max_virtual_blocks_to_create: 0,
+            max_virtual_blocks_to_create: 1,
         },
     };
 
@@ -89,7 +87,7 @@ fn execute_internal_bootloader_test() {
     let test_count = {
         let storage: StoragePtr<StorageView<InMemoryStorage>> =
             StorageView::new(InMemoryStorage::with_custom_system_contracts_and_chain_id(
-                L2ChainId(IN_MEMORY_STORAGE_DEFAULT_NETWORK_ID),
+                L2ChainId::from(IN_MEMORY_STORAGE_DEFAULT_NETWORK_ID),
                 hash_bytecode,
                 get_system_smart_contracts_from_dir(env::current_dir().unwrap().join("../../")),
             ))
@@ -122,7 +120,7 @@ fn execute_internal_bootloader_test() {
 
         let storage: StoragePtr<StorageView<InMemoryStorage>> =
             StorageView::new(InMemoryStorage::with_custom_system_contracts_and_chain_id(
-                L2ChainId(IN_MEMORY_STORAGE_DEFAULT_NETWORK_ID),
+                L2ChainId::from(IN_MEMORY_STORAGE_DEFAULT_NETWORK_ID),
                 hash_bytecode,
                 get_system_smart_contracts_from_dir(env::current_dir().unwrap().join("../../")),
             ))
