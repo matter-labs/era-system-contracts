@@ -214,8 +214,8 @@ describe('AccountCodeStorage tests', function () {
     });
 });
 
-// // Utility function to unset code hash for the specified address.
-// // Deployer system contract should be impersonated
+// Utility function to unset code hash for the specified address.
+// Deployer system contract should be impersonated
 async function unsetCodeHash(accountCodeStorage: AccountCodeStorage, address: string) {
     const deployerAccount = await ethers.getImpersonatedSigner(DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
 
