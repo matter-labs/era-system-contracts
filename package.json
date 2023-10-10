@@ -56,6 +56,7 @@
     "compile-yul": "ts-node scripts/compile-yul.ts",
     "deploy-preimages": "ts-node scripts/deploy-preimages.ts",
     "lint": "yarn lint:md && yarn lint:sol && yarn lint:ts && yarn prettier:check",
+    "lint:fix": "yarn lint:md --fix && yarn lint:sol --fix && yarn lint:ts --fix && yarn prettier:write",
     "lint:md": "markdownlint **/*.md",
     "lint:sol": "solhint 'contracts/**/*.sol'",
     "lint:ts": "eslint .",
