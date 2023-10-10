@@ -91,7 +91,7 @@ jobs:
 
 
   test_bootloader:
-    needs: [build]
+    needs: [build, lint]
     runs-on: ubuntu-latest
 
     steps:
