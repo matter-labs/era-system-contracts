@@ -60,6 +60,7 @@
     "prettier:check": "prettier --check **/*.{js,json,md,sol,ts,yaml}",
     "prettier:write": "prettier --write **/*.{js,json,md,sol,ts,yaml}",
     "preprocess:yul": "rm -rf ./bootloader/build && yarn ts-node scripts/process.ts",
-    "test": "hardhat test --network zkSyncTestNode"
+    "test": "hardhat test --network zkSyncTestNode",
+    "test:bootloader": "cd bootloader/test_infra && cargo run"
   }
 }
