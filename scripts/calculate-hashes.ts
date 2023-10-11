@@ -155,23 +155,25 @@ const makePathAbsolute = (path: string): string => {
 };
 
 const readSourceCode = (details: ContractDetails): string => {
+  const absolutePath = makePathAbsolute(details.sourceCodePath);
   try {
-    return ethers.utils.hexlify(fs.readFileSync(details.sourceCodePath));
+    return ethers.utils.hexlify(fs.readFileSync(absolutePath));
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";
     throw new Error(
-      `Failed to read source code for ${details.contractName}: ${details.sourceCodePath} Error: ${msg}`
+      `Failed to read source code for ${details.contractName}: ${absolutePath} Error: ${msg}`
     );
   }
 };
 
 const readBytecode = (details: ContractDetails): string => {
+  const absolutePath = makePathAbsolute(details.bytecodePath);
   try {
     if (details.bytecodePath.endsWith(".json")) {
-      const jsonFile = fs.readFileSync(details.bytecodePath, "utf8");
+      const jsonFile = fs.readFileSync(absolutePath, "utf8");
       return ethers.utils.hexlify(JSON.parse(jsonFile).bytecode);
     } else {
-      return ethers.utils.hexlify(fs.readFileSync(details.bytecodePath));
+      return ethers.utils.hexlify(fs.readFileSync(absolutePath));
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";
