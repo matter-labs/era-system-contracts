@@ -126,9 +126,9 @@ const SYSTEM_CONTRACTS_DETAILS: ContractDetails[] = [
       "contracts/precompiles/artifacts/Keccak256.yul/Keccak256.yul.zbin",
   },
   {
-    contractName: "Sha256",
-    sourceCodePath: "contracts/precompiles/Sha256.yul",
-    bytecodePath: "contracts/precompiles/artifacts/Sha256.yul/Sha256.yul.zbin",
+    contractName: "SHA256",
+    sourceCodePath: "contracts/precompiles/SHA256.yul",
+    bytecodePath: "contracts/precompiles/artifacts/SHA256.yul/SHA256.yul.zbin",
   },
   // bootloader dir yul
   {

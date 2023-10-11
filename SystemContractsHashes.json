@@ -132,10 +132,10 @@
     "bytecodeHash": "0x0100001fb52ca33668d01c230a1c3b13ede90fe2e37d77222410e9f183cb7a89",
     "sourceCodeHash": "0x6415e127a4e07907fb87d0cbdf480fff8c70326c4f2f670af0cf3248862e4df4"
   },
-  "sha256": {
-    "contractName": "Sha256",
-    "sourceCodePath": "contracts/precompiles/Sha256.yul",
-    "bytecodePath": "contracts/precompiles/artifacts/Sha256.yul/Sha256.yul.zbin",
+  "sHA256": {
+    "contractName": "SHA256",
+    "sourceCodePath": "contracts/precompiles/SHA256.yul",
+    "bytecodePath": "contracts/precompiles/artifacts/SHA256.yul/SHA256.yul.zbin",
     "bytecodeHash": "0x010000178d93b2d7d6448866009892223caf018a8e8dbcf090c2b9053a285f8d",
     "sourceCodeHash": "0x8f5a719394836111c850774e89ffb22ef825ff4d24d116ca750888be906f0109"
   },
