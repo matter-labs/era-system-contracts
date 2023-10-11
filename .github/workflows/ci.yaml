@@ -12,5 +12,6 @@ jobs:
           node-version: 18.18.0
       - run: yarn
       - run: yarn build
-      - run: yarn build-yul
+      - run: yarn preprocess
+      - run: yarn compile-yul
       - run: yarn calculate-hashes --check-only
