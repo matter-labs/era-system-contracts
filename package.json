@@ -58,10 +58,10 @@
     "lint": "yarn lint:md && yarn lint:sol && yarn lint:ts && yarn prettier:check",
     "lint:fix": "yarn lint:md --fix && yarn lint:sol --fix && yarn lint:ts --fix && yarn prettier:write",
     "lint:md": "markdownlint **/*.md",
-    "lint:sol": "solhint 'contracts/**/*.sol'",
+    "lint:sol": "solhint \"contracts/**/*.sol\"",
     "lint:ts": "eslint .",
-    "prettier:check": "prettier --check **/*.{js,json,md,sol,ts,yaml}",
-    "prettier:write": "prettier --write **/*.{js,json,md,sol,ts,yaml}",
+    "prettier:check": "prettier --check \"**/*.{js,json,md,sol,ts,yaml}\"",
+    "prettier:write": "prettier --write \"**/*.{js,json,md,sol,ts,yaml}\"",
     "preprocess:yul": "rm -rf ./bootloader/build && yarn ts-node scripts/process.ts",
     "test": "hardhat test --network zkSyncTestNode",
     "test:bootloader": "cd bootloader/test_infra && cargo run"
