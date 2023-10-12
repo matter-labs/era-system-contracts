@@ -146,10 +146,6 @@ type Hashes = {
 
 type SystemContractHashes = ContractDetails & Hashes;
 
-type SystemContractsHashes = {
-  [key: string]: SystemContractHashes;
-};
-
 const makePathAbsolute = (path: string): string => {
   return join(__dirname, "..", path);
 };
@@ -203,14 +199,10 @@ const getHashes = (
   }
 };
 
-const withLowercaseFirstLetter = (name: string) => {
-  return name.charAt(0).toLowerCase() + name.slice(1);
-};
-
 const getSystemContractsHashes = (
   systemContractsDetails: ContractDetails[]
-): SystemContractsHashes =>
-  systemContractsDetails.reduce((systemContractsHashes, contractDetails) => {
+): SystemContractHashes[] =>
+  systemContractsDetails.map((contractDetails) => {
     const sourceCode = readSourceCode(contractDetails);
     const bytecode = readBytecode(contractDetails);
     const hashes = getHashes(
@@ -224,17 +216,14 @@ const getSystemContractsHashes = (
       ...hashes,
     };
 
-    const keyName = withLowercaseFirstLetter(contractDetails.contractName);
-
-    return {
-      ...systemContractsHashes,
-      [keyName]: systemContractHashes,
-    };
-  }, {});
+    return systemContractHashes;
+  });
 
 const OUTPUT_FILE_PATH = "SystemContractsHashes.json";
 
-const readSystemContractsHashesFile = (path: string): SystemContractsHashes => {
+const readSystemContractsHashesFile = (
+  path: string
+): SystemContractHashes[] => {
   const absolutePath = makePathAbsolute(path);
   try {
     const file = fs.readFileSync(absolutePath, "utf8");
@@ -248,7 +237,7 @@ const readSystemContractsHashesFile = (path: string): SystemContractsHashes => {
 
 const saveSystemContractsHashesFile = (
   path: string,
-  systemContractsHashes: SystemContractsHashes
+  systemContractsHashes: SystemContractHashes[]
 ) => {
   const absolutePath = makePathAbsolute(path);
   try {
@@ -263,21 +252,28 @@ const saveSystemContractsHashesFile = (
 };
 
 const findDifferences = (
-  newHashes: SystemContractsHashes,
-  oldHashes: SystemContractsHashes
+  newHashes: SystemContractHashes[],
+  oldHashes: SystemContractHashes[]
 ) => {
-  const differences = _.xorWith(
-    Object.entries(newHashes),
-    Object.entries(oldHashes),
-    _.isEqual
+  const differentElements = _.xorWith(newHashes, oldHashes, _.isEqual);
+
+  const differentUniqueElements = _.uniqWith(
+    differentElements,
+    (a, b) => a.contractName === b.contractName
   );
 
-  const differencesUniqueKeys = _.uniq(differences.map(([key]) => key));
+  const differencesList = differentUniqueElements.map((diffElem) => {
+    const newHashesElem = newHashes.find(
+      (elem) => elem.contractName === diffElem.contractName
+    );
 
-  const differencesList = differencesUniqueKeys.map((key) => {
+    const oldHashesElem = oldHashes.find(
+      (elem) => elem.contractName === diffElem.contractName
+    );
+
     const differingFields = _.xorWith(
-      Object.entries(newHashes[key] || {}),
-      Object.entries(oldHashes[key] || {}),
+      Object.entries(newHashesElem || {}),
+      Object.entries(oldHashesElem || {}),
       _.isEqual
     );
 
@@ -286,10 +282,10 @@ const findDifferences = (
     );
 
     return {
-      key: key,
+      contract: diffElem.contractName,
       differingFields: differingFieldsUniqueKeys,
-      old: oldHashes[key] || {},
-      new: newHashes[key] || {},
+      old: oldHashesElem || {},
+      new: newHashesElem || {},
     };
   });
 
