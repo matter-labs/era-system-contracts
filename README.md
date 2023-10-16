@@ -35,7 +35,7 @@ This repository is used as a submodule of the [zksync-2-dev](https://github.com/
 
 Compile the solidity and yul contracts: `yarn build`
 
-Check the system contracts hashes: `yarn calculate-hashes --check`
+Check the system contracts hashes: `yarn calculate-hashes --check-only`
 
 Update the system contracts hashes: `yarn calculate-hashes`
 
