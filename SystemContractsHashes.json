@@ -25,7 +25,7 @@
     "sourceCodePath": "contracts/Compressor.sol",
     "bytecodePath": "artifacts-zk/cache-zk/solpp-generated-contracts/Compressor.sol/Compressor.json",
     "bytecodeHash": "0x010001b7297c61d6172f0b23934d876f8899487a53a9b1244384b943cfbeea35",
-    "sourceCodeHash": "0x0c5acc4841941f31b2343c49ac16173a1078b166a88d0409a521b9eda5f9c768"
+    "sourceCodeHash": "0xfed07845a7f4b19cf41351b56687311d3f55cfca90a8d3b2a3d3df1737873bbd"
   },
   {
     "contractName": "ContractDeployer",
@@ -67,7 +67,7 @@
     "sourceCodePath": "contracts/L1Messenger.sol",
     "bytecodePath": "artifacts-zk/cache-zk/solpp-generated-contracts/L1Messenger.sol/L1Messenger.json",
     "bytecodeHash": "0x010002fb34f285e9173965a047ce210290969caf59f3f608154e5de619fa4394",
-    "sourceCodeHash": "0x123b72389c2c7b6580db376f4b2740b97d016086a1490c2451031112da090e05"
+    "sourceCodeHash": "0x85d7b2639d7844735a6d2f166c77c45bd81f0197b3131d9d6a3594c313dc965a"
   },
   {
     "contractName": "L2EthToken",
