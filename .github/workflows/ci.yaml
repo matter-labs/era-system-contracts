@@ -72,7 +72,7 @@ jobs:
           toolchain: nightly-2023-04-17
 
       - name: Use era-test-node for testing
-        run: cargo +nightly install --git https://github.com/matter-labs/era-test-node.git --locked --branch boojum-integration
+        run: cargo install --git https://github.com/matter-labs/era-test-node.git --locked --branch boojum-integration
 
       - name: Install dependencies
         run: yarn
