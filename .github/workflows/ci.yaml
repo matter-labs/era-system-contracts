@@ -91,7 +91,7 @@ jobs:
             bootloader/build
 
       - name: Starting test node
-        run: era_test_node run > /dev/null 2>&1
+        run: era_test_node run > /dev/null 2>&1 &
 
       - name: Run tests
         run: yarn test
