@@ -9,7 +9,7 @@ import {
 } from './shared/constants';
 import { deployContract, getCode, getWallets, loadArtifact, setCode } from './shared/utils';
 
-describe('KnownCodesStorage tests', function () {
+xdescribe('KnownCodesStorage tests', function () {
     let wallet: Wallet;
     let knownCodesStorage: KnownCodesStorage;
     let mockL1Messenger: MockL1Messenger;

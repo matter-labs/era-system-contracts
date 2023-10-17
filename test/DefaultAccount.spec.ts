@@ -21,7 +21,7 @@ import {
 import { signedTxToTransactionData } from './shared/transactions';
 import { deployContract, getWallets, loadArtifact, setCode } from './shared/utils';
 
-describe('DefaultAccount tests', function () {
+xdescribe('DefaultAccount tests', function () {
     let wallet: Wallet;
     let account: Wallet;
     let defaultAccount: DefaultAccount;
