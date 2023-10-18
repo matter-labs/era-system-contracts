@@ -7,13 +7,13 @@ import { hashBytecode } from 'zksync-web3/build/src/utils';
 
 type ContractDetails = {
     contractName: string;
-    sourceCodePath: string;
     bytecodePath: string;
+    sourceCodePath: string;
 };
 
 type Hashes = {
-    sourceCodeHash: string;
     bytecodeHash: string;
+    sourceCodeHash: string;
 };
 
 type SystemContractHashes = ContractDetails & Hashes;
@@ -39,8 +39,8 @@ const getSolidityContractDetails = (dir: string, contractName: string): Contract
     const sourceCodePath = join(dir, contractName + '.sol');
     return {
         contractName,
-        sourceCodePath,
-        bytecodePath
+        bytecodePath,
+        sourceCodePath
     };
 };
 
@@ -59,8 +59,8 @@ const getYulContractDetails = (dir: string, contractName: string): ContractDetai
     const sourceCodePath = join(dir, contractName + '.yul');
     return {
         contractName,
-        sourceCodePath,
-        bytecodePath
+        bytecodePath,
+        sourceCodePath
     };
 };
 
