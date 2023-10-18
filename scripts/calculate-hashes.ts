@@ -11,124 +11,66 @@ type ContractDetails = {
     bytecodePath: string;
 };
 
-const SYSTEM_CONTRACTS_DETAILS: ContractDetails[] = [
-    // contracts dir sol
-    {
-        contractName: 'AccountCodeStorage',
-        sourceCodePath: 'contracts/AccountCodeStorage.sol',
-        bytecodePath: 'artifacts-zk/cache-zk/solpp-generated-contracts/AccountCodeStorage.sol/AccountCodeStorage.json'
-    },
-    {
-        contractName: 'BootloaderUtilities',
-        sourceCodePath: 'contracts/BootloaderUtilities.sol',
-        bytecodePath: 'artifacts-zk/cache-zk/solpp-generated-contracts/BootloaderUtilities.sol/BootloaderUtilities.json'
-    },
-    {
-        contractName: 'ComplexUpgrader',
-        sourceCodePath: 'contracts/ComplexUpgrader.sol',
-        bytecodePath: 'artifacts-zk/cache-zk/solpp-generated-contracts/ComplexUpgrader.sol/ComplexUpgrader.json'
-    },
-    {
-        contractName: 'Compressor',
-        sourceCodePath: 'contracts/Compressor.sol',
-        bytecodePath: 'artifacts-zk/cache-zk/solpp-generated-contracts/Compressor.sol/Compressor.json'
-    },
-    {
-        contractName: 'ContractDeployer',
-        sourceCodePath: 'contracts/ContractDeployer.sol',
-        bytecodePath: 'artifacts-zk/cache-zk/solpp-generated-contracts/ContractDeployer.sol/ContractDeployer.json'
-    },
-    {
-        contractName: 'DefaultAccount',
-        sourceCodePath: 'contracts/DefaultAccount.sol',
-        bytecodePath: 'artifacts-zk/cache-zk/solpp-generated-contracts/DefaultAccount.sol/DefaultAccount.json'
-    },
-    {
-        contractName: 'EmptyContract',
-        sourceCodePath: 'contracts/EmptyContract.sol',
-        bytecodePath: 'artifacts-zk/cache-zk/solpp-generated-contracts/EmptyContract.sol/EmptyContract.json'
-    },
-    {
-        contractName: 'ImmutableSimulator',
-        sourceCodePath: 'contracts/ImmutableSimulator.sol',
-        bytecodePath: 'artifacts-zk/cache-zk/solpp-generated-contracts/ImmutableSimulator.sol/ImmutableSimulator.json'
-    },
-    {
-        contractName: 'KnownCodesStorage',
-        sourceCodePath: 'contracts/KnownCodesStorage.sol',
-        bytecodePath: 'artifacts-zk/cache-zk/solpp-generated-contracts/KnownCodesStorage.sol/KnownCodesStorage.json'
-    },
-    {
-        contractName: 'L1Messenger',
-        sourceCodePath: 'contracts/L1Messenger.sol',
-        bytecodePath: 'artifacts-zk/cache-zk/solpp-generated-contracts/L1Messenger.sol/L1Messenger.json'
-    },
-    {
-        contractName: 'L2EthToken',
-        sourceCodePath: 'contracts/L2EthToken.sol',
-        bytecodePath: 'artifacts-zk/cache-zk/solpp-generated-contracts/L2EthToken.sol/L2EthToken.json'
-    },
-    {
-        contractName: 'MsgValueSimulator',
-        sourceCodePath: 'contracts/MsgValueSimulator.sol',
-        bytecodePath: 'artifacts-zk/cache-zk/solpp-generated-contracts/MsgValueSimulator.sol/MsgValueSimulator.json'
-    },
-    {
-        contractName: 'NonceHolder',
-        sourceCodePath: 'contracts/NonceHolder.sol',
-        bytecodePath: 'artifacts-zk/cache-zk/solpp-generated-contracts/NonceHolder.sol/NonceHolder.json'
-    },
-    {
-        contractName: 'SystemContext',
-        sourceCodePath: 'contracts/SystemContext.sol',
-        bytecodePath: 'artifacts-zk/cache-zk/solpp-generated-contracts/SystemContext.sol/SystemContext.json'
-    },
-    // contracts dir yul
-    {
-        contractName: 'EventWriter',
-        sourceCodePath: 'contracts/EventWriter.yul',
-        bytecodePath: 'contracts/artifacts/EventWriter.yul/EventWriter.yul.zbin'
-    },
-    // precompiles dir yul
-    {
-        contractName: 'EcAdd',
-        sourceCodePath: 'contracts/precompiles/EcAdd.yul',
-        bytecodePath: 'contracts/precompiles/artifacts/EcAdd.yul/EcAdd.yul.zbin'
-    },
-    {
-        contractName: 'EcMul',
-        sourceCodePath: 'contracts/precompiles/EcMul.yul',
-        bytecodePath: 'contracts/precompiles/artifacts/EcMul.yul/EcMul.yul.zbin'
-    },
-    {
-        contractName: 'Ecrecover',
-        sourceCodePath: 'contracts/precompiles/Ecrecover.yul',
-        bytecodePath: 'contracts/precompiles/artifacts/Ecrecover.yul/Ecrecover.yul.zbin'
-    },
-    {
-        contractName: 'Keccak256',
-        sourceCodePath: 'contracts/precompiles/Keccak256.yul',
-        bytecodePath: 'contracts/precompiles/artifacts/Keccak256.yul/Keccak256.yul.zbin'
-    },
-    {
-        contractName: 'SHA256',
-        sourceCodePath: 'contracts/precompiles/SHA256.yul',
-        bytecodePath: 'contracts/precompiles/artifacts/SHA256.yul/SHA256.yul.zbin'
-    },
-    // bootloader dir yul
-    {
-        contractName: 'proved_batch',
-        sourceCodePath: 'bootloader/build/proved_batch.yul',
-        bytecodePath: 'bootloader/build/artifacts/proved_batch.yul/proved_batch.yul.zbin'
-    }
-];
-
 type Hashes = {
     sourceCodeHash: string;
     bytecodeHash: string;
 };
 
 type SystemContractHashes = ContractDetails & Hashes;
+
+const findDirsEndingWith =
+    (endingWith: string) =>
+    (path: string): string[] => {
+        const absolutePath = makePathAbsolute(path);
+        try {
+            const dirs = fs.readdirSync(absolutePath, { withFileTypes: true }).filter((dirent) => dirent.isDirectory());
+            const dirsEndingWithSol = dirs.filter((dirent) => dirent.name.endsWith(endingWith));
+            return dirsEndingWithSol.map((dirent) => dirent.name);
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : 'Unknown error';
+            throw new Error(`Failed to read directory: ${absolutePath} Error: ${msg}`);
+        }
+    };
+
+const SOLIDITY_ARTIFACTS_DIR = 'artifacts-zk';
+
+const getSolidityContractDetails = (dir: string, contractName: string): ContractDetails => {
+    const bytecodePath = join(SOLIDITY_ARTIFACTS_DIR, dir, contractName + '.sol', contractName + '.json');
+    const sourceCodePath = join(dir, contractName + '.sol');
+    return {
+        contractName,
+        sourceCodePath,
+        bytecodePath
+    };
+};
+
+const getSolidityContractsDetails = (dir: string): ContractDetails[] => {
+    const bytecodesDir = join(SOLIDITY_ARTIFACTS_DIR, dir);
+    const dirsEndingWithSol = findDirsEndingWith('.sol')(bytecodesDir);
+    const contractNames = dirsEndingWithSol.map((d) => d.replace('.sol', ''));
+    const solidityContractsDetails = contractNames.map((c) => getSolidityContractDetails(dir, c));
+    return solidityContractsDetails;
+};
+
+const YUL_ARTIFACTS_DIR = 'artifacts';
+
+const getYulContractDetails = (dir: string, contractName: string): ContractDetails => {
+    const bytecodePath = join(dir, YUL_ARTIFACTS_DIR, contractName + '.yul', contractName + '.yul.zbin');
+    const sourceCodePath = join(dir, contractName + '.yul');
+    return {
+        contractName,
+        sourceCodePath,
+        bytecodePath
+    };
+};
+
+const getYulContractsDetails = (dir: string): ContractDetails[] => {
+    const bytecodesDir = join(dir, YUL_ARTIFACTS_DIR);
+    const dirsEndingWithYul = findDirsEndingWith('.yul')(bytecodesDir);
+    const contractNames = dirsEndingWithYul.map((d) => d.replace('.yul', ''));
+    const yulContractsDetails = contractNames.map((c) => getYulContractDetails(dir, c));
+    return yulContractsDetails;
+};
 
 const makePathAbsolute = (path: string): string => {
     return join(__dirname, '..', path);
@@ -187,8 +129,6 @@ const getSystemContractsHashes = (systemContractsDetails: ContractDetails[]): Sy
         return systemContractHashes;
     });
 
-const OUTPUT_FILE_PATH = 'SystemContractsHashes.json';
-
 const readSystemContractsHashesFile = (path: string): SystemContractHashes[] => {
     const absolutePath = makePathAbsolute(path);
     try {
@@ -240,6 +180,10 @@ const findDifferences = (newHashes: SystemContractHashes[], oldHashes: SystemCon
     return differencesList;
 };
 
+const SOLIDITY_SOURCE_CODE_PATHS = ['cache-zk/solpp-generated-contracts'];
+const YUL_SOURCE_CODE_PATHS = ['contracts', 'contracts/precompiles', 'bootloader/build'];
+const OUTPUT_FILE_PATH = 'SystemContractsHashes.json';
+
 const main = async () => {
     const args = process.argv;
     if (args.length > 3 || (args.length == 3 && !args.includes('--check-only'))) {
@@ -250,21 +194,20 @@ const main = async () => {
     }
     const checkOnly = args.includes('--check-only');
 
-    const newSystemContractsHashes = getSystemContractsHashes(SYSTEM_CONTRACTS_DETAILS);
+    const solidityContractsDetails = _.flatten(SOLIDITY_SOURCE_CODE_PATHS.map(getSolidityContractsDetails));
+    const yulContractsDetails = _.flatten(YUL_SOURCE_CODE_PATHS.map(getYulContractsDetails));
+    const systemContractsDetails = [...solidityContractsDetails, ...yulContractsDetails];
 
+    const newSystemContractsHashes = getSystemContractsHashes(systemContractsDetails);
     const oldSystemContractsHashes = readSystemContractsHashesFile(OUTPUT_FILE_PATH);
-
     if (_.isEqual(newSystemContractsHashes, oldSystemContractsHashes)) {
         console.log('Calculated hashes match the hashes in the SystemContractsHashes.json file.');
         console.log('Exiting...');
         return;
     }
-
     const differences = findDifferences(newSystemContractsHashes, oldSystemContractsHashes);
-
     console.log('Calculated hashes differ from the hashes in the SystemContractsHashes.json file. Differences:');
     console.log(differences);
-
     if (checkOnly) {
         console.log('You can use the `yarn calculate-hashes` command to update the SystemContractsHashes.json file.');
         console.log('Exiting...');
