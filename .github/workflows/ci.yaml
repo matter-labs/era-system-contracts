@@ -110,11 +110,12 @@ jobs:
         with:
           toolchain: nightly-2023-04-17
 
-      - name: Rust cacheing
-        uses: Swatinem/rust-cache@v2
-
-      - name: Install era-test-node
-        run: cargo install --git https://github.com/matter-labs/era-test-node.git --locked --branch boojum-integration
+      - name: Use era-test-node for testing
+        uses: baptiste0928/cargo-install@v2
+        with:
+          crate: era_test_node
+          git: https://github.com/matter-labs/era-test-node.git
+          branch: boojum-integration
 
       - name: Install dependencies
         run: yarn
