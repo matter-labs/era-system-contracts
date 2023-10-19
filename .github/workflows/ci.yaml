@@ -112,7 +112,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Install era-test-node
-        run: cargo install --git https://github.com/matter-labs/era-test-node.git --locked --branch boojum-integration
+        run: rustup run nightly cargo install --git https://github.com/matter-labs/era-test-node.git --locked --branch boojum-integration
 
       - name: Install dependencies
         run: yarn
