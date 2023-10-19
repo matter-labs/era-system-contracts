@@ -106,13 +106,15 @@ jobs:
           cache: yarn
 
       - name: Install rust
-        run: rustup toolchain install nightly-2023-04-17 --profile minimal
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: nightly-2023-04-17
 
       - name: Rust cacheing
         uses: Swatinem/rust-cache@v2
 
       - name: Install era-test-node
-        run: rustup run nightly cargo install --git https://github.com/matter-labs/era-test-node.git --locked --branch boojum-integration
+        run: cargo install --git https://github.com/matter-labs/era-test-node.git --locked --branch boojum-integration
 
       - name: Install dependencies
         run: yarn
