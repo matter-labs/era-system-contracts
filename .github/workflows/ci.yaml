@@ -106,7 +106,7 @@ jobs:
           cache: yarn
 
       - name: Install rust
-        uses: rustup toolchain install nightly-2023-04-17 --profile minimal
+        run: rustup toolchain install nightly-2023-04-17 --profile minimal
 
       - name: Rust cacheing
         uses: Swatinem/rust-cache@v2
