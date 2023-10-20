@@ -156,11 +156,6 @@ jobs:
         with:
           toolchain: nightly-2023-04-17
 
-      - uses: baptiste0928/cargo-install@21a18ba3bf4a184d1804e8b759930d3471b1c941
-        with:
-          crate: test_infra
-          args: --path bootloader/test_infra
-
       - name: Restore artifacts cache
         uses: actions/cache/restore@v3
         with:
