@@ -67,11 +67,8 @@ contract KeccakTest {
 
         bytes32 result;
         assembly {
-            let ptr := mload(0x40)
-            returndatacopy(ptr, 0, 32)
-            result := mload(ptr)
-            // Clearing the pointer just in case
-            mstore(ptr, 0)
+            returndatacopy(0, 0, 32)
+            result := mload(0)
         }
 
         require(result == bytes32(0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470), "The result is not correct");
