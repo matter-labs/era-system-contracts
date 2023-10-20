@@ -111,7 +111,7 @@ jobs:
           toolchain: nightly-2023-04-17
 
       - name: Use era_test_node for testing
-        uses: baptiste0928/cargo-install@v2
+        uses: baptiste0928/cargo-install@21a18ba3bf4a184d1804e8b759930d3471b1c941
         with:
           crate: era_test_node
           git: https://github.com/matter-labs/era-test-node.git
