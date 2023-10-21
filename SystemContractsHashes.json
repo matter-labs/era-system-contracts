@@ -108,8 +108,8 @@
     "contractName": "EcAdd",
     "bytecodePath": "contracts/precompiles/artifacts/EcAdd.yul/EcAdd.yul.zbin",
     "sourceCodePath": "contracts/precompiles/EcAdd.yul",
-    "bytecodeHash": "0x010000bb0ef14673a93b93461973b249f2717cba27db07ba8a7c85c005c1e786",
-    "sourceCodeHash": "0x1dcfbda17a177cb76fc7e445249a1b1b7944323073d8ddbfa6becfb35addce16"
+    "bytecodeHash": "0x010000bb77ebc6b561e21e20b4075757ac005ccca2011f45c80dcfa5318a5cc5",
+    "sourceCodeHash": "0x0587d539fd7760c226c92c715c0ea9f8a1db9131015a2251dd449a83a96b9d2f"
   },
   {
     "contractName": "EcMul",
