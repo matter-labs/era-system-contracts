@@ -1,5 +1,7 @@
 object "EcMul" {
-    code { }
+    code {
+        return(0, 0)
+    }
     object "EcMul_deployed" {
         code {
             // CONSTANTS
