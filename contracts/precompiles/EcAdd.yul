@@ -1,5 +1,7 @@
 object "EcAdd" {
-    code { }
+    code {
+        return(0, 0)
+    }
     object "EcAdd_deployed" {
         code {
             // CONSTANTS
