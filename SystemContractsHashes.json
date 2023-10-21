@@ -115,7 +115,7 @@
     "contractName": "EcMul",
     "bytecodePath": "contracts/precompiles/artifacts/EcMul.yul/EcMul.yul.zbin",
     "sourceCodePath": "contracts/precompiles/EcMul.yul",
-    "bytecodeHash": "0x010001378d31273c8e58caa12bcf1a5694e66a0aefdba2504adb8e3eb02b21c7",
+    "bytecodeHash": "0x01000137de2328e3d1bfd58ba73a18ce9fd4c81589ac6570d65e77a99d5c3b0d",
     "sourceCodeHash": "0xdf282be4cf38330f655a2bb916c0c23474d86b3ce8410ce3720596bfe8f47465"
   },
   {
