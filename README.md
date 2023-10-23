@@ -30,7 +30,7 @@ on msg.sender, when it calls other contracts.
 
 ## Building
 
-This repository is used as a submodule of the [zksync-2-dev](https://github.com/matter-labs/zksync-2-dev).
+This repository is used as a submodule of the [zksync-era](https://github.com/matter-labs/zksync-era).
 
 Compile the solidity contracts: `yarn build`
 
