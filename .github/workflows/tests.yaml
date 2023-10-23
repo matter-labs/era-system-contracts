@@ -9,7 +9,9 @@ jobs:
       image: matterlabs/zk-environment:latest2.0
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/setup-node@v3
-      with:
-        node-version: 18
+    - name: Setup environment
+      run: |
+        echo ZKSYNC_HOME=$(pwd) >> $GITHUB_ENV
+        echo $(pwd)/bin >> $GITHUB_PATH
+        echo IN_DOCKER=1 >> .env
     - run: npm test
