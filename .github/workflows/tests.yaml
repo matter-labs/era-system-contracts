@@ -12,7 +12,7 @@ jobs:
     - name: Setup environment
       run: |
         echo "ZKSYNC_HOME=${{ github.workspace }}" >> $GITHUB_ENV
-        echo "${{ github.workspace }}/bin:$PATH" >> $GITHUB_ENV
+        echo "PATH=${{ github.workspace }}/bin:$PATH" >> $GITHUB_ENV
     - name: Run tests
       run: |
         npm test
