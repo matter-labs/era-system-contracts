@@ -1,0 +1,13 @@
+name: Workflow to run tests
+
+on: pull_request
+
+jobs:
+  tests:
+    runs-on: ubuntu-22.04-github-hosted-16core
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 18
+    - run: npm test
