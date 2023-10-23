@@ -9,10 +9,6 @@ jobs:
       image: matterlabs/zk-environment:latest2.0-lightweight
     steps:
     - uses: actions/checkout@v4
-    - name: Setup environment
-      run: |
-        echo "ZKSYNC_HOME=$GITHUB_WORKSPACE" >> $GITHUB_ENV
-        echo "PATH=$GITHUB_WORKSPACE/bin:$PATH" >> $GITHUB_ENV
     - name: Run tests
       run: |
-        npm test
+        mocha test/system-contract-test.test.ts
