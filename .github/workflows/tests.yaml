@@ -4,14 +4,15 @@ on: pull_request
 
 jobs:
   tests:
-    runs-on: ubuntu-22.04-github-hosted-16core
+    runs-on: matterlabs-ci-runner
     container:
-      image: matterlabs/zk-environment:latest2.0
+      image: matterlabs/zk-environment:latest2.0-lightweight
     steps:
     - uses: actions/checkout@v4
     - name: Setup environment
       run: |
-        echo ZKSYNC_HOME=$(pwd) >> $GITHUB_ENV
-        echo $(pwd)/bin >> $GITHUB_PATH
-        echo IN_DOCKER=1 >> .env
-    - run: npm test
+        echo "ZKSYNC_HOME=${{ github.workspace }}" >> $GITHUB_ENV
+        echo "${{ github.workspace }}/bin:$PATH" >> $GITHUB_ENV
+    - name: Run tests
+      run: |
+        npm test
