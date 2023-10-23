@@ -11,5 +11,6 @@ jobs:
     - uses: actions/checkout@v4
     - name: Run tests
       run: |
+        npm install -g ts-node
         npm install -g mocha
         mocha test/system-contract-test.test.ts
