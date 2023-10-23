@@ -9,8 +9,11 @@ jobs:
       image: matterlabs/zk-environment:latest2.0-lightweight
     steps:
     - uses: actions/checkout@v4
-    - name: Run tests
+    - name: Install dependencies
       run: |
         npm install -g ts-node
         npm install -g mocha
+        npm install
+    - name: Run tests
+      run: |
         mocha test/system-contract-test.test.ts
