@@ -209,7 +209,7 @@ const main = async () => {
     console.log('Calculated hashes differ from the hashes in the SystemContractsHashes.json file. Differences:');
     console.log(differences);
     if (checkOnly) {
-        console.log('You can use the `yarn calculate-hashes` command to update the SystemContractsHashes.json file.');
+        console.log('You can use the `yarn calculate-hashes:fix` command to update the SystemContractsHashes.json file.');
         console.log('Exiting...');
         process.exit(1);
     } else {
@@ -226,7 +226,7 @@ main()
     .catch((err) => {
         console.error('Error:', err.message || err);
         console.log(
-            'Please make sure to run `yarn build && yarn preprocess && yarn compile-yul` before running this script.'
+            'Please make sure to run `yarn build` before running this script.'
         );
         process.exit(1);
     });
