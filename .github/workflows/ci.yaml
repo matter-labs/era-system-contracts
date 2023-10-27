@@ -108,7 +108,7 @@ jobs:
       - name: Use era-test-node for testing
         uses: dutterbutter/era-test-node-action@latest
         with:
-          releaseTag: "v0.0.1-alpha.boojum"
+          releaseTag: tags/v0.0.1-alpha.boojum
 
       - name: Install dependencies
         run: yarn
