@@ -382,7 +382,6 @@ contract SystemContext is ISystemContext, ISystemContextDeprecated, ISystemContr
 
         // The structure of the "setNewBatch" implies that currentBatchNumber > 0, but we still double check it
         require(currentBatchNumber > 0, "The current batch number must be greater than 0");
-        bytes32 prevBatchHash = batchHash[currentBatchNumber - 1];
 
         // In order to spend less pubdata, the packed version is published
         uint256 packedTimestamps = (uint256(currentBatchTimestamp) << 128) | currentL2BlockTimestamp;
