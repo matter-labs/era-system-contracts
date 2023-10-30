@@ -214,6 +214,9 @@ contract ContractDeployer is IContractDeployer, ISystemContract {
     function forceDeployOnAddress(ForceDeployment calldata _deployment, address _sender) external payable onlySelf {
         _ensureBytecodeIsKnown(_deployment.bytecodeHash);
 
+        // Since the `forceDeployOnAddress` function is called only during upgrades, the Governance is trusted to correctly select
+        // the addresses to deploy the new bytecodes to and to assess whether overriding the AccountInfo for the "force-deployed"
+        // contract is acceptable.
         AccountInfo memory newAccountInfo;
         newAccountInfo.supportedAAVersion = AccountAbstractionVersion.None;
         // Accounts have sequential nonces by default.
