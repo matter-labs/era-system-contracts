@@ -1755,6 +1755,37 @@ object "Bootloader" {
             }
             <!-- @endif -->
 
+            /// @dev Given the callee and the data to be called with, 
+            /// this function returns whether the mimicCall should use the `isSystem` flag.
+            /// This flag should only be used for contract deployments and nothing else.
+            /// @param to The callee of the call.
+            /// @param dataPtr The pointer to the calldata of the transaction.
+            function shouldMsgValueMimicCallBeSystem(to, dataPtr) -> ret {
+                let dataLen := mload(dataPtr)
+                // Note, that this point it is not fully known whether it is indeed the selector 
+                // of the calldata (it might not be the case if the `dataLen` < 4), but it will be checked later on
+                let selector := shr(32, mload(add(dataPtr, 32)))
+
+                let isSelectorCreate := or(
+                    eq(selector, {{CREATE_SELECTOR}})
+                    eq(selector, {{CREATE_ACCOUNT_SELECTOR}})
+                )
+                let isSelectorCreate2 := or(
+                    eq(selector, {{CREATE2_SELECTOR}}),
+                    eq(selector, {{CREATE2_ACCOUNT_SELECTOR}})
+                )
+
+                // Firstly, ensure that the selector is a valid deployment function 
+                ret := or(
+                    isSelectorCreate,
+                    isSelectorCreate2
+                )
+                // Secondly, ensure that the callee is ContractDeployer
+                ret := and(ret, eq(to, CONTRACT_DEPLOYER_ADDR()))
+                // Thirdly, ensure that the calldata is long enough to contain the selector
+                ret := and(ret, gt(dataLen, 3))
+            }
+
             /// @dev Given the pointer to the calldata, the value and to
             /// performs the call through the msg.value simulator.
             /// @param to Which contract to call
@@ -1764,7 +1795,7 @@ object "Bootloader" {
             /// the length of the calldata and the calldata itself right afterwards.
             function msgValueSimulatorMimicCall(to, from, value, dataPtr) -> success {
                 // Only calls to the deployer system contract are allowed to be system
-                let isSystem := eq(to, CONTRACT_DEPLOYER_ADDR())
+                let isSystem := shouldMsgValueMimicCallBeSystem(to, dataPtr)
 
                 success := mimicCallOnlyResult(
                     MSG_VALUE_SIMULATOR_ADDR(),
