@@ -13,8 +13,10 @@
     "zksync-web3": "^0.14.3"
   },
   "devDependencies": {
+    "@matterlabs/eslint-config-typescript": "^1.1.2",
     "@matterlabs/hardhat-zksync-chai-matchers": "^0.1.4",
     "@matterlabs/hardhat-zksync-solc": "^0.4.2",
+    "@matterlabs/prettier-config": "^1.0.3",
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.3",
     "@nomiclabs/hardhat-ethers": "^2.0.6",
     "@typechain/ethers-v5": "^10.0.0",
@@ -26,8 +28,11 @@
     "@typescript-eslint/eslint-plugin": "^6.7.4",
     "@typescript-eslint/parser": "^6.7.4",
     "chai": "^4.3.6",
-    "lodash": "^4.17.21",
     "eslint": "^8.51.0",
+    "eslint-import-resolver-typescript": "^3.6.1",
+    "eslint-plugin-import": "^2.29.0",
+    "eslint-plugin-prettier": "^5.0.1",
+    "lodash": "^4.17.21",
     "markdownlint-cli": "^0.33.0",
     "mocha": "^10.0.0",
     "prettier": "^3.0.3",
