@@ -920,7 +920,7 @@ object "Bootloader" {
                     refundGas := max(getOperatorRefundForTx(transactionIndex), potentialRefund)
                 }
 
-                refundGas := safeAdd(refundGas, reservedGas)
+                refundGas := safeAdd(refundGas, reservedGas, "iop")
 
                 if gt(refundGas, gasLimit) {
                     assertionError("L1: refundGas > gasLimit")
@@ -1768,7 +1768,7 @@ object "Bootloader" {
                 let selector := shr(32, mload(add(dataPtr, 32)))
 
                 let isSelectorCreate := or(
-                    eq(selector, {{CREATE_SELECTOR}})
+                    eq(selector, {{CREATE_SELECTOR}}),
                     eq(selector, {{CREATE_ACCOUNT_SELECTOR}})
                 )
                 let isSelectorCreate2 := or(

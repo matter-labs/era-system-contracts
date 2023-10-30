@@ -219,7 +219,7 @@ contract DefaultAccount is IAccount {
         _transaction.processPaymasterInput();
     }
 
-    fallback() external payable {
+    fallback() external payable ignoreInDelegateCall {
         // fallback of default account shouldn't be called by bootloader under no circumstances
         assert(msg.sender != BOOTLOADER_FORMAL_ADDRESS);
 
