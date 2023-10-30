@@ -32,7 +32,7 @@ address constant ECMUL_SYSTEM_CONTRACT = address(0x07);
 /// 0x01 - ecrecover
 /// 0x02 - sha256
 /// Important! So the constant should be updated if more precompiles are deployed.
-uint256 constant CURRENT_MAX_PRECOMPILE_ADDRESS = uint256(uint160(SHA256_SYSTEM_CONTRACT));
+uint256 constant CURRENT_MAX_PRECOMPILE_ADDRESS = uint256(uint160(ECMUL_SYSTEM_CONTRACT));
 
 address payable constant BOOTLOADER_FORMAL_ADDRESS = payable(address(SYSTEM_CONTRACTS_OFFSET + 0x01));
 IAccountCodeStorage constant ACCOUNT_CODE_STORAGE_SYSTEM_CONTRACT = IAccountCodeStorage(
