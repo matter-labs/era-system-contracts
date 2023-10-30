@@ -270,7 +270,7 @@ contract L1Messenger is IL1Messenger, ISystemContract {
 
         /// Check State Diffs
         /// encoding is as follows:
-        /// header (1 byte version, 2 bytes total len of compressed, 1 byte enumeration index size, 2 bytes number of initial writes)
+        /// header (1 byte version, 3 bytes total len of compressed, 1 byte enumeration index size, 2 bytes number of initial writes)
         /// body (N bytes of initial writes [32 byte derived key || compressed value], M bytes repeated writes [enumeration index || compressed value])
         /// encoded state diffs: [20bytes address][32bytes key][32bytes derived key][8bytes enum index][32bytes initial value][32bytes final value]
         require(
