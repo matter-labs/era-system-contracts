@@ -939,10 +939,14 @@ object "Bootloader" {
                 let toRefundRecipient
                 switch success
                 case 0 {
+                    if iszero(isPriorityOp) {
+                        // Upgrade transactions must always succeed
+                        assertionError("Upgrade tx failed")
+                    }
+
                     // If the transaction reverts, then minting the msg.value to the user has been reverted
                     // as well, so we can simply mint everything that the user has deposited to 
                     // the refund recipient
-
                     toRefundRecipient := safeSub(getReserved0(innerTxDataOffset), payToOperator, "vji")
                 }
                 default {
