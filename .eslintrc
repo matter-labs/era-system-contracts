@@ -3,6 +3,9 @@
   "rules": {
     "no-multiple-empty-lines": ["error", { "max": 1 }],
     "@typescript-eslint/no-namespace": "off",
-    "import/no-named-as-default-member": "off"
+    "import/no-named-as-default-member": "off",
+    "import/namespace": "off",
+    "import/no-unresolved": "off",
+    "import/order": "off"
   }
 }
