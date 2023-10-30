@@ -44,7 +44,7 @@ contract ContractDeployer is IContractDeployer, ISystemContract {
         }
 
         // It is an EOA, it is still an account.
-        if (ACCOUNT_CODE_STORAGE_SYSTEM_CONTRACT.getRawCodeHash(_address) == 0) {
+        if (_address > address(MAX_SYSTEM_CONTRACT_ADDRESS) && ACCOUNT_CODE_STORAGE_SYSTEM_CONTRACT.getRawCodeHash(_address) == 0) {
             return AccountAbstractionVersion.Version1;
         }
 
