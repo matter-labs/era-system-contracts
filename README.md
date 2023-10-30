@@ -75,6 +75,7 @@ See [LICENSE-MIT](LICENSE-MIT) for details.
 - [Twitter](https://twitter.com/zksync)
 - [Twitter for Devs](https://twitter.com/zkSyncDevs)
 - [Discord](https://discord.gg/nMaPGrDDwk)
+- [Mirror](https://zksync.mirror.xyz/)
 
 ## Disclaimer
 
