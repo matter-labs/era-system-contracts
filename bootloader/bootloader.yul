@@ -1767,7 +1767,7 @@ object "Bootloader" {
                 let dataLen := mload(dataPtr)
                 // Note, that this point it is not fully known whether it is indeed the selector 
                 // of the calldata (it might not be the case if the `dataLen` < 4), but it will be checked later on
-                let selector := shr(32, mload(add(dataPtr, 32)))
+                let selector := shr(224, mload(add(dataPtr, 32)))
 
                 let isSelectorCreate := or(
                     eq(selector, {{CREATE_SELECTOR}}),
