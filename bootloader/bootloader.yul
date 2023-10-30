@@ -1425,6 +1425,7 @@ object "Bootloader" {
                     refundRecipient := paymaster
                     
                     if gt(gasLeft, 0) {
+                        checkEnoughGas(gasLeft)
                         let nearCallAbi := getNearCallABI(gasLeft)
                         let gasBeforePostOp := gas()
                         pop(ZKSYNC_NEAR_CALL_callPostOp(
