@@ -3289,7 +3289,7 @@ object "Bootloader" {
                 }
             }
 
-            /// @dev Returns the addition of two unsigned integers, reverting on overflow.
+            /// @dev Returns the subtraction of two unsigned integers, reverting on overflow.
             function safeSub(x, y, errMsg) -> ret {
                 if gt(y, x) {
                     assertionError(errMsg)
