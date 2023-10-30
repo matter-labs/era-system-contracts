@@ -920,7 +920,7 @@ object "Bootloader" {
                     refundGas := max(getOperatorRefundForTx(transactionIndex), potentialRefund)
                 }
 
-                refundGas := add(refundGas, reservedGas)
+                refundGas := safeAdd(refundGas, reservedGas)
 
                 if gt(refundGas, gasLimit) {
                     assertionError("L1: refundGas > gasLimit")
