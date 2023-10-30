@@ -81,8 +81,9 @@ contract L1Messenger is IL1Messenger, ISystemContract {
 
         // We need to charge cost of hashing, as it will be used in `publishPubdataAndClearState`:
         // - keccakGasCost(L2_TO_L1_LOG_SERIALIZE_SIZE) and keccakGasCost(64) when reconstructing L2ToL1Log
-        // - at most 2 times keccakGasCost(64) (as merkle tree can contain ~2*N leaves)
-        uint256 gasToPay = keccakGasCost(L2_TO_L1_LOG_SERIALIZE_SIZE) + 3 * keccakGasCost(64);
+        // - at most 1 time keccakGasCost(64) when building the Merkle tree (as merkle tree can contain 
+        // ~2*N nodes, where the first N nodes are leaves the hash of which is calculated on the previous step).
+        uint256 gasToPay = keccakGasCost(L2_TO_L1_LOG_SERIALIZE_SIZE) + 2 * keccakGasCost(64);
         SystemContractHelper.burnGas(Utils.safeCastToU32(gasToPay));
     }
 
@@ -141,12 +142,12 @@ contract L1Messenger is IL1Messenger, ISystemContract {
         // We need to charge cost of hashing, as it will be used in `publishPubdataAndClearState`:
         // - keccakGasCost(L2_TO_L1_LOG_SERIALIZE_SIZE) and keccakGasCost(64) when reconstructing L2ToL1Log
         // - keccakGasCost(64) and gasSpentOnMessageHashing when reconstructing Messages
-        // - at most 2 times keccakGasCost(64) (as merkle tree can contain ~2*N leaves)
+        // - at most 1 time keccakGasCost(64) when building the Merkle tree (as merkle tree can contain 
+        // ~2*N nodes, where the first N nodes are leaves the hash of which is calculated on the previous step).
         uint256 gasToPay = pubdataLen *
             gasPerPubdataBytes +
             keccakGasCost(L2_TO_L1_LOG_SERIALIZE_SIZE) +
-            4 *
-            keccakGasCost(64) +
+            3 * keccakGasCost(64) +
             gasSpentOnMessageHashing;
         SystemContractHelper.burnGas(Utils.safeCastToU32(gasToPay));
 
