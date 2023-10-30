@@ -1,14 +1,16 @@
-import * as hre from "hardhat";
-
 import { ethers } from "ethers";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
 import { renderFile } from "template-file";
 import { utils } from "zksync-web3";
+
 import { SYSTEM_CONTRACTS, getRevertSelector, getTransactionUtils } from "./constants";
-import { ForceDeployment } from "./utils";
+
+import type { ForceDeployment } from "./utils";
 
 /* eslint-disable @typescript-eslint/no-var-requires */
+const hre = require("hardhat");
 const preprocess = require("preprocess");
+
 const SYSTEM_PARAMS = require("../SystemConfig.json");
 /* eslint-enable@typescript-eslint/no-var-requires */
 

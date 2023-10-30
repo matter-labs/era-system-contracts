@@ -1,23 +1,20 @@
-import * as hre from "hardhat";
-
 import { Deployer } from "@matterlabs/hardhat-zksync-deploy";
 import { Command } from "commander";
-import { BigNumber, ethers } from "ethers";
+import { ethers } from "ethers";
 import { formatUnits, parseUnits } from "ethers/lib/utils";
 import * as fs from "fs";
+import * as hre from "hardhat";
 import * as path from "path";
 import { Provider, Wallet } from "zksync-web3";
 import { hashBytecode } from "zksync-web3/build/src/utils";
-import { Language, SYSTEM_CONTRACTS } from "./constants";
-import {
-  Dependency,
-  DeployedDependency,
-  filterPublishedFactoryDeps,
-  publishFactoryDeps,
-  readYulBytecode,
-} from "./utils";
 
-const testConfigPath = path.join(process.env.ZKSYNC_HOME as string, `etc/test_config/constant`);
+import { Language, SYSTEM_CONTRACTS } from "./constants";
+import { filterPublishedFactoryDeps, publishFactoryDeps, readYulBytecode } from "./utils";
+
+import type { Dependency, DeployedDependency } from "./utils";
+import type { BigNumber } from "ethers";
+
+const testConfigPath = path.join(process.env.ZKSYNC_HOME as string, "etc/test_config/constant");
 const ethTestConfig = JSON.parse(fs.readFileSync(`${testConfigPath}/eth.json`, { encoding: "utf-8" }));
 
 // Maximum length of the combined length of dependencies

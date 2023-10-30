@@ -1,8 +1,10 @@
 import { expect } from "chai";
 import { ethers, network } from "hardhat";
-import { ComplexUpgrader, DummyUpgrade } from "../typechain-types";
+
 import { FORCE_DEPLOYER_ADDRESS } from "./shared/constants";
 import { deployContract } from "./shared/utils";
+
+import type { ComplexUpgrader, DummyUpgrade } from "../typechain-types";
 
 describe("ComplexUpgrader tests", function () {
   let complexUpgrader: ComplexUpgrader;

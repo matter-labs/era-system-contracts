@@ -1,5 +1,6 @@
-import { BigNumberish, BytesLike, Transaction } from "ethers";
 import * as zksync from "zksync-web3";
+
+import type { BigNumberish, BytesLike, Transaction } from "ethers";
 
 // Interface encoding the transaction struct used for AA protocol
 export interface TransactionData {

@@ -1,10 +1,15 @@
-import * as hre from "hardhat";
-
-import { Deployer } from "@matterlabs/hardhat-zksync-deploy";
-import { BigNumber, BigNumberish, BytesLike, ethers } from "ethers";
+import { BigNumber, ethers } from "ethers";
 import * as fs from "fs";
 import { hashBytecode } from "zksync-web3/build/src/utils";
-import { Language, SYSTEM_CONTRACTS, YulContractDescrption } from "./constants";
+
+import { Language, SYSTEM_CONTRACTS } from "./constants";
+
+import type { YulContractDescrption } from "./constants";
+import type { Deployer } from "@matterlabs/hardhat-zksync-deploy";
+import type { BigNumberish, BytesLike } from "ethers";
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const hre = require("hardhat");
 
 export interface Dependency {
   name: string;

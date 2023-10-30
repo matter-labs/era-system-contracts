@@ -1,6 +1,8 @@
 import { expect } from "chai";
-import { Contract } from "zksync-web3";
+
 import { callFallback, deployContractYul } from "./shared/utils";
+
+import type { Contract } from "zksync-web3";
 
 describe("EcMul tests", function () {
   let ecMul: Contract;

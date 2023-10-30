@@ -1,10 +1,11 @@
-import * as hre from "hardhat";
-
 import { getZksolcUrl, saltFromUrl } from "@matterlabs/hardhat-zksync-solc";
 import { spawn as _spawn } from "child_process";
 import * as fs from "fs";
 import { getCompilersDir } from "hardhat/internal/util/global-dir";
 import path from "path";
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const hre = require("hardhat");
 
 const COMPILER_VERSION = "1.3.14";
 const IS_COMPILER_PRE_RELEASE = false;

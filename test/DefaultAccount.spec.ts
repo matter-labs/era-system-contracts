@@ -1,18 +1,8 @@
 import { expect } from "chai";
 import { ethers, network } from "hardhat";
 import * as zksync from "zksync-web3";
-import { Wallet } from "zksync-web3";
 import { serialize } from "zksync-web3/build/src/utils";
-import {
-  Callable,
-  DefaultAccount,
-  DefaultAccount__factory,
-  L2EthToken,
-  L2EthToken__factory,
-  MockERC20Approve,
-  NonceHolder,
-  NonceHolder__factory,
-} from "../typechain-types";
+
 import {
   BOOTLOADER_FORMAL_ADDRESS,
   ETH_TOKEN_SYSTEM_CONTRACT_ADDRESS,
@@ -20,6 +10,10 @@ import {
 } from "./shared/constants";
 import { signedTxToTransactionData } from "./shared/transactions";
 import { deployContract, getWallets, loadArtifact, setCode } from "./shared/utils";
+import { DefaultAccount__factory, L2EthToken__factory, NonceHolder__factory } from "../typechain-types";
+
+import type { Callable, DefaultAccount, L2EthToken, MockERC20Approve, NonceHolder } from "../typechain-types";
+import type { Wallet } from "zksync-web3";
 
 describe("DefaultAccount tests", function () {
   let wallet: Wallet;
