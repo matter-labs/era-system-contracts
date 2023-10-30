@@ -2546,7 +2546,7 @@ object "Bootloader" {
                 )
 
                 if iszero(success) {
-                    debugLog("Failed publish timestamp data to L1", 0)
+                    debugLog("Failed publish timestamp to L1", 0)
                     revertWithReason(FAILED_TO_PUBLISH_TIMESTAMP_DATA_TO_L1(), 1)
                 }
             }
