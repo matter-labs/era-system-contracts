@@ -1,10 +1,11 @@
 import { Deployer } from "@matterlabs/hardhat-zksync-deploy";
-import { ZkSyncArtifact } from "@matterlabs/hardhat-zksync-deploy/dist/types";
-import { BytesLike } from "ethers";
+import type { ZkSyncArtifact } from "@matterlabs/hardhat-zksync-deploy/dist/types";
+import type { BytesLike } from "ethers";
 import * as hre from "hardhat";
 import { ethers, network } from "hardhat";
 import * as zksync from "zksync-web3";
-import { Contract, Provider, Wallet } from "zksync-web3";
+import type { Contract } from "zksync-web3";
+import { Provider, Wallet } from "zksync-web3";
 import { Language } from "../../scripts/constants";
 import { readYulBytecode } from "../../scripts/utils";
 import { ContractDeployer__factory } from "../../typechain-types";

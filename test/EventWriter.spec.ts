@@ -1,8 +1,9 @@
 import { expect } from "chai";
-import { Contract, Wallet } from "zksync-web3";
+import type { Wallet } from "zksync-web3";
+import { Contract } from "zksync-web3";
 import { Language } from "../scripts/constants";
 import { readYulBytecode } from "../scripts/utils";
-import { EventWriterTest } from "../typechain-types";
+import type { EventWriterTest } from "../typechain-types";
 import { EVENT_WRITER_CONTRACT_ADDRESS } from "./shared/constants";
 import { deployContract, getCode, getWallets, setCode } from "./shared/utils";
 

@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, writeFileSync } from "fs";
 import { renderFile } from "template-file";
 import { utils } from "zksync-web3";
 import { SYSTEM_CONTRACTS, getRevertSelector, getTransactionUtils } from "./constants";
-import { ForceDeployment } from "./utils";
+import type { ForceDeployment } from "./utils";
 
 /* eslint-disable @typescript-eslint/no-var-requires */
 const preprocess = require("preprocess");

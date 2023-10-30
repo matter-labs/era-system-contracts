@@ -1,7 +1,8 @@
 import { expect } from "chai";
 import { ethers, network } from "hardhat";
-import { Wallet } from "zksync-web3";
-import { KnownCodesStorage, MockL1Messenger, MockL1Messenger__factory } from "../typechain-types";
+import type { Wallet } from "zksync-web3";
+import type { KnownCodesStorage, MockL1Messenger } from "../typechain-types";
+import { MockL1Messenger__factory } from "../typechain-types";
 import {
   BOOTLOADER_FORMAL_ADDRESS,
   COMPRESSOR_CONTRACT_ADDRESS,

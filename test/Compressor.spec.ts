@@ -1,9 +1,11 @@
 import { expect } from "chai";
-import { BigNumber, BytesLike } from "ethers";
+import type { BytesLike } from "ethers";
+import { BigNumber } from "ethers";
 import { ethers, network } from "hardhat";
 import * as zksync from "zksync-web3";
-import { Wallet } from "zksync-web3";
-import { Compressor, MockKnownCodesStorage__factory } from "../typechain-types";
+import type { Wallet } from "zksync-web3";
+import type { Compressor } from "../typechain-types";
+import { MockKnownCodesStorage__factory } from "../typechain-types";
 import {
   BOOTLOADER_FORMAL_ADDRESS,
   KNOWN_CODE_STORAGE_CONTRACT_ADDRESS,
