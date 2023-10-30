@@ -1,16 +1,13 @@
 import { expect } from "chai";
 import { ethers, network } from "hardhat";
-
+import { Wallet } from "zksync-web3";
+import { KnownCodesStorage, MockL1Messenger, MockL1Messenger__factory } from "../typechain-types";
 import {
   BOOTLOADER_FORMAL_ADDRESS,
   COMPRESSOR_CONTRACT_ADDRESS,
   L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS,
 } from "./shared/constants";
 import { deployContract, getCode, getWallets, loadArtifact, setCode } from "./shared/utils";
-import { MockL1Messenger__factory } from "../typechain-types";
-
-import type { KnownCodesStorage, MockL1Messenger } from "../typechain-types";
-import type { Wallet } from "zksync-web3";
 
 describe("KnownCodesStorage tests", function () {
   let wallet: Wallet;

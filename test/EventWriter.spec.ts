@@ -1,13 +1,10 @@
 import { expect } from "chai";
-import { Contract } from "zksync-web3";
-
-import { EVENT_WRITER_CONTRACT_ADDRESS } from "./shared/constants";
-import { deployContract, getCode, getWallets, setCode } from "./shared/utils";
+import { Contract, Wallet } from "zksync-web3";
 import { Language } from "../scripts/constants";
 import { readYulBytecode } from "../scripts/utils";
-
-import type { EventWriterTest } from "../typechain-types";
-import type { Wallet } from "zksync-web3";
+import { EventWriterTest } from "../typechain-types";
+import { EVENT_WRITER_CONTRACT_ADDRESS } from "./shared/constants";
+import { deployContract, getCode, getWallets, setCode } from "./shared/utils";
 
 describe("EventWriter tests", function () {
   let wallet: Wallet;

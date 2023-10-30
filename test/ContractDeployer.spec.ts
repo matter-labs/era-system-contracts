@@ -1,18 +1,20 @@
+import { ZkSyncArtifact } from "@matterlabs/hardhat-zksync-deploy/dist/types";
 import { expect } from "chai";
 import { ethers, network } from "hardhat";
-import { Contract, utils } from "zksync-web3";
-
+import { Contract, Wallet, utils } from "zksync-web3";
+import {
+  ContractDeployer,
+  ContractDeployer__factory,
+  Deployable__factory,
+  NonceHolder,
+  NonceHolder__factory,
+} from "../typechain-types";
 import {
   DEPLOYER_SYSTEM_CONTRACT_ADDRESS,
   FORCE_DEPLOYER_ADDRESS,
   NONCE_HOLDER_SYSTEM_CONTRACT_ADDRESS,
 } from "./shared/constants";
 import { deployContract, getCode, getWallets, loadArtifact, publishBytecode, setCode } from "./shared/utils";
-import { ContractDeployer__factory, Deployable__factory, NonceHolder__factory } from "../typechain-types";
-
-import type { ContractDeployer, NonceHolder } from "../typechain-types";
-import type { ZkSyncArtifact } from "@matterlabs/hardhat-zksync-deploy/dist/types";
-import type { Wallet } from "zksync-web3";
 
 describe("ContractDeployer tests", function () {
   let wallet: Wallet;

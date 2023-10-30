@@ -1,11 +1,9 @@
 import { expect } from "chai";
 import { ethers, network } from "hardhat";
-
+import { Wallet } from "zksync-web3";
+import { AccountCodeStorage } from "../typechain-types";
 import { DEPLOYER_SYSTEM_CONTRACT_ADDRESS, EMPTY_STRING_KECCAK } from "./shared/constants";
 import { deployContract, getWallets } from "./shared/utils";
-
-import type { AccountCodeStorage } from "../typechain-types";
-import type { Wallet } from "zksync-web3";
 
 describe("AccountCodeStorage tests", function () {
   let wallet: Wallet;

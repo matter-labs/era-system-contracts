@@ -1,6 +1,4 @@
-import { constants, ethers } from "ethers";
-
-import type { BigNumberish, BytesLike } from "ethers";
+import { BigNumberish, BytesLike, constants, ethers } from "ethers";
 
 export const BOOTLOADER_FORMAL_ADDRESS = "0x0000000000000000000000000000000000008001";
 export const ETH_ADDRESS = constants.AddressZero;
@@ -283,9 +281,9 @@ function getBytesLengthGetterName(fieldName: string): string {
 function getBytesLengthGetter(fieldName: string, type: DynamicType) {
   let lengthToBytes: string;
   if (type == "bytes") {
-    lengthToBytes = "lengthToWords(mload(ptr))";
+    lengthToBytes = `lengthToWords(mload(ptr))`;
   } else if (type == "bytes32[]") {
-    lengthToBytes = "mul(mload(ptr),32)";
+    lengthToBytes = `mul(mload(ptr),32)`;
   } else {
     throw new Error(`Type ${type} is not supported`);
   }
@@ -322,7 +320,7 @@ function getDataLength(baseLength: number, dynamicFields: [string, DynamicType][
 function validateFixedSizeField(fieldName: string, type: FixedType): string {
   if (type == "uint256") {
     // There is no validation for uint256
-    return "";
+    return ``;
   }
   const assertionErrorStr = getEncodingError(fieldName);
   const fieldValue = `${fieldName}Value`;
@@ -384,7 +382,7 @@ export function getTransactionUtils(): string {
             ///\n`;
 
   let innerOffsetBytes = 0;
-  let checksStr = "";
+  let checksStr = ``;
 
   const dynamicFields: [string, DynamicType][] = [];
   for (const [key, value] of Object.entries(TransactionFields)) {

@@ -1,13 +1,11 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import * as zksync from "zksync-web3";
+import { Wallet } from "zksync-web3";
 import { serialize } from "zksync-web3/build/src/utils";
-
+import { BootloaderUtilities } from "../typechain-types";
 import { signedTxToTransactionData } from "./shared/transactions";
 import { deployContract, getWallets } from "./shared/utils";
-
-import type { BootloaderUtilities } from "../typechain-types";
-import type { Wallet } from "zksync-web3";
 
 describe("BootloaderUtilities tests", function () {
   let wallet: Wallet;

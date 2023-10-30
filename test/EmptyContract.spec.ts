@@ -1,10 +1,8 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-
+import { Wallet } from "zksync-web3";
+import { EmptyContract } from "../typechain-types";
 import { deployContract, getWallets, provider } from "./shared/utils";
-
-import type { EmptyContract } from "../typechain-types";
-import type { Wallet } from "zksync-web3";
 
 describe("EmptyContract tests", function () {
   let wallet: Wallet;
