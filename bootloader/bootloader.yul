@@ -917,10 +917,8 @@ object "Bootloader" {
 
                     // In case the operator provided smaller refund than the one calculated
                     // by the bootloader, we return the refund calculated by the bootloader.
-                    refundGas := max(getOperatorRefundForTx(transactionIndex), potentialRefund)
+                    refundGas := max(getOperatorRefundForTx(transactionIndex), safeAdd(potentialRefund, reservedGas, "iop"))
                 }
-
-                refundGas := safeAdd(refundGas, reservedGas, "iop")
 
                 if gt(refundGas, gasLimit) {
                     assertionError("L1: refundGas > gasLimit")
