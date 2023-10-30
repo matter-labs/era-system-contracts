@@ -1180,7 +1180,7 @@ object "Bootloader" {
             /// @param txDataOffset The offset to the ABI-encoded Transaction struct.
             /// @param gasLimitForTx The L2 gas limit for the transaction validation & execution.
             /// @param gasPrice The L2 gas price that should be used by the transaction.
-            /// @return ergsLeft The ergs left after the validation step.
+            /// @return gasLeft The gas left after the validation step.
             function l2TxValidation(
                 txDataOffset,
                 gasLimitForTx,
@@ -1232,9 +1232,9 @@ object "Bootloader" {
 
             /// @dev The function responsible for the execution step of the L2 transaction.
             /// @param txDataOffset The offset to the ABI-encoded Transaction struct.
-            /// @param ergsLeft The ergs left after the validation step.
+            /// @param gasLeft The gas left after the validation step.
             /// @return success Whether or not the execution step was successful.
-            /// @return ergsSpentOnExecute The ergs spent on the transaction execution.
+            /// @return gasSpentOnExecute The gas spent on the transaction execution.
             function l2TxExecution(
                 txDataOffset,
                 gasLeft,
@@ -1264,7 +1264,7 @@ object "Bootloader" {
                 default {
                     // Note, that since gt(gasLeft, gasSpentOnFactoryDeps) = true
                     // sub(gasLeft, gasSpentOnFactoryDeps) > 0, which is important
-                    // because a nearCall with 0 ergs passes on all the ergs of the parent frame.
+                    // because a nearCall with 0 gas passes on all the gas of the parent frame.
                     gasLeft := sub(gasLeft, gasSpentOnFactoryDeps)
 
                     let executeABI := getNearCallABI(gasLeft)
@@ -1598,7 +1598,7 @@ object "Bootloader" {
             /// @dev Get checked for overcharged operator's overhead for the transaction.
             /// @param transactionIndex The index of the transaction in the batch
             /// @param txTotalGasLimit The total gass limit of the transaction (including the overhead).
-            /// @param gasPerPubdataByte The price for pubdata byte in ergs.
+            /// @param gasPerPubdataByte The price for pubdata byte in gas.
             /// @param txEncodeLen The length of the ABI-encoding of the transaction
             function getVerifiedOperatorOverheadForTx(
                 transactionIndex,
