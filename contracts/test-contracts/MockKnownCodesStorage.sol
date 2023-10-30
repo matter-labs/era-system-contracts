@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity0.8.20;
+pragma solidity0 .8 .20;
 
 contract MockKnownCodesStorage {
     event MockBytecodePublished(bytes32 indexed bytecodeHash);

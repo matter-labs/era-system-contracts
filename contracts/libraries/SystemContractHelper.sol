@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity0.8.20;
+pragma solidity0 .8 .20;
 
 import {MAX_SYSTEM_CONTRACT_ADDRESS} from "../Constants.sol";
 

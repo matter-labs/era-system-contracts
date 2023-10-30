@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity0.8.20;
+pragma solidity0 .8 .20;
 
 interface IEthToken {
     function balanceOf(uint256) external view returns (uint256);

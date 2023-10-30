@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity0.8.20;
+pragma solidity0 .8 .20;
 
 import "./interfaces/IImmutableSimulator.sol";
 import {DEPLOYER_SYSTEM_CONTRACT} from "./Constants.sol";
