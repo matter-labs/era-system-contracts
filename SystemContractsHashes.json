@@ -31,8 +31,8 @@
     "contractName": "ContractDeployer",
     "bytecodePath": "artifacts-zk/cache-zk/solpp-generated-contracts/ContractDeployer.sol/ContractDeployer.json",
     "sourceCodePath": "cache-zk/solpp-generated-contracts/ContractDeployer.sol",
-    "bytecodeHash": "0x01000609f1afb4e3c0c200fd2ea758f453331a72cebc3bc9e25646e6f909741f",
-    "sourceCodeHash": "0x68ef4e51aff165804fb8b5323145cee131b1241bc7f560b58f6adf55c21487c3"
+    "bytecodeHash": "0x010006098193e41685f5e63b2d0e7369be71b39f41ccd13296a03801645fb1df",
+    "sourceCodeHash": "0x86a2b81dabf56644a7d183c7a8ceb58ce5a2417f89af9eed2491c44943b7cd0a"
   },
   {
     "contractName": "DefaultAccount",
@@ -66,8 +66,8 @@
     "contractName": "L1Messenger",
     "bytecodePath": "artifacts-zk/cache-zk/solpp-generated-contracts/L1Messenger.sol/L1Messenger.json",
     "sourceCodePath": "cache-zk/solpp-generated-contracts/L1Messenger.sol",
-    "bytecodeHash": "0x01000301a157872ad631b2de1632b7583116275d97a3f9f7319b738a49c80270",
-    "sourceCodeHash": "0x965ad585680128f4f6be86527967b0733c6bd2361179e61e0f70ac7de8955d5c"
+    "bytecodeHash": "0x010003010b1831cbe1c9eff5407f46cdafef9ead24e5b10571ea681cd04b044a",
+    "sourceCodeHash": "0xc6d60bfcea55041604cf3714bf4d9e0af51737953e1578430f574f800e4292d7"
   },
   {
     "contractName": "L2EthToken",
