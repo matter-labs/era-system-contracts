@@ -44,7 +44,10 @@ contract ContractDeployer is IContractDeployer, ISystemContract {
         }
 
         // It is an EOA, it is still an account.
-        if (_address > address(MAX_SYSTEM_CONTRACT_ADDRESS) && ACCOUNT_CODE_STORAGE_SYSTEM_CONTRACT.getRawCodeHash(_address) == 0) {
+        if (
+            _address > address(MAX_SYSTEM_CONTRACT_ADDRESS) &&
+            ACCOUNT_CODE_STORAGE_SYSTEM_CONTRACT.getRawCodeHash(_address) == 0
+        ) {
             return AccountAbstractionVersion.Version1;
         }
 
@@ -233,11 +236,11 @@ contract ContractDeployer is IContractDeployer, ISystemContract {
         );
     }
 
-    /// @notice The method that is temporarily needed to upgrade the Keccak256 precompile. It is to be removed in the 
-    /// future. Unlike a normal forced deployment, it does not update account information as it requires updating a 
+    /// @notice The method that is temporarily needed to upgrade the Keccak256 precompile. It is to be removed in the
+    /// future. Unlike a normal forced deployment, it does not update account information as it requires updating a
     /// mapping, and so requires Keccak256 precompile to work already.
-    /// @dev This method expects the sender (FORCE_DEPLOYER) to provide the correct bytecode hash for the Keccak256 
-    /// precompile. 
+    /// @dev This method expects the sender (FORCE_DEPLOYER) to provide the correct bytecode hash for the Keccak256
+    /// precompile.
     function forceDeployKeccak256(bytes32 _keccak256BytecodeHash) external payable onlyCallFrom(FORCE_DEPLOYER) {
         _ensureBytecodeIsKnown(_keccak256BytecodeHash);
         _constructContract(
