@@ -86,10 +86,10 @@ class CompilerPaths {
 }
 
 async function main() {
-    await compileYulFolder('contracts');
-    await compileYulFolder('contracts/precompiles');
-    await compileYulFolder('bootloader/build');
-    await compileYulFolder('bootloader/tests');
+    const folders = process.argv.slice(2);
+    for (const folder of folders) {
+        await compileYulFolder(folder)
+    }
 }
 
 main()

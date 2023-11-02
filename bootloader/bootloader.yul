@@ -2902,7 +2902,7 @@ object "Bootloader" {
 
                         <!-- @endif -->
                         
-                        <!-- @if BOOTLOADER_TYPE=='proved_block' -->
+                        <!-- @if BOOTLOADER_TYPE=='proved_batch' -->
                         assertEq(gt(getFrom(innerTxDataOffset), MAX_SYSTEM_CONTRACT_ADDR()), 1, "from in kernel space")
                         <!-- @endif -->
                         

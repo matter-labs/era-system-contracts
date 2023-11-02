@@ -1,8 +1,8 @@
 import * as hre from 'hardhat';
 
 import { ethers } from 'ethers';
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
-import { renderFile } from 'template-file';
+import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'fs';
+import { render, renderFile } from 'template-file';
 import { utils } from 'zksync-web3';
 import { SYSTEM_CONTRACTS, getRevertSelector, getTransactionUtils } from './constants';
 import { ForceDeployment } from './utils';
@@ -13,6 +13,11 @@ const SYSTEM_PARAMS = require('../SystemConfig.json');
 /* eslint-enable@typescript-eslint/no-var-requires */
 
 const OUTPUT_DIR = 'bootloader/build';
+
+const PREPROCCESING_MODES = [
+    'proved_batch',
+    'playground_batch'
+];
 
 function getSelector(contractName: string, method: string): string {
     const artifact = hre.artifacts.readArtifactSync(contractName);
@@ -193,10 +198,22 @@ function createTestFramework(tests: string[]): string {
     return testFramework;
 }
 
+function validateSource(source: string) {
+    const matches = source.matchAll(/<!-- @if BOOTLOADER_TYPE=='([^']*)' -->/g)
+    for (const match of matches) {
+        if (!PREPROCCESING_MODES.includes(match[1])) {
+            throw Error(`Invalid preprocessing mode '${match[1]}' at postion ${match.index}`);
+        }
+    }
+}
+
 async function main() {
-    const bootloader = await renderFile('bootloader/bootloader.yul', params);
+    const bootloaderSource = readFileSync('bootloader/bootloader.yul').toString();
+    validateSource(bootloaderSource)
+
+    const bootloader = await render(bootloaderSource, params);
     // The overhead is unknown for gas tests and so it should be zero to calculate it
-    const gasTestBootloaderTemplate = await renderFile('bootloader/bootloader.yul', {
+    const gasTestBootloaderTemplate = await render(bootloaderSource, {
         ...params,
         L2_TX_INTRINSIC_GAS: 0,
         L2_TX_INTRINSIC_PUBDATA: 0,
@@ -205,7 +222,7 @@ async function main() {
         FORBID_ZERO_GAS_PER_PUBDATA: 0
     });
 
-    const feeEstimationBootloaderTemplate = await renderFile('bootloader/bootloader.yul', {
+    const feeEstimationBootloaderTemplate = await render(bootloaderSource, {
         ...params,
         ENSURE_RETURNED_MAGIC: 0
     });
@@ -232,7 +249,7 @@ async function main() {
 
     const bootloaderTestUtils = await renderFile('bootloader/tests/utils/test_utils.yul', {});
 
-    const bootloaderWithTests = await renderFile('bootloader/bootloader.yul', {
+    const bootloaderWithTests = await render(bootloaderSource, {
         ...params,
         CODE_START_PLACEHOLDER: '\n' + bootloaderTestUtils + '\n' + bootloaderTests + '\n' + testFramework
     });

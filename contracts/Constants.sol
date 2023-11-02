@@ -16,7 +16,7 @@ import {IBootloaderUtilities} from "./interfaces/IBootloaderUtilities.sol";
 
 /// @dev All the system contracts introduced by zkSync have their addresses
 /// started from 2^15 in order to avoid collision with Ethereum precompiles.
-uint160 constant SYSTEM_CONTRACTS_OFFSET = 0x8000; // 2^15
+uint160 constant SYSTEM_CONTRACTS_OFFSET = {{SYSTEM_CONTRACTS_OFFSET}}; // 2^15
 
 /// @dev All the system contracts must be located in the kernel space,
 /// i.e. their addresses must be below 2^16.

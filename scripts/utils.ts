@@ -20,7 +20,7 @@ export interface DeployedDependency {
 
 export function readYulBytecode(description: YulContractDescrption) {
     const contractName = description.codeName;
-    const path = `contracts/${description.path}/artifacts/${contractName}.yul/${contractName}.yul.zbin`;
+    const path = `contracts-preprocessed/${description.path}/artifacts/${contractName}.yul/${contractName}.yul.zbin`;
     return ethers.utils.hexlify(fs.readFileSync(path));
 }
 
