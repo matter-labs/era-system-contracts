@@ -17,7 +17,7 @@ async function preprocess(testMode: boolean) {
         params.SYSTEM_CONTRACTS_OFFSET = '0x9000'
     }
 
-    const contracts = await glob([`${CONTRACTS_DIR}/**/*.sol`, `${CONTRACTS_DIR}/**/*.yul`])
+    const contracts = await glob([`${CONTRACTS_DIR}/**/*.sol`, `${CONTRACTS_DIR}/**/*.yul`, `${CONTRACTS_DIR}/**/*.zasm`], {nodir: true})
 
     for(const contract of contracts) {
         const preprocessed = await renderFile(contract, params)

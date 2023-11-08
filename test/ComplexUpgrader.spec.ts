@@ -1,16 +1,22 @@
 import { expect } from 'chai';
 import { ethers, network } from 'hardhat';
-import { ComplexUpgrader, DummyUpgrade } from '../typechain-types';
-import { FORCE_DEPLOYER_ADDRESS } from './shared/constants';
-import { deployContract } from './shared/utils';
+import {ComplexUpgrader__factory, ComplexUpgrader, MockContract} from '../typechain-types';
+import {
+    ACCOUNT_CODE_STORAGE_SYSTEM_CONTRACT_ADDRESS,
+    COMPLEX_UPGRADER_CONTRACT_ADDRESS,
+    FORCE_DEPLOYER_ADDRESS
+} from './shared/constants';
+import {deployContract, deployContractOnAddress, getWallets} from './shared/utils';
 
 describe('ComplexUpgrader tests', function () {
     let complexUpgrader: ComplexUpgrader;
-    let dummyUpgrade: DummyUpgrade;
+    let dummyUpgrade: MockContract;
 
     before(async () => {
-        complexUpgrader = (await deployContract('ComplexUpgrader')) as ComplexUpgrader;
-        dummyUpgrade = (await deployContract('DummyUpgrade')) as DummyUpgrade;
+        const wallet = (await getWallets())[0]
+        await deployContractOnAddress(COMPLEX_UPGRADER_CONTRACT_ADDRESS, 'ComplexUpgrader')
+        complexUpgrader = ComplexUpgrader__factory.connect(COMPLEX_UPGRADER_CONTRACT_ADDRESS, wallet);
+        dummyUpgrade = (await deployContract('MockContract')) as MockContract;
     });
 
     describe('upgrade', function () {
@@ -18,7 +24,7 @@ describe('ComplexUpgrader tests', function () {
             await expect(
                 complexUpgrader.upgrade(
                     dummyUpgrade.address,
-                    dummyUpgrade.interface.encodeFunctionData('performUpgrade')
+                    '0xdeadbeef'
                 )
             ).to.be.revertedWith('Can only be called by FORCE_DEPLOYER');
         });
@@ -34,8 +40,8 @@ describe('ComplexUpgrader tests', function () {
             await expect(
                 complexUpgrader
                     .connect(force_deployer)
-                    .upgrade(dummyUpgrade.address, dummyUpgrade.interface.encodeFunctionData('performUpgrade'))
-            ).to.emit(dummyUpgrade.attach(complexUpgrader.address), 'Upgraded');
+                    .upgrade(dummyUpgrade.address, '0xdeadbeef')
+            ).to.emit(dummyUpgrade.attach(COMPLEX_UPGRADER_CONTRACT_ADDRESS), 'Called').withArgs(0, '0xdeadbeef');
 
             await network.provider.request({
                 method: 'hardhat_stopImpersonatingAccount',

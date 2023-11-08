@@ -5,7 +5,8 @@ export const ETH_ADDRESS = constants.AddressZero;
 
 export enum Language {
     Solidity = 'solidity',
-    Yul = 'yul'
+    Yul = 'yul',
+    Zasm = 'zasm'
 }
 
 export interface SystemContractDescription {
@@ -15,6 +16,12 @@ export interface SystemContractDescription {
 
 export interface YulContractDescrption extends SystemContractDescription {
     lang: Language.Yul;
+    path: string;
+}
+
+// Currently used only for the tests
+export interface ZasmContractDescrption extends SystemContractDescription {
+    lang: Language.Zasm;
     path: string;
 }
 

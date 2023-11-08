@@ -3,41 +3,59 @@ import { BigNumber, BytesLike } from 'ethers';
 import { ethers, network } from 'hardhat';
 import * as zksync from 'zksync-web3';
 import { Wallet } from 'zksync-web3';
-import { Compressor, MockKnownCodesStorage__factory } from '../typechain-types';
 import {
-    BOOTLOADER_FORMAL_ADDRESS,
+    AccountCodeStorage__factory,
+    Compressor, Compressor__factory,
+    MockContract, MockContract__factory,
+    MockKnownCodesStorage__factory
+} from '../typechain-types';
+import {
+    ACCOUNT_CODE_STORAGE_SYSTEM_CONTRACT_ADDRESS,
+    BOOTLOADER_FORMAL_ADDRESS, COMPRESSOR_CONTRACT_ADDRESS,
     KNOWN_CODE_STORAGE_CONTRACT_ADDRESS,
     L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS,
     TWO_IN_256
 } from './shared/constants';
-import { deployContract, getCode, getWallets, loadArtifact, setCode } from './shared/utils';
+import {deployContract, deployContractOnAddress, getCode, getWallets, loadArtifact, setCode} from './shared/utils';
 
 describe('Compressor tests', function () {
     let wallet: Wallet;
-    let compressor: Compressor;
-    let bootloader: ethers.Signer;
-    let l1Messenger: ethers.Signer;
+    let bootloaderAccount: ethers.Signer;
+    let l1MessengerAccount: ethers.Signer;
 
-    let _knownCodesStorageCode: string;
+    let compressor: Compressor;
+    let mockl1Messenger: MockContract
+    let mockKnowCodesStorage: MockContract
+
+    let l1MessengerIface: ethers.utils.Interface
+    let knownCodesStorageIface: ethers.utils.Interface
 
     before(async () => {
         wallet = getWallets()[0];
-        compressor = (await deployContract('Compressor')) as Compressor;
-        _knownCodesStorageCode = await getCode(KNOWN_CODE_STORAGE_CONTRACT_ADDRESS);
-        const mockKnownCodesStorageArtifact = await loadArtifact('MockKnownCodesStorage');
-        await setCode(KNOWN_CODE_STORAGE_CONTRACT_ADDRESS, mockKnownCodesStorageArtifact.bytecode);
+
+        await deployContractOnAddress(COMPRESSOR_CONTRACT_ADDRESS, 'Compressor')
+        compressor = Compressor__factory.connect(COMPRESSOR_CONTRACT_ADDRESS, wallet);
+
+        await deployContractOnAddress(L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS, 'MockContract')
+        mockl1Messenger = MockContract__factory.connect(L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS, wallet);
+
+        await deployContractOnAddress(KNOWN_CODE_STORAGE_CONTRACT_ADDRESS, 'MockContract')
+        mockKnowCodesStorage = MockContract__factory.connect(KNOWN_CODE_STORAGE_CONTRACT_ADDRESS, wallet);
+
+        l1MessengerIface = new ethers.utils.Interface((await loadArtifact('L1Messenger')).abi)
+        knownCodesStorageIface = new ethers.utils.Interface((await loadArtifact('KnownCodesStorage')).abi)
 
         await network.provider.request({
             method: 'hardhat_impersonateAccount',
             params: [BOOTLOADER_FORMAL_ADDRESS]
         });
-        bootloader = await ethers.getSigner(BOOTLOADER_FORMAL_ADDRESS);
+        bootloaderAccount = await ethers.getSigner(BOOTLOADER_FORMAL_ADDRESS);
 
         await network.provider.request({
             method: 'hardhat_impersonateAccount',
             params: [L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS]
         });
-        l1Messenger = await ethers.getSigner(L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS);
+        l1MessengerAccount = await ethers.getSigner(L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS);
     });
 
     after(async function () {
@@ -50,8 +68,6 @@ describe('Compressor tests', function () {
             method: 'hardhat_stopImpersonatingAccount',
             params: [L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS]
         });
-
-        await setCode(KNOWN_CODE_STORAGE_CONTRACT_ADDRESS, _knownCodesStorageCode);
     });
 
     describe('publishCompressedBytecode', function () {
@@ -65,114 +81,55 @@ describe('Compressor tests', function () {
             const BYTECODE = '0xdeadbeefdeadbeef';
             const COMPRESSED_BYTECODE = '0x0001deadbeefdeadbeef00000000';
             await expect(
-                compressor.connect(bootloader).publishCompressedBytecode(BYTECODE, COMPRESSED_BYTECODE)
+                compressor.connect(bootloaderAccount).publishCompressedBytecode(BYTECODE, COMPRESSED_BYTECODE)
             ).to.be.revertedWith('Encoded data length should be 4 times shorter than the original bytecode');
         });
 
         it('chunk index is out of bounds', async () => {
-            await network.provider.request({
-                method: 'hardhat_impersonateAccount',
-                params: [BOOTLOADER_FORMAL_ADDRESS]
-            });
-
-            const bootloader = await ethers.getSigner(BOOTLOADER_FORMAL_ADDRESS);
-
             const BYTECODE = '0xdeadbeefdeadbeef';
             const COMPRESSED_BYTECODE = '0x0001deadbeefdeadbeef0001';
             await expect(
-                compressor.connect(bootloader).publishCompressedBytecode(BYTECODE, COMPRESSED_BYTECODE)
+                compressor.connect(bootloaderAccount).publishCompressedBytecode(BYTECODE, COMPRESSED_BYTECODE)
             ).to.be.revertedWith('Encoded chunk index is out of bounds');
-
-            await network.provider.request({
-                method: 'hardhat_stopImpersonatingAccount',
-                params: [BOOTLOADER_FORMAL_ADDRESS]
-            });
         });
 
         it('chunk does not match the original bytecode', async () => {
-            await network.provider.request({
-                method: 'hardhat_impersonateAccount',
-                params: [BOOTLOADER_FORMAL_ADDRESS]
-            });
-
-            const bootloader = await ethers.getSigner(BOOTLOADER_FORMAL_ADDRESS);
-
             const BYTECODE = '0xdeadbeefdeadbeef1111111111111111';
             const COMPRESSED_BYTECODE = '0x0002deadbeefdeadbeef111111111111111100000000';
             await expect(
-                compressor.connect(bootloader).publishCompressedBytecode(BYTECODE, COMPRESSED_BYTECODE)
+                compressor.connect(bootloaderAccount).publishCompressedBytecode(BYTECODE, COMPRESSED_BYTECODE)
             ).to.be.revertedWith('Encoded chunk does not match the original bytecode');
-
-            await network.provider.request({
-                method: 'hardhat_stopImpersonatingAccount',
-                params: [BOOTLOADER_FORMAL_ADDRESS]
-            });
         });
 
         it('invalid bytecode length in bytes', async () => {
-            await network.provider.request({
-                method: 'hardhat_impersonateAccount',
-                params: [BOOTLOADER_FORMAL_ADDRESS]
-            });
-
-            const bootloader = await ethers.getSigner(BOOTLOADER_FORMAL_ADDRESS);
-
             const BYTECODE = '0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef';
             const COMPRESSED_BYTECODE = '0x0001deadbeefdeadbeef000000000000';
             await expect(
-                compressor.connect(bootloader).publishCompressedBytecode(BYTECODE, COMPRESSED_BYTECODE)
+                compressor.connect(bootloaderAccount).publishCompressedBytecode(BYTECODE, COMPRESSED_BYTECODE)
             ).to.be.revertedWith('po');
-
-            await network.provider.request({
-                method: 'hardhat_stopImpersonatingAccount',
-                params: [BOOTLOADER_FORMAL_ADDRESS]
-            });
         });
 
         // Test case with too big bytecode is unrealistic because API cannot accept so much data.
         it('invalid bytecode length in words', async () => {
-            await network.provider.request({
-                method: 'hardhat_impersonateAccount',
-                params: [BOOTLOADER_FORMAL_ADDRESS]
-            });
-
-            const bootloader = await ethers.getSigner(BOOTLOADER_FORMAL_ADDRESS);
-
             const BYTECODE = '0x' + 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef'.repeat(2);
             const COMPRESSED_BYTECODE = '0x0001deadbeefdeadbeef' + '0000'.repeat(4 * 2);
             await expect(
-                compressor.connect(bootloader).publishCompressedBytecode(BYTECODE, COMPRESSED_BYTECODE)
+                compressor.connect(bootloaderAccount).publishCompressedBytecode(BYTECODE, COMPRESSED_BYTECODE)
             ).to.be.revertedWith('pr');
-
-            await network.provider.request({
-                method: 'hardhat_stopImpersonatingAccount',
-                params: [BOOTLOADER_FORMAL_ADDRESS]
-            });
         });
 
         it('successfully published', async () => {
-            await network.provider.request({
-                method: 'hardhat_impersonateAccount',
-                params: [BOOTLOADER_FORMAL_ADDRESS]
-            });
-
-            const bootloader = await ethers.getSigner(BOOTLOADER_FORMAL_ADDRESS);
-
             const BYTECODE =
                 '0x000200000000000200010000000103550000006001100270000000150010019d0000000101200190000000080000c13d0000000001000019004e00160000040f0000000101000039004e00160000040f0000001504000041000000150510009c000000000104801900000040011002100000000001310019000000150320009c0000000002048019000000600220021000000000012100190000004f0001042e000000000100001900000050000104300000008002000039000000400020043f0000000002000416000000000110004c000000240000613d000000000120004c0000004d0000c13d000000200100003900000100001004430000012000000443000001000100003900000040020000390000001d03000041004e000a0000040f000000000120004c0000004d0000c13d0000000001000031000000030110008c0000004d0000a13d0000000101000367000000000101043b0000001601100197000000170110009c0000004d0000c13d0000000101000039000000000101041a0000000202000039000000000202041a000000400300043d00000040043000390000001805200197000000000600041a0000000000540435000000180110019700000020043000390000000000140435000000a0012002700000001901100197000000600430003900000000001404350000001a012001980000001b010000410000000001006019000000b8022002700000001c02200197000000000121019f0000008002300039000000000012043500000018016001970000000000130435000000400100043d0000000002130049000000a0022000390000000003000019004e000a0000040f004e00140000040f0000004e000004320000004f0001042e000000500001043000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ffffffffffffffff000000000000000000000000000000000000000000000000000000008903573000000000000000000000000000000000000000000000000000000000000000000000000000000000ffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000ffffff0000000000008000000000000000000000000000000000000000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80000000000000000000000000000000000000000000000000000000000000007fffff00000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000';
             const COMPRESSED_BYTECODE =
                 '0x00510000000000000000ffffffffffffffff0000004d0000c13d00000000ffffffff0000000000140435004e000a0000040f000000000120004c00000050000104300000004f0001042e0000000101000039004e00160000040f0000000001000019000000020000000000000000007fffffffffffffff80000000000000000080000000000000ffffff8903573000000000ffffffff000000000000004e00000432004e00140000040f0000000003000019000000a0022000390000000002130049000000400100043d0000000000130435000000180160019700000000001204350000008002300039000000000121019f0000001c02200197000000b80220027000000000010060190000001b010000410000001a0120019800000060043000390000001901100197000000a001200270000000200430003900000018011001970000000000540435000000000600041a00000018052001970000004004300039000000400300043d000000000202041a0000000202000039000000000101041a000000170110009c0000001601100197000000000101043b00000001010003670000004d0000a13d000000030110008c00000000010000310000001d0300004100000040020000390000010001000039000001200000044300000100001004430000002001000039000000240000613d000000000110004c0000000002000416000000400020043f0000008002000039000000000121001900000060022002100000000002048019000000150320009c000000000131001900000040011002100000000001048019000000150510009c0000001504000041000000080000c13d0000000101200190000000150010019d0000006001100270000100000001035500020000000000020050004f004e004d004c004b000b000a0009000a004a004900480047004600450044004300420008000b000700410040003f003e003d00060002003c003b003a003900380037000500060002003600350034003300320031003000020009002f002e002d002c002b002a002900280027002600040025002400230004002200210020001f001e001d001c001b001a001900180017001600150005001400130008000700000000000000000000000000030012000000000000001100000000000000000003000100010000000000000010000f000000000000000100010001000e000000000000000d000c0000000000000000000000000000';
-            await expect(compressor.connect(bootloader).publishCompressedBytecode(BYTECODE, COMPRESSED_BYTECODE))
+            await mockl1Messenger.setResult(l1MessengerIface.encodeFunctionData('sendToL1', [COMPRESSED_BYTECODE]), {failure: false, returnData: ethers.constants.HashZero})
+            await expect(compressor.connect(bootloaderAccount).publishCompressedBytecode(BYTECODE, COMPRESSED_BYTECODE))
                 .to.emit(
-                    MockKnownCodesStorage__factory.connect(KNOWN_CODE_STORAGE_CONTRACT_ADDRESS, wallet),
-                    'MockBytecodePublished'
+                    mockKnowCodesStorage,
+                    'Called'
                 )
-                .withArgs(zksync.utils.hashBytecode(BYTECODE));
-
-            await network.provider.request({
-                method: 'hardhat_stopImpersonatingAccount',
-                params: [BOOTLOADER_FORMAL_ADDRESS]
-            });
+                .withArgs(0, knownCodesStorageIface.encodeFunctionData('markBytecodeAsPublished', [zksync.utils.hashBytecode(BYTECODE)]));
         });
     });
 
@@ -197,7 +154,7 @@ describe('Compressor tests', function () {
             const compressedStateDiffs = compressStateDiffs(9, stateDiffs);
             await expect(
                 compressor
-                    .connect(l1Messenger)
+                    .connect(l1MessengerAccount)
                     .verifyCompressedStateDiffs(1, 9, encodedStateDiffs, compressedStateDiffs)
             ).to.be.revertedWith('enumeration index size is too large');
         });
@@ -216,7 +173,7 @@ describe('Compressor tests', function () {
             const compressedStateDiffs = compressStateDiffs(4, stateDiffs);
             await expect(
                 compressor
-                    .connect(l1Messenger)
+                    .connect(l1MessengerAccount)
                     .verifyCompressedStateDiffs(1, 4, encodedStateDiffs, compressedStateDiffs)
             ).to.be.revertedWith('iw: initial key mismatch');
         });
@@ -235,7 +192,7 @@ describe('Compressor tests', function () {
             const compressedStateDiffs = compressStateDiffs(8, stateDiffs);
             await expect(
                 compressor
-                    .connect(l1Messenger)
+                    .connect(l1MessengerAccount)
                     .verifyCompressedStateDiffs(1, 8, encodedStateDiffs, compressedStateDiffs)
             ).to.be.revertedWith('rw: enum key mismatch');
         });
@@ -260,7 +217,7 @@ describe('Compressor tests', function () {
             const compressedStateDiffs = compressStateDiffs(3, stateDiffs);
             await expect(
                 compressor
-                    .connect(l1Messenger)
+                    .connect(l1MessengerAccount)
                     .verifyCompressedStateDiffs(2, 3, encodedStateDiffs, compressedStateDiffs)
             ).to.be.revertedWith('transform or no compression: compressed and final mismatch');
         });
@@ -285,7 +242,7 @@ describe('Compressor tests', function () {
             const compressedStateDiffs = compressStateDiffs(1, stateDiffs);
             await expect(
                 compressor
-                    .connect(l1Messenger)
+                    .connect(l1MessengerAccount)
                     .verifyCompressedStateDiffs(2, 1, encodedStateDiffs, compressedStateDiffs)
             ).to.be.revertedWith('transform or no compression: compressed and final mismatch');
         });
@@ -304,7 +261,7 @@ describe('Compressor tests', function () {
             const compressedStateDiffs = compressStateDiffs(1, stateDiffs);
             await expect(
                 compressor
-                    .connect(l1Messenger)
+                    .connect(l1MessengerAccount)
                     .verifyCompressedStateDiffs(1, 1, encodedStateDiffs, compressedStateDiffs)
             ).to.be.revertedWith('add: initial plus converted not equal to final');
         });
@@ -323,7 +280,7 @@ describe('Compressor tests', function () {
             const compressedStateDiffs = compressStateDiffs(1, stateDiffs);
             await expect(
                 compressor
-                    .connect(l1Messenger)
+                    .connect(l1MessengerAccount)
                     .verifyCompressedStateDiffs(1, 1, encodedStateDiffs, compressedStateDiffs)
             ).to.be.revertedWith('sub: initial minus converted not equal to final');
         });
@@ -344,7 +301,7 @@ describe('Compressor tests', function () {
             compressedStateDiffs = compressedStateDiffsCharArray.join('');
             await expect(
                 compressor
-                    .connect(l1Messenger)
+                    .connect(l1MessengerAccount)
                     .verifyCompressedStateDiffs(1, 1, encodedStateDiffs, compressedStateDiffs)
             ).to.be.revertedWith('unsupported operation');
         });
@@ -374,7 +331,7 @@ describe('Compressor tests', function () {
             const compressedStateDiffs = compressStateDiffs(1, stateDiffs);
             await expect(
                 compressor
-                    .connect(l1Messenger)
+                    .connect(l1MessengerAccount)
                     .verifyCompressedStateDiffs(2, 1, encodedStateDiffs, compressedStateDiffs)
             ).to.be.revertedWith('Incorrect number of initial storage diffs');
         });
@@ -404,7 +361,7 @@ describe('Compressor tests', function () {
             const compressedStateDiffs = compressStateDiffs(1, stateDiffs);
             await expect(
                 compressor
-                    .connect(l1Messenger)
+                    .connect(l1MessengerAccount)
                     .verifyCompressedStateDiffs(2, 1, encodedStateDiffs, compressedStateDiffs)
             ).to.be.revertedWith('Extra data in _compressedStateDiffs');
         });

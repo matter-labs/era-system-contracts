@@ -1,22 +1,30 @@
 import { expect } from 'chai';
 import { ethers, network } from 'hardhat';
 import { Wallet } from 'zksync-web3';
-import { KnownCodesStorage, MockL1Messenger, MockL1Messenger__factory } from '../typechain-types';
 import {
+    ContractDeployer__factory,
+    KnownCodesStorage, KnownCodesStorage__factory,
+    MockContract, MockContract__factory,
+    MockL1Messenger,
+    MockL1Messenger__factory
+} from '../typechain-types';
+import {
+    ACCOUNT_CODE_STORAGE_SYSTEM_CONTRACT_ADDRESS,
     BOOTLOADER_FORMAL_ADDRESS,
-    COMPRESSOR_CONTRACT_ADDRESS,
+    COMPRESSOR_CONTRACT_ADDRESS, DEPLOYER_SYSTEM_CONTRACT_ADDRESS, KNOWN_CODE_STORAGE_CONTRACT_ADDRESS,
     L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS
 } from './shared/constants';
-import { deployContract, getCode, getWallets, loadArtifact, setCode } from './shared/utils';
+import {deployContract, deployContractOnAddress, getCode, getWallets, loadArtifact, setCode} from './shared/utils';
 
 describe('KnownCodesStorage tests', function () {
     let wallet: Wallet;
-    let knownCodesStorage: KnownCodesStorage;
-    let mockL1Messenger: MockL1Messenger;
     let bootloaderAccount: ethers.Signer;
     let compressorAccount: ethers.Signer;
 
-    let _l1MessengerCode: string;
+    let knownCodesStorage: KnownCodesStorage;
+    let mockL1Messenger: MockContract;
+
+    let l1MessengerIface: ethers.utils.Interface
 
     const BYTECODE_HASH_1 = '0x0100FFFFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF';
     const BYTECODE_HASH_2 = '0x0100FFFFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEE1';
@@ -25,14 +33,17 @@ describe('KnownCodesStorage tests', function () {
     const INCORRECTLY_FORMATTED_HASH = '0x0120FFFFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF';
     const INVALID_LENGTH_HASH = '0x0100FFFEDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF';
 
+    // TODO: currently test depends on the previous state and can not be run twice, think about fixing it. Relevant for other tests as well.
     before(async () => {
         wallet = (await getWallets())[0];
-        knownCodesStorage = (await deployContract('KnownCodesStorage')) as KnownCodesStorage;
 
-        _l1MessengerCode = await getCode(L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS);
-        const l1MessengerArtifact = await loadArtifact('MockL1Messenger');
-        await setCode(L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS, l1MessengerArtifact.bytecode);
-        mockL1Messenger = MockL1Messenger__factory.connect(L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS, wallet);
+        await deployContractOnAddress(KNOWN_CODE_STORAGE_CONTRACT_ADDRESS, 'KnownCodesStorage')
+        knownCodesStorage = KnownCodesStorage__factory.connect(KNOWN_CODE_STORAGE_CONTRACT_ADDRESS, wallet);
+
+        await deployContractOnAddress(L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS, 'MockContract')
+        mockL1Messenger = MockContract__factory.connect(L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS, wallet);
+
+        l1MessengerIface = new ethers.utils.Interface((await loadArtifact('L1Messenger')).abi)
 
         await network.provider.request({
             method: 'hardhat_impersonateAccount',
@@ -47,7 +58,6 @@ describe('KnownCodesStorage tests', function () {
     });
 
     after(async () => {
-        await setCode(L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS, _l1MessengerCode);
         await network.provider.request({
             method: 'hardhat_stopImpersonatingAccount',
             params: [BOOTLOADER_FORMAL_ADDRESS]
@@ -81,7 +91,7 @@ describe('KnownCodesStorage tests', function () {
             await expect(knownCodesStorage.connect(compressorAccount).markBytecodeAsPublished(BYTECODE_HASH_1))
                 .to.emit(knownCodesStorage, 'MarkedAsKnown')
                 .withArgs(BYTECODE_HASH_1.toLowerCase(), false)
-                .not.emit(mockL1Messenger, 'MockBytecodeL1Published');
+                .not.emit(mockL1Messenger, 'Called');
             expect(await knownCodesStorage.getMarker(BYTECODE_HASH_1)).to.be.eq(1);
         });
 
@@ -123,7 +133,7 @@ describe('KnownCodesStorage tests', function () {
                 .withArgs(BYTECODE_HASH_2.toLowerCase(), false)
                 .emit(knownCodesStorage, 'MarkedAsKnown')
                 .withArgs(BYTECODE_HASH_3.toLowerCase(), false)
-                .not.emit(mockL1Messenger, 'MockBytecodeL1Published');
+                .not.emit(mockL1Messenger, 'Called')
             expect(await knownCodesStorage.getMarker(BYTECODE_HASH_2)).to.be.eq(1);
             expect(await knownCodesStorage.getMarker(BYTECODE_HASH_3)).to.be.eq(1);
         });
@@ -138,8 +148,8 @@ describe('KnownCodesStorage tests', function () {
             await expect(knownCodesStorage.connect(bootloaderAccount).markFactoryDeps(true, [BYTECODE_HASH_4]))
                 .to.emit(knownCodesStorage, 'MarkedAsKnown')
                 .withArgs(BYTECODE_HASH_4.toLowerCase(), true)
-                .emit(mockL1Messenger, 'MockBytecodeL1Published')
-                .withArgs(BYTECODE_HASH_4.toLowerCase());
+                .emit(mockL1Messenger, 'Called')
+                .withArgs(0, l1MessengerIface.encodeFunctionData('requestBytecodeL1Publication', [BYTECODE_HASH_4]));
             expect(await knownCodesStorage.getMarker(BYTECODE_HASH_4)).to.be.eq(1);
         });
     });

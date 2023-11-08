@@ -1,14 +1,30 @@
 import { expect } from 'chai';
 import { ethers, network } from 'hardhat';
 import { Wallet } from 'zksync-web3';
-import { AccountCodeStorage } from '../typechain-types';
-import { DEPLOYER_SYSTEM_CONTRACT_ADDRESS, EMPTY_STRING_KECCAK } from './shared/constants';
-import { deployContract, getWallets } from './shared/utils';
+import {
+    AccountCodeStorage,
+    AccountCodeStorage__factory,
+    MockContract,
+    MockContract__factory,
+    NonceHolder
+} from '../typechain-types';
+import {
+    DEPLOYER_SYSTEM_CONTRACT_ADDRESS,
+    EMPTY_STRING_KECCAK,
+    ACCOUNT_CODE_STORAGE_SYSTEM_CONTRACT_ADDRESS,
+    NONCE_HOLDER_SYSTEM_CONTRACT_ADDRESS,
+    ONE_BYTES32_HEX
+} from './shared/constants';
+import { getWallets, deployContractOnAddress, loadArtifact} from './shared/utils';
 
 describe('AccountCodeStorage tests', function () {
     let wallet: Wallet;
-    let accountCodeStorage: AccountCodeStorage;
     let deployerAccount: ethers.Signer;
+
+    let accountCodeStorage: AccountCodeStorage;
+    let mockNonceHolder: MockContract;
+
+    let nonceHolderIface: ethers.utils.Interface;
 
     const CONSTRUCTING_BYTECODE_HASH = '0x0101FFFFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF';
     const CONSTRUCTED_BYTECODE_HASH = '0x0100FFFFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF';
@@ -16,7 +32,14 @@ describe('AccountCodeStorage tests', function () {
 
     before(async () => {
         wallet = getWallets()[0];
-        accountCodeStorage = (await deployContract('AccountCodeStorage')) as AccountCodeStorage;
+
+        await deployContractOnAddress(ACCOUNT_CODE_STORAGE_SYSTEM_CONTRACT_ADDRESS, 'AccountCodeStorage')
+        accountCodeStorage = AccountCodeStorage__factory.connect(ACCOUNT_CODE_STORAGE_SYSTEM_CONTRACT_ADDRESS, wallet);
+
+        await deployContractOnAddress(NONCE_HOLDER_SYSTEM_CONTRACT_ADDRESS, 'MockContract')
+        mockNonceHolder = MockContract__factory.connect(NONCE_HOLDER_SYSTEM_CONTRACT_ADDRESS, wallet);
+
+        nonceHolderIface = new ethers.utils.Interface((await loadArtifact('NonceHolder')).abi)
 
         await network.provider.request({
             method: 'hardhat_impersonateAccount',
@@ -148,8 +171,8 @@ describe('AccountCodeStorage tests', function () {
         });
 
         it('EOA with non-zero nonce', async () => {
-            // This address at least deployed this contract
-            expect(await accountCodeStorage.getCodeHash(wallet.address)).to.be.eq(EMPTY_STRING_KECCAK);
+            await mockNonceHolder.setResult(nonceHolderIface.encodeFunctionData('getRawNonce', [RANDOM_ADDRESS]), {failure: false, returnData: ONE_BYTES32_HEX})
+            expect(await accountCodeStorage.getCodeHash(RANDOM_ADDRESS)).to.be.eq(EMPTY_STRING_KECCAK);
         });
 
         it('address in the constructor', async () => {
@@ -175,6 +198,7 @@ describe('AccountCodeStorage tests', function () {
         });
 
         it('zero', async () => {
+            await mockNonceHolder.setResult(nonceHolderIface.encodeFunctionData('getRawNonce', [RANDOM_ADDRESS]), {failure: false, returnData: ethers.constants.HashZero})
             expect(await accountCodeStorage.getCodeHash(RANDOM_ADDRESS)).to.be.eq(ethers.constants.HashZero);
         });
     });

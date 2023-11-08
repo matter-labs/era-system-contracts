@@ -265,7 +265,7 @@ async function main() {
     writeFileSync(`${OUTPUT_DIR}/gas_test.yul`, gasTestBootloader);
     writeFileSync(`${OUTPUT_DIR}/fee_estimate.yul`, feeEstimationBootloader);
 
-    console.log('Preprocessing done!');
+    console.log('Bootloader preprocessing done!');
 }
 
 main();
