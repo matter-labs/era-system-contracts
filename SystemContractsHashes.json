@@ -119,6 +119,13 @@
     "sourceCodeHash": "0xdad8be6e926155a362ea05b132ba8b6c634e978a41f79bb6390b870e18049e45"
   },
   {
+    "contractName": "P256VERIFY",
+    "bytecodePath": "contracts/precompiles/artifacts/P256VERIFY.yul/P256VERIFY.yul.zbin",
+    "sourceCodePath": "contracts/precompiles/P256VERIFY.yul",
+    "bytecodeHash": "0x",
+    "sourceCodeHash": "0x0848c3e7c3a8c9fb83af459236d7ff5e4a517e1fe6c42d7573f6d28f8ce61527"
+  },
+  {
     "contractName": "Ecrecover",
     "bytecodePath": "contracts/precompiles/artifacts/Ecrecover.yul/Ecrecover.yul.zbin",
     "sourceCodePath": "contracts/precompiles/Ecrecover.yul",
