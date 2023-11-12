@@ -122,7 +122,7 @@
     "contractName": "EcPairing",
     "bytecodePath": "contracts/precompiles/artifacts/EcPairing.yul/EcPairing.yul.zbin",
     "sourceCodePath": "contracts/precompiles/EcPairing.yul",
-    "bytecodeHash": "0x23cb5e31e2bde5246c44694d69d2a71e9ec3b5c1f3e37ab8affe4a25bc933534",
+    "bytecodeHash": "0x0100121b7d53456470baebed90d2e914396a939f00617650f495b2fb79f8c453",
     "sourceCodeHash": "0xbb50650a15ff86b0ee683dd51491b31b785272d1a803b871799af8f07eb7e300"
   },
   {
