@@ -122,7 +122,7 @@
     "contractName": "P256VERIFY",
     "bytecodePath": "contracts/precompiles/artifacts/P256VERIFY.yul/P256VERIFY.yul.zbin",
     "sourceCodePath": "contracts/precompiles/P256VERIFY.yul",
-    "bytecodeHash": "0x",
+    "bytecodeHash": "0x01000457cda003df87f344df89739fceda8009bcdc7d01a40e5876b4ffdb36ad",
     "sourceCodeHash": "0x0848c3e7c3a8c9fb83af459236d7ff5e4a517e1fe6c42d7573f6d28f8ce61527"
   },
   {
