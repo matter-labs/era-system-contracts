@@ -6,7 +6,7 @@ import * as fs from "fs";
 import { getCompilersDir } from "hardhat/internal/util/global-dir";
 import path from "path";
 
-const COMPILER_VERSION = "1.3.14";
+const COMPILER_VERSION = "1.3.17";
 const IS_COMPILER_PRE_RELEASE = false;
 
 async function compilerLocation(): Promise<string> {
