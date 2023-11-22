@@ -1,5 +1,7 @@
 object "ModExp" {
-	code { }
+	code {
+	    return(0, 0)
+	}
 	object "ModExp_deployed" {
 		code {
 
