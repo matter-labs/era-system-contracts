@@ -4,9 +4,7 @@ object "EcMul" {
     }
     object "EcMul_deployed" {
         code {
-            ////////////////////////////////////////////////////////////////
-            //                      CONSTANTS
-            ////////////////////////////////////////////////////////////////
+            // CONSTANTS
 
             /// @notice Constant function for value one in Montgomery form.
             /// @dev This value was precomputed using Python.
@@ -54,9 +52,7 @@ object "EcMul" {
                 ret := 111032442853175714102588374283752698368366046808579839647964533820976443843465
             }
 
-            // ////////////////////////////////////////////////////////////////
-            //                      HELPER FUNCTIONS
-            // ////////////////////////////////////////////////////////////////
+            // HELPER FUNCTIONS
 
             /// @dev Executes the `precompileCall` opcode.
             function precompileCall(precompileParams, gasToBurn) -> ret {
@@ -375,9 +371,7 @@ object "EcMul" {
                 xr := montgomeryAdd(xr, xr)
             }
 
-            ////////////////////////////////////////////////////////////////
-            //                      FALLBACK
-            ////////////////////////////////////////////////////////////////
+            // FALLBACK
 
             // Retrieve the coordinates from the calldata
             let x := calldataload(0)
@@ -389,6 +383,8 @@ object "EcMul" {
 
             if affinePointIsInfinity(x, y) {
                 // Infinity * scalar = Infinity
+                mstore(0x00, 0x00)
+                mstore(0x20, 0x00)
                 return(0x00, 0x40)
             }
 
@@ -402,6 +398,8 @@ object "EcMul" {
 
             if eq(scalar, 0) {
                 // P * 0 = Infinity
+                mstore(0x00, 0x00)
+                mstore(0x20, 0x00)
                 return(0x00, 0x40)
             }
             if eq(scalar, 1) {
