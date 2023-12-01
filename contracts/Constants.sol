@@ -27,7 +27,7 @@ address constant SHA256_SYSTEM_CONTRACT = address(0x02);
 address constant ECADD_SYSTEM_CONTRACT = address(0x06);
 address constant ECMUL_SYSTEM_CONTRACT = address(0x07);
 
-/// @dev The maximal possible address of an L1-like precompie. These precompiles maintain the following properties:
+/// @dev The maximal possible address of an L1-like precompile. These precompiles maintain the following properties:
 /// - Their extcodehash is EMPTY_STRING_KECCAK
 /// - Their extcodesize is 0 despite having a bytecode formally deployed there.
 uint256 constant CURRENT_MAX_PRECOMPILE_ADDRESS = 0xff;
