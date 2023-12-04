@@ -34,102 +34,114 @@ interface ISystemContracts {
 }
 
 export const SYSTEM_CONTRACTS: ISystemContracts = {
-    zeroAddress: {
-        // zero address has EmptyContract code
-        address: '0x0000000000000000000000000000000000000000',
-        codeName: 'EmptyContract',
-        lang: Language.Solidity
-    },
-    ecrecover: {
-        address: '0x0000000000000000000000000000000000000001',
-        codeName: 'Ecrecover',
-        lang: Language.Yul,
-        path: 'precompiles'
-    },
-    sha256: {
-        address: '0x0000000000000000000000000000000000000002',
-        codeName: 'SHA256',
-        lang: Language.Yul,
-        path: 'precompiles'
-    },
-    bootloader: {
-        // Bootloader has EmptyContract code
-        address: '0x0000000000000000000000000000000000008001',
-        codeName: 'EmptyContract',
-        lang: Language.Solidity
-    },
-    accountCodeStorage: {
-        address: '0x0000000000000000000000000000000000008002',
-        codeName: 'AccountCodeStorage',
-        lang: Language.Solidity
-    },
-    nonceHolder: {
-        address: '0x0000000000000000000000000000000000008003',
-        codeName: 'NonceHolder',
-        lang: Language.Solidity
-    },
-    knownCodesStorage: {
-        address: '0x0000000000000000000000000000000000008004',
-        codeName: 'KnownCodesStorage',
-        lang: Language.Solidity
-    },
-    immutableSimulator: {
-        address: '0x0000000000000000000000000000000000008005',
-        codeName: 'ImmutableSimulator',
-        lang: Language.Solidity
-    },
-    contractDeployer: {
-        address: '0x0000000000000000000000000000000000008006',
-        codeName: 'ContractDeployer',
-        lang: Language.Solidity
-    },
-    l1Messenger: {
-        address: '0x0000000000000000000000000000000000008008',
-        codeName: 'L1Messenger',
-        lang: Language.Solidity
-    },
-    msgValueSimulator: {
-        address: '0x0000000000000000000000000000000000008009',
-        codeName: 'MsgValueSimulator',
-        lang: Language.Solidity
-    },
-    l2EthToken: {
-        address: '0x000000000000000000000000000000000000800a',
-        codeName: 'L2EthToken',
-        lang: Language.Solidity
-    },
-    systemContext: {
-        address: '0x000000000000000000000000000000000000800b',
-        codeName: 'SystemContext',
-        lang: Language.Solidity
-    },
-    bootloaderUtilities: {
-        address: '0x000000000000000000000000000000000000800c',
-        codeName: 'BootloaderUtilities',
-        lang: Language.Solidity
-    },
-    eventWriter: {
-        address: '0x000000000000000000000000000000000000800d',
-        codeName: 'EventWriter',
-        lang: Language.Yul,
-        path: ''
-    },
-    compressor: {
-        address: '0x000000000000000000000000000000000000800e',
-        codeName: 'Compressor',
-        lang: Language.Solidity
-    },
-    complexUpgrader: {
-        address: '0x000000000000000000000000000000000000800f',
-        codeName: 'ComplexUpgrader',
-        lang: Language.Solidity
-    },
-    keccak256: {
-        address: '0x0000000000000000000000000000000000008010',
-        codeName: 'Keccak256',
-        lang: Language.Yul,
-        path: 'precompiles'
-    }
+  zeroAddress: {
+    // zero address has EmptyContract code
+    address: "0x0000000000000000000000000000000000000000",
+    codeName: "EmptyContract",
+    lang: Language.Solidity,
+  },
+  ecrecover: {
+    address: "0x0000000000000000000000000000000000000001",
+    codeName: "Ecrecover",
+    lang: Language.Yul,
+    path: "precompiles",
+  },
+  sha256: {
+    address: "0x0000000000000000000000000000000000000002",
+    codeName: "SHA256",
+    lang: Language.Yul,
+    path: "precompiles",
+  },
+  ecAdd: {
+    address: "0x0000000000000000000000000000000000000006",
+    codeName: "EcAdd",
+    lang: Language.Yul,
+    path: "precompiles",
+  },
+  ecMul: {
+    address: "0x0000000000000000000000000000000000000007",
+    codeName: "EcMul",
+    lang: Language.Yul,
+    path: "precompiles",
+  },
+  bootloader: {
+    // Bootloader has EmptyContract code
+    address: "0x0000000000000000000000000000000000008001",
+    codeName: "EmptyContract",
+    lang: Language.Solidity,
+  },
+  accountCodeStorage: {
+    address: "0x0000000000000000000000000000000000008002",
+    codeName: "AccountCodeStorage",
+    lang: Language.Solidity,
+  },
+  nonceHolder: {
+    address: "0x0000000000000000000000000000000000008003",
+    codeName: "NonceHolder",
+    lang: Language.Solidity,
+  },
+  knownCodesStorage: {
+    address: "0x0000000000000000000000000000000000008004",
+    codeName: "KnownCodesStorage",
+    lang: Language.Solidity,
+  },
+  immutableSimulator: {
+    address: "0x0000000000000000000000000000000000008005",
+    codeName: "ImmutableSimulator",
+    lang: Language.Solidity,
+  },
+  contractDeployer: {
+    address: "0x0000000000000000000000000000000000008006",
+    codeName: "ContractDeployer",
+    lang: Language.Solidity,
+  },
+  l1Messenger: {
+    address: "0x0000000000000000000000000000000000008008",
+    codeName: "L1Messenger",
+    lang: Language.Solidity,
+  },
+  msgValueSimulator: {
+    address: "0x0000000000000000000000000000000000008009",
+    codeName: "MsgValueSimulator",
+    lang: Language.Solidity,
+  },
+  l2EthToken: {
+    address: "0x000000000000000000000000000000000000800a",
+    codeName: "L2EthToken",
+    lang: Language.Solidity,
+  },
+  systemContext: {
+    address: "0x000000000000000000000000000000000000800b",
+    codeName: "SystemContext",
+    lang: Language.Solidity,
+  },
+  bootloaderUtilities: {
+    address: "0x000000000000000000000000000000000000800c",
+    codeName: "BootloaderUtilities",
+    lang: Language.Solidity,
+  },
+  eventWriter: {
+    address: "0x000000000000000000000000000000000000800d",
+    codeName: "EventWriter",
+    lang: Language.Yul,
+    path: "",
+  },
+  compressor: {
+    address: "0x000000000000000000000000000000000000800e",
+    codeName: "Compressor",
+    lang: Language.Solidity,
+  },
+  complexUpgrader: {
+    address: "0x000000000000000000000000000000000000800f",
+    codeName: "ComplexUpgrader",
+    lang: Language.Solidity,
+  },
+  keccak256: {
+    address: "0x0000000000000000000000000000000000008010",
+    codeName: "Keccak256",
+    lang: Language.Yul,
+    path: "precompiles",
+  },
 } as const;
 
 export const EIP712_TX_ID = 113;
