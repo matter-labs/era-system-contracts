@@ -40,6 +40,6 @@ export default {
     },
   },
   paths: {
-    sources: "./contracts-preprocessed"
+    sources: "./contracts-preprocessed",
   },
 };
