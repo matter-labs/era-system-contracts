@@ -33,21 +33,26 @@ describe("ContractDeployer tests", function () {
   let mockAccountCodeStorage: MockContract;
   let mockNonceHolder: MockContract;
   let mockKnownCodesStorage: MockContract;
-  let mockEthToken: MockContract; // eslint-disable-line
-  let mockImmutableSimulator: MockContract; // eslint-disable-line
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  let mockEthToken: MockContract;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  let mockImmutableSimulator: MockContract;
   let contractDeployerSystemCall: ContractDeployer;
 
   let accountCodeStorageIface: ethers.utils.Interface;
   let nonceHolderIface: ethers.utils.Interface;
   let knownCodesStorageIface: ethers.utils.Interface;
-  let ethTokenIface: ethers.utils.Interface; // eslint-disable-line
-  let immutableSimulatorIface: ethers.utils.Interface; // eslint-disable-line
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  let ethTokenIface: ethers.utils.Interface;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  let immutableSimulatorIface: ethers.utils.Interface;
 
   let deployableArtifact: ZkSyncArtifact;
 
   const RANDOM_ADDRESS = ethers.utils.getAddress("0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef");
   const RANDOM_ADDRESS_2 = ethers.utils.getAddress("0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbee2");
   const RANDOM_ADDRESS_3 = ethers.utils.getAddress("0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbee3");
+  const EMPTY_KERNEL_ADDRESS = ethers.utils.getAddress('0x0000000000000000000000000000000000000101');
   const AA_VERSION_NONE = 0;
   const AA_VERSION_1 = 1;
   const NONCE_ORDERING_SEQUENTIAL = 0;
@@ -184,6 +189,15 @@ describe("ContractDeployer tests", function () {
         { failure: false, returnData: ethers.constants.HashZero }
       );
       expect(await contractDeployer.extendedAccountVersion(RANDOM_ADDRESS)).to.be.eq(AA_VERSION_1);
+    });
+
+    it('Empty address', async () => {
+      await mockAccountCodeStorage.setResult(
+          accountCodeStorageIface.encodeFunctionData("getRawCodeHash", [EMPTY_KERNEL_ADDRESS]),
+          { failure: false, returnData: ethers.constants.HashZero }
+      );
+      // Now testing that the system contracts with empty bytecode are still treated as AA_VERSION_NONE
+      expect(await contractDeployer.extendedAccountVersion(EMPTY_KERNEL_ADDRESS)).to.be.eq(AA_VERSION_NONE);
     });
 
     it("not AA", async () => {

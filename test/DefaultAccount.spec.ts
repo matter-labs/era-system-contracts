@@ -3,7 +3,7 @@ import { ethers, network } from "hardhat";
 import * as zksync from "zksync-web3";
 import type { Wallet } from "zksync-web3";
 import { serialize } from "zksync-web3/build/src/utils";
-import type { DefaultAccount, L2EthToken, MockContract } from "../typechain-types";
+import type { DefaultAccount, DelegateCaller, L2EthToken, MockContract } from "../typechain-types";
 import { DefaultAccount__factory, L2EthToken__factory, MockContract__factory } from "../typechain-types";
 import {
   BOOTLOADER_FORMAL_ADDRESS,
@@ -21,15 +21,19 @@ describe("DefaultAccount tests", function () {
 
   let defaultAccount: DefaultAccount;
   let account: Wallet;
-  let mockNonceHolder: MockContract; // eslint-disable-line
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  let mockNonceHolder: MockContract;
   let mockMsgValueSimulator: MockContract;
   let mockBootloaderFormalAddress: MockContract;
-  let l2EthToken: L2EthToken; // eslint-disable-line
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  let l2EthToken: L2EthToken;
   let callable: MockContract;
+  let delegateCaller: DelegateCaller;
   let mockERC20: MockContract;
 
   let paymasterFlowIface: ethers.utils.Interface;
-  let nonceHolderIface: ethers.utils.Interface; // eslint-disable-line
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  let nonceHolderIface: ethers.utils.Interface;
   let ERC20Iface: ethers.utils.Interface;
 
   const RANDOM_ADDRESS = ethers.utils.getAddress("0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef");
@@ -53,6 +57,7 @@ describe("DefaultAccount tests", function () {
 
     l2EthToken = L2EthToken__factory.connect(ETH_TOKEN_SYSTEM_CONTRACT_ADDRESS, wallet);
     callable = (await deployContract("MockContract")) as MockContract;
+    delegateCaller = (await deployContract('DelegateCaller')) as DelegateCaller;
     mockERC20 = (await deployContract("MockContract")) as MockContract;
 
     paymasterFlowIface = new ethers.utils.Interface((await loadArtifact("IPaymasterFlow")).abi);
@@ -373,7 +378,7 @@ describe("DefaultAccount tests", function () {
   });
 
   describe("fallback/receive", function () {
-    it("zero value", async () => {
+    it("zero value by EOA wallet", async () => {
       const call = {
         from: wallet.address,
         to: defaultAccount.address,
@@ -383,7 +388,7 @@ describe("DefaultAccount tests", function () {
       expect(await wallet.provider.call(call)).to.be.eq("0x");
     });
 
-    it("non-zero value", async () => {
+    it("non-zero value by EOA wallet", async () => {
       const call = {
         from: wallet.address,
         to: defaultAccount.address,
@@ -391,6 +396,32 @@ describe("DefaultAccount tests", function () {
         data: "0x87238489489983493904904390431212224343434344433443433434344234234234",
       };
       expect(await wallet.provider.call(call)).to.be.eq("0x");
+    });
+
+    it('zero value by bootloader', async () => {
+      // Here we need to ensure that during delegatecalls even if `msg.sender` is the bootloader,
+      // the fallback is behaving correctly
+      const calldata = delegateCaller.interface.encodeFunctionData('delegateCall', [defaultAccount.address]);
+      const call = {
+        from: BOOTLOADER_FORMAL_ADDRESS,
+        to: delegateCaller.address,
+        value: 0,
+        data: calldata
+      };
+      expect(await bootloaderAccount.call(call)).to.be.eq('0x');
+    });
+
+    it('non-zero value by bootloader', async () => {
+      // Here we need to ensure that during delegatecalls even if `msg.sender` is the bootloader,
+      // the fallback is behaving correctly
+      const calldata = delegateCaller.interface.encodeFunctionData('delegateCall', [defaultAccount.address]);
+      const call = {
+        from: BOOTLOADER_FORMAL_ADDRESS,
+        to: delegateCaller.address,
+        value: 3223,
+        data: calldata
+      };
+      expect(await bootloaderAccount.call(call)).to.be.eq('0x');
     });
   });
 });
