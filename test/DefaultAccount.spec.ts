@@ -57,7 +57,7 @@ describe("DefaultAccount tests", function () {
 
     l2EthToken = L2EthToken__factory.connect(ETH_TOKEN_SYSTEM_CONTRACT_ADDRESS, wallet);
     callable = (await deployContract("MockContract")) as MockContract;
-    delegateCaller = (await deployContract('DelegateCaller')) as DelegateCaller;
+    delegateCaller = (await deployContract("DelegateCaller")) as DelegateCaller;
     mockERC20 = (await deployContract("MockContract")) as MockContract;
 
     paymasterFlowIface = new ethers.utils.Interface((await loadArtifact("IPaymasterFlow")).abi);
@@ -398,30 +398,30 @@ describe("DefaultAccount tests", function () {
       expect(await wallet.provider.call(call)).to.be.eq("0x");
     });
 
-    it('zero value by bootloader', async () => {
+    it("zero value by bootloader", async () => {
       // Here we need to ensure that during delegatecalls even if `msg.sender` is the bootloader,
       // the fallback is behaving correctly
-      const calldata = delegateCaller.interface.encodeFunctionData('delegateCall', [defaultAccount.address]);
+      const calldata = delegateCaller.interface.encodeFunctionData("delegateCall", [defaultAccount.address]);
       const call = {
         from: BOOTLOADER_FORMAL_ADDRESS,
         to: delegateCaller.address,
         value: 0,
-        data: calldata
+        data: calldata,
       };
-      expect(await bootloaderAccount.call(call)).to.be.eq('0x');
+      expect(await bootloaderAccount.call(call)).to.be.eq("0x");
     });
 
-    it('non-zero value by bootloader', async () => {
+    it("non-zero value by bootloader", async () => {
       // Here we need to ensure that during delegatecalls even if `msg.sender` is the bootloader,
       // the fallback is behaving correctly
-      const calldata = delegateCaller.interface.encodeFunctionData('delegateCall', [defaultAccount.address]);
+      const calldata = delegateCaller.interface.encodeFunctionData("delegateCall", [defaultAccount.address]);
       const call = {
         from: BOOTLOADER_FORMAL_ADDRESS,
         to: delegateCaller.address,
         value: 3223,
-        data: calldata
+        data: calldata,
       };
-      expect(await bootloaderAccount.call(call)).to.be.eq('0x');
+      expect(await bootloaderAccount.call(call)).to.be.eq("0x");
     });
   });
 });

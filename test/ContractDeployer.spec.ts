@@ -52,7 +52,7 @@ describe("ContractDeployer tests", function () {
   const RANDOM_ADDRESS = ethers.utils.getAddress("0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef");
   const RANDOM_ADDRESS_2 = ethers.utils.getAddress("0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbee2");
   const RANDOM_ADDRESS_3 = ethers.utils.getAddress("0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbee3");
-  const EMPTY_KERNEL_ADDRESS = ethers.utils.getAddress('0x0000000000000000000000000000000000000101');
+  const EMPTY_KERNEL_ADDRESS = ethers.utils.getAddress("0x0000000000000000000000000000000000000101");
   const AA_VERSION_NONE = 0;
   const AA_VERSION_1 = 1;
   const NONCE_ORDERING_SEQUENTIAL = 0;
@@ -191,10 +191,10 @@ describe("ContractDeployer tests", function () {
       expect(await contractDeployer.extendedAccountVersion(RANDOM_ADDRESS)).to.be.eq(AA_VERSION_1);
     });
 
-    it('Empty address', async () => {
+    it("Empty address", async () => {
       await mockAccountCodeStorage.setResult(
-          accountCodeStorageIface.encodeFunctionData("getRawCodeHash", [EMPTY_KERNEL_ADDRESS]),
-          { failure: false, returnData: ethers.constants.HashZero }
+        accountCodeStorageIface.encodeFunctionData("getRawCodeHash", [EMPTY_KERNEL_ADDRESS]),
+        { failure: false, returnData: ethers.constants.HashZero }
       );
       // Now testing that the system contracts with empty bytecode are still treated as AA_VERSION_NONE
       expect(await contractDeployer.extendedAccountVersion(EMPTY_KERNEL_ADDRESS)).to.be.eq(AA_VERSION_NONE);
