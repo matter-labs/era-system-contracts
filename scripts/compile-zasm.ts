@@ -22,7 +22,7 @@ export async function compileZasmFolder(path: string) {
 
 // Currently used only for the test contracts
 async function main() {
-  await compileZasmFolder('contracts-preprocessed/test-contracts');
+  await compileZasmFolder("contracts-preprocessed/test-contracts");
 }
 
 main()

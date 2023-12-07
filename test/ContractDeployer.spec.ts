@@ -268,7 +268,7 @@ describe("ContractDeployer tests", function () {
 
     it("non system call failed", async () => {
       await expect(
-          contractDeployer.createAccount(
+        contractDeployer.createAccount(
           ethers.constants.HashZero,
           utils.hashBytecode(deployableArtifact.bytecode),
           "0x",
@@ -391,7 +391,7 @@ describe("ContractDeployer tests", function () {
 
     it("non system call failed", async () => {
       await expect(
-          contractDeployer.create2Account(
+        contractDeployer.create2Account(
           "0x1234567891234567891234512222122167891123456789123456787654323456",
           utils.hashBytecode(deployableArtifact.bytecode),
           "0xdeadbeef",
@@ -550,11 +550,7 @@ describe("ContractDeployer tests", function () {
 
     it("non system call failed", async () => {
       await expect(
-          contractDeployer.create(
-          ethers.constants.HashZero,
-          utils.hashBytecode(deployableArtifact.bytecode),
-          "0x"
-        )
+        contractDeployer.create(ethers.constants.HashZero, utils.hashBytecode(deployableArtifact.bytecode), "0x")
       ).to.be.revertedWith("This method require system call flag");
     });
 
@@ -620,11 +616,7 @@ describe("ContractDeployer tests", function () {
 
     it("non system call failed", async () => {
       await expect(
-          contractDeployer.create2(
-          ethers.constants.HashZero,
-          utils.hashBytecode(deployableArtifact.bytecode),
-          "0xabcd"
-        )
+        contractDeployer.create2(ethers.constants.HashZero, utils.hashBytecode(deployableArtifact.bytecode), "0xabcd")
       ).to.be.revertedWith("This method require system call flag");
     });
 
