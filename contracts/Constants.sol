@@ -60,6 +60,7 @@ ISystemContext constant SYSTEM_CONTEXT_CONTRACT = ISystemContext(payable(address
 
 IBootloaderUtilities constant BOOTLOADER_UTILITIES = IBootloaderUtilities(address(SYSTEM_CONTRACTS_OFFSET + 0x0c));
 
+// It will be a different value for tests, while shouldn't. But for now, this constant is not used by other contracts, so that's fine.
 address constant EVENT_WRITER_CONTRACT = address(SYSTEM_CONTRACTS_OFFSET + 0x0d);
 
 ICompressor constant COMPRESSOR_CONTRACT = ICompressor(address(SYSTEM_CONTRACTS_OFFSET + 0x0e));
