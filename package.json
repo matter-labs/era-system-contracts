@@ -15,6 +15,7 @@
   "devDependencies": {
     "@matterlabs/eslint-config-typescript": "^1.1.2",
     "@matterlabs/hardhat-zksync-chai-matchers": "^0.1.4",
+    "@matterlabs/hardhat-zksync-node": "^0.0.1-beta.7",
     "@matterlabs/hardhat-zksync-solc": "^0.4.2",
     "@matterlabs/prettier-config": "^1.0.3",
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.3",
@@ -76,6 +77,7 @@
     "prettier:check": "prettier --check \"**/*.{js,json,md,sol,ts,yaml}\"",
     "prettier:fix": "prettier --write \"**/*.{js,json,md,sol,ts,yaml}\"",
     "test": "yarn build:test-system-contracts && hardhat test --network zkSyncTestNode",
+    "test-node": "hardhat node-zksync --tag v0.0.1-alpha.boojum",
     "test:bootloader": "cd bootloader/test_infra && cargo run"
   }
 }

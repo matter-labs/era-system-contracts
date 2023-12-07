@@ -39,6 +39,23 @@ Check the system contracts hashes: `yarn calculate-hashes:check`
 
 Update the system contracts hashes: `yarn calculate-hashes:fix`
 
+## Testing
+
+The tests of the system contracts utilize the zkSync test node. In order to run the tests, execute the following commands in the root of the repository:
+
+```
+yarn test-node
+```
+
+It will run the test node, and you can see its logs in the output.
+Then run tests in the separate terminal:
+
+```
+yarn test
+```
+
+Please note that you need to rerun the test node every time you are running the tests because, in the current version, tests will be affected by the state after the previous run.
+
 ## Update Process
 
 System contracts handle core functionalities and play a critical role in maintaining the integrity of our protocol. To

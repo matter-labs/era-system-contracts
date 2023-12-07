@@ -2,6 +2,7 @@ import "@matterlabs/hardhat-zksync-chai-matchers";
 import "@matterlabs/hardhat-zksync-solc";
 import "@nomiclabs/hardhat-ethers";
 import "@typechain/hardhat";
+import "@matterlabs/hardhat-zksync-node";
 
 export default {
   zksolc: {
