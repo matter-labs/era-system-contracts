@@ -4,7 +4,7 @@ import { ethers, network } from "hardhat";
 import type { Wallet } from "zksync-web3";
 import { utils } from "zksync-web3";
 import type { ContractDeployer, MockContract } from "../typechain-types";
-import { ContractDeployer__factory, Deployable__factory, MockContract__factory, NonceHolder } from "../typechain-types";
+import { ContractDeployer__factory, Deployable__factory, MockContract__factory } from "../typechain-types";
 import {
   ACCOUNT_CODE_STORAGE_SYSTEM_CONTRACT_ADDRESS,
   DEPLOYER_SYSTEM_CONTRACT_ADDRESS,
@@ -33,15 +33,15 @@ describe("ContractDeployer tests", function () {
   let mockAccountCodeStorage: MockContract;
   let mockNonceHolder: MockContract;
   let mockKnownCodesStorage: MockContract;
-  let mockEthToken: MockContract;
-  let mockImmutableSimulator: MockContract;
+  let mockEthToken: MockContract; // eslint-disable-line
+  let mockImmutableSimulator: MockContract; // eslint-disable-line
   let contractDeployerSystemCall: ContractDeployer;
 
   let accountCodeStorageIface: ethers.utils.Interface;
   let nonceHolderIface: ethers.utils.Interface;
   let knownCodesStorageIface: ethers.utils.Interface;
-  let ethTokenIface: ethers.utils.Interface;
-  let immutableSimulatorIface: ethers.utils.Interface;
+  let ethTokenIface: ethers.utils.Interface; // eslint-disable-line
+  let immutableSimulatorIface: ethers.utils.Interface; // eslint-disable-line
 
   let deployableArtifact: ZkSyncArtifact;
 

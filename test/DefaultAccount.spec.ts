@@ -4,7 +4,7 @@ import * as zksync from "zksync-web3";
 import type { Wallet } from "zksync-web3";
 import { serialize } from "zksync-web3/build/src/utils";
 import type { DefaultAccount, L2EthToken, MockContract } from "../typechain-types";
-import { DefaultAccount__factory, L2EthToken__factory, MockContract__factory, NonceHolder } from "../typechain-types";
+import { DefaultAccount__factory, L2EthToken__factory, MockContract__factory } from "../typechain-types";
 import {
   BOOTLOADER_FORMAL_ADDRESS,
   ETH_TOKEN_SYSTEM_CONTRACT_ADDRESS,
@@ -21,15 +21,15 @@ describe("DefaultAccount tests", function () {
 
   let defaultAccount: DefaultAccount;
   let account: Wallet;
-  let mockNonceHolder: MockContract;
+  let mockNonceHolder: MockContract; // eslint-disable-line
   let mockMsgValueSimulator: MockContract;
   let mockBootloaderFormalAddress: MockContract;
-  let l2EthToken: L2EthToken;
+  let l2EthToken: L2EthToken; // eslint-disable-line
   let callable: MockContract;
   let mockERC20: MockContract;
 
   let paymasterFlowIface: ethers.utils.Interface;
-  let nonceHolderIface: ethers.utils.Interface;
+  let nonceHolderIface: ethers.utils.Interface; // eslint-disable-line
   let ERC20Iface: ethers.utils.Interface;
 
   const RANDOM_ADDRESS = ethers.utils.getAddress("0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef");

@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { ethers, network } from "hardhat";
 import type { Wallet } from "zksync-web3";
 import type { AccountCodeStorage, MockContract } from "../typechain-types";
-import { AccountCodeStorage__factory, MockContract__factory, NonceHolder } from "../typechain-types";
+import { AccountCodeStorage__factory, MockContract__factory } from "../typechain-types";
 import {
   DEPLOYER_SYSTEM_CONTRACT_ADDRESS,
   EMPTY_STRING_KECCAK,

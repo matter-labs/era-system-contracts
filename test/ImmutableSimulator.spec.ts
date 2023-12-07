@@ -1,9 +1,9 @@
 import { expect } from "chai";
 import { ethers, network } from "hardhat";
 import type { ImmutableSimulator } from "../typechain-types";
-import { ContractDeployer__factory, ImmutableSimulator__factory } from "../typechain-types";
+import { ImmutableSimulator__factory } from "../typechain-types";
 import { DEPLOYER_SYSTEM_CONTRACT_ADDRESS, IMMUTABLE_SIMULATOR_SYSTEM_CONTRACT_ADDRESS } from "./shared/constants";
-import { deployContract, deployContractOnAddress, getWallets } from "./shared/utils";
+import { deployContractOnAddress, getWallets } from "./shared/utils";
 
 describe("ImmutableSimulator tests", function () {
   let immutableSimulator: ImmutableSimulator;

@@ -5,21 +5,15 @@ import { ethers, network } from "hardhat";
 import * as zksync from "zksync-web3";
 import type { Wallet } from "zksync-web3";
 import type { Compressor, MockContract } from "../typechain-types";
+import { Compressor__factory, MockContract__factory } from "../typechain-types";
 import {
-  AccountCodeStorage__factory,
-  Compressor__factory,
-  MockContract__factory,
-  MockKnownCodesStorage__factory,
-} from "../typechain-types";
-import {
-  ACCOUNT_CODE_STORAGE_SYSTEM_CONTRACT_ADDRESS,
   BOOTLOADER_FORMAL_ADDRESS,
   COMPRESSOR_CONTRACT_ADDRESS,
   KNOWN_CODE_STORAGE_CONTRACT_ADDRESS,
   L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS,
   TWO_IN_256,
 } from "./shared/constants";
-import { deployContract, deployContractOnAddress, getCode, getWallets, loadArtifact, setCode } from "./shared/utils";
+import { deployContractOnAddress, getWallets, loadArtifact } from "./shared/utils";
 
 describe("Compressor tests", function () {
   let wallet: Wallet;

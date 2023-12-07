@@ -2,22 +2,14 @@ import { expect } from "chai";
 import { ethers, network } from "hardhat";
 import type { Wallet } from "zksync-web3";
 import type { KnownCodesStorage, MockContract } from "../typechain-types";
+import { KnownCodesStorage__factory, MockContract__factory } from "../typechain-types";
 import {
-  ContractDeployer__factory,
-  KnownCodesStorage__factory,
-  MockContract__factory,
-  MockL1Messenger,
-  MockL1Messenger__factory,
-} from "../typechain-types";
-import {
-  ACCOUNT_CODE_STORAGE_SYSTEM_CONTRACT_ADDRESS,
   BOOTLOADER_FORMAL_ADDRESS,
   COMPRESSOR_CONTRACT_ADDRESS,
-  DEPLOYER_SYSTEM_CONTRACT_ADDRESS,
   KNOWN_CODE_STORAGE_CONTRACT_ADDRESS,
   L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS,
 } from "./shared/constants";
-import { deployContract, deployContractOnAddress, getCode, getWallets, loadArtifact, setCode } from "./shared/utils";
+import { deployContractOnAddress, getWallets, loadArtifact } from "./shared/utils";
 
 describe("KnownCodesStorage tests", function () {
   let wallet: Wallet;

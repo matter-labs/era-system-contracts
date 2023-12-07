@@ -2,11 +2,7 @@ import { expect } from "chai";
 import { ethers, network } from "hardhat";
 import type { ComplexUpgrader, MockContract } from "../typechain-types";
 import { ComplexUpgrader__factory } from "../typechain-types";
-import {
-  ACCOUNT_CODE_STORAGE_SYSTEM_CONTRACT_ADDRESS,
-  COMPLEX_UPGRADER_CONTRACT_ADDRESS,
-  FORCE_DEPLOYER_ADDRESS,
-} from "./shared/constants";
+import { COMPLEX_UPGRADER_CONTRACT_ADDRESS, FORCE_DEPLOYER_ADDRESS } from "./shared/constants";
 import { deployContract, deployContractOnAddress, getWallets } from "./shared/utils";
 
 describe("ComplexUpgrader tests", function () {

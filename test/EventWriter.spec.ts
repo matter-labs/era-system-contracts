@@ -1,20 +1,9 @@
 import { expect } from "chai";
-import { ethers, network } from "hardhat";
+import { ethers } from "hardhat";
 import type { Wallet } from "zksync-web3";
 import { Contract } from "zksync-web3";
-import { Language } from "../scripts/constants";
-import { readYulBytecode } from "../scripts/utils";
-import { EventWriterTest } from "../typechain-types";
-import { EVENT_WRITER_CONTRACT_ADDRESS, ONE_BYTES32_HEX, REAL_EVENT_WRITER_CONTRACT_ADDRESS } from "./shared/constants";
-import {
-  deployContract,
-  deployContractZasm,
-  getCode,
-  getWallets,
-  loadYulBytecode,
-  loadZasmBytecode,
-  setCode,
-} from "./shared/utils";
+import { ONE_BYTES32_HEX, REAL_EVENT_WRITER_CONTRACT_ADDRESS } from "./shared/constants";
+import { getCode, getWallets, loadYulBytecode, loadZasmBytecode, setCode } from "./shared/utils";
 import { encodeExtraAbiCallerCalldata, EXTRA_ABI_CALLER_ADDRESS } from "./shared/extraAbiCaller";
 import type { TransactionResponse } from "zksync-web3/build/src/types";
 
