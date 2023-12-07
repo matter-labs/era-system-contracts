@@ -14,6 +14,7 @@ import {
 import { signedTxToTransactionData } from "./shared/transactions";
 import { deployContract, deployContractOnAddress, getWallets, loadArtifact, setCode } from "./shared/utils";
 
+// TODO: more test cases can be added, `DelegateCaller` can be useful.
 describe("DefaultAccount tests", function () {
   let wallet: Wallet;
   let bootloaderAccount: ethers.Signer;

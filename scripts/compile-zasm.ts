@@ -20,11 +20,9 @@ export async function compileZasmFolder(path: string) {
   }
 }
 
+// Currently used only for the test contracts
 async function main() {
-  const folders = process.argv.slice(2);
-  for (const folder of folders) {
-    await compileZasmFolder(folder);
-  }
+  await compileZasmFolder('contracts-preprocessed/test-contracts');
 }
 
 main()

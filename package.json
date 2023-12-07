@@ -55,9 +55,9 @@
   },
   "scripts": {
     "build": "yarn build:system-contracts && yarn build:bootloader",
-    "build:bootloader": "yarn preprocess:bootloader && yarn compile-yul bootloader/build bootloader/tests",
-    "build:system-contracts": "yarn preprocess:system-contracts && hardhat compile && yarn compile-yul contracts-preprocessed contracts-preprocessed/precompiles",
-    "build:test-system-contracts": "yarn preprocess:system-contracts --test-mode && hardhat compile && yarn compile-yul contracts-preprocessed contracts-preprocessed/precompiles && yarn compile-zasm contracts-preprocessed/test-contracts",
+    "build:bootloader": "yarn preprocess:bootloader && yarn compile-yul compile-bootloader",
+    "build:system-contracts": "yarn preprocess:system-contracts && hardhat compile && yarn compile-yul compile-precompiles",
+    "build:test-system-contracts": "yarn preprocess:system-contracts --test-mode && hardhat compile && yarn compile-yul compile-precompiles && yarn compile-zasm",
     "calculate-hashes:check": "ts-node scripts/calculate-hashes.ts --check-only",
     "calculate-hashes:fix": "ts-node scripts/calculate-hashes.ts",
     "clean": "yarn clean:bootloader && yarn clean:system-contracts",
@@ -75,7 +75,7 @@
     "preprocess:system-contracts": "rm -rf ./contracts-preprocessed && ts-node scripts/preprocess-system-contracts.ts",
     "prettier:check": "prettier --check \"**/*.{js,json,md,sol,ts,yaml}\"",
     "prettier:fix": "prettier --write \"**/*.{js,json,md,sol,ts,yaml}\"",
-    "test:system-contracts": "yarn build:test-system-contracts && hardhat test --network zkSyncTestNode",
+    "test": "yarn build:test-system-contracts && hardhat test --network zkSyncTestNode",
     "test:bootloader": "cd bootloader/test_infra && cargo run"
   }
 }

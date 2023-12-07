@@ -36,7 +36,6 @@ describe("ContractDeployer tests", function () {
   let mockEthToken: MockContract;
   let mockImmutableSimulator: MockContract;
   let contractDeployerSystemCall: ContractDeployer;
-  let contractDeployerNotSystemCall: ContractDeployer;
 
   let accountCodeStorageIface: ethers.utils.Interface;
   let nonceHolderIface: ethers.utils.Interface;
@@ -83,12 +82,6 @@ describe("ContractDeployer tests", function () {
 
     const contractDeployerSystemCallContract = await deployContract("SystemCaller", [contractDeployer.address]);
     contractDeployerSystemCall = ContractDeployer__factory.connect(contractDeployerSystemCallContract.address, wallet);
-
-    const contractDeployerNotSystemCallContract = await deployContract("NotSystemCaller", [contractDeployer.address]);
-    contractDeployerNotSystemCall = ContractDeployer__factory.connect(
-      contractDeployerNotSystemCallContract.address,
-      wallet
-    );
 
     deployableArtifact = await loadArtifact("Deployable");
 
@@ -275,7 +268,7 @@ describe("ContractDeployer tests", function () {
 
     it("non system call failed", async () => {
       await expect(
-        contractDeployerNotSystemCall.createAccount(
+          contractDeployer.createAccount(
           ethers.constants.HashZero,
           utils.hashBytecode(deployableArtifact.bytecode),
           "0x",
@@ -398,7 +391,7 @@ describe("ContractDeployer tests", function () {
 
     it("non system call failed", async () => {
       await expect(
-        contractDeployerNotSystemCall.create2Account(
+          contractDeployer.create2Account(
           "0x1234567891234567891234512222122167891123456789123456787654323456",
           utils.hashBytecode(deployableArtifact.bytecode),
           "0xdeadbeef",
@@ -557,7 +550,7 @@ describe("ContractDeployer tests", function () {
 
     it("non system call failed", async () => {
       await expect(
-        contractDeployerNotSystemCall.create(
+          contractDeployer.create(
           ethers.constants.HashZero,
           utils.hashBytecode(deployableArtifact.bytecode),
           "0x"
@@ -627,7 +620,7 @@ describe("ContractDeployer tests", function () {
 
     it("non system call failed", async () => {
       await expect(
-        contractDeployerNotSystemCall.create2(
+          contractDeployer.create2(
           ethers.constants.HashZero,
           utils.hashBytecode(deployableArtifact.bytecode),
           "0xabcd"
