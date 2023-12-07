@@ -72,11 +72,13 @@ For this purpose special testing preprocessing mode exists, it's needed to chang
 When some system contracts call others using these constants, they will actually get to testing addresses.
 
 The exceptions are:
+
 - [EventWriter.yul](contracts%2FEventWriter.yul)
 - [precompiles](contracts%2Fprecompiles)
 
 During preprocessing, we keep production addresses for them because we want other contracts to call them in tests rather than mock them. This simplifies the testing process.
 Also, when testing these contracts, some of them should also be deployed on the original addresses:
+
 - [EventWriter.yul](contracts%2FEventWriter.yul): should be on the original address because event logs are filtered by address
 - [Ecrecover.yul](contracts%2Fprecompiles%2FEcrecover.yul): uses precompile call instruction, which is address-dependent
 - [Keccak256.yul](contracts%2Fprecompiles%2FKeccak256.yul): uses precompile call instruction, which is address-dependent
@@ -92,6 +94,7 @@ It is crucial to control these values during testing.
 They are often interconnected, requiring the need to mock some of them.
 
 To achieve this, the following contracts and features were used/implemented:
+
 - [MockContract.sol](contracts%2Ftest-contracts%2FMockContract.sol) - a contract used for mocking.
 - [ExtraAbiCaller.zasm](contracts%2Ftest-contracts%2FExtraAbiCaller.zasm) - a contract that allows to set the extra abi registers, `context_u128` value with the system flag for the call.
 - [SystemCaller.sol](contracts%2Ftest-contracts%2FSystemCaller.sol) - a "proxy" that sets the system call flag.
