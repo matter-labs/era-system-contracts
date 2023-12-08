@@ -15,7 +15,6 @@
   "devDependencies": {
     "@matterlabs/eslint-config-typescript": "^1.1.2",
     "@matterlabs/hardhat-zksync-chai-matchers": "^0.1.4",
-    "@matterlabs/hardhat-zksync-node": "^0.0.1-beta.7",
     "@matterlabs/hardhat-zksync-solc": "^0.4.2",
     "@matterlabs/prettier-config": "^1.0.3",
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.3",
