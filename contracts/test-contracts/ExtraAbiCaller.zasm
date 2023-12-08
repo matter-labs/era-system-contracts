@@ -44,6 +44,12 @@ __entry:
 .func_end0:
         .note.GNU-stack
         .rodata
+; far call abi:
+; gas amount = 0xFFFFFFFF(max)
+; forwarding mode = fat ptr
+; shard id = 0
+; constructor flag = false
+; system call flag = true
 ; 01 00 00 01 FFFFFFFF 0000000000000000 00000000000000000000000000000000
 CPI0_0:
         .cell 452312902503159716397502014137536550255307801666780882257920705274096648192

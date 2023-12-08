@@ -37,9 +37,9 @@ const findFilesEndingWith =
   (path: string): string[] => {
     const absolutePath = makePathAbsolute(path);
     try {
-      const dirs = fs.readdirSync(absolutePath, { withFileTypes: true }).filter((dirent) => dirent.isFile());
-      const dirsEndingWithSol = dirs.filter((dirent) => dirent.name.endsWith(endingWith));
-      return dirsEndingWithSol.map((dirent) => dirent.name);
+      const files = fs.readdirSync(absolutePath, { withFileTypes: true }).filter((dirent) => dirent.isFile());
+      const filesEndingWithSol = files.filter((dirent) => dirent.name.endsWith(endingWith));
+      return filesEndingWithSol.map((dirent) => dirent.name);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown error";
       throw new Error(`Failed to read directory: ${absolutePath} Error: ${msg}`);

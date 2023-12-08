@@ -41,7 +41,7 @@ contract MockContract {
                 return(add(returnData, 0x20), mload(returnData))
             }
             default {
-                return(add(returnData, 0x20), mload(returnData))
+                revert(add(returnData, 0x20), mload(returnData))
             }
         }
     }
