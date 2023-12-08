@@ -255,7 +255,6 @@ describe("DefaultAccount tests", function () {
   });
 
   describe("payForTransaction", function () {
-    before(async () => {});
     it("non-deployer ignored", async () => {
       const legacyTx = await account.populateTransaction({
         type: 0,
