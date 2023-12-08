@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, writeFileSync } from "fs";
 import path from "path";
 import { renderFile } from "template-file";
-import { glob } from "glob";
+import { glob } from "fast-glob";
 import { Command } from "commander";
 
 const CONTRACTS_DIR = "contracts";
@@ -19,7 +19,7 @@ async function preprocess(testMode: boolean) {
 
   const contracts = await glob(
     [`${CONTRACTS_DIR}/**/*.sol`, `${CONTRACTS_DIR}/**/*.yul`, `${CONTRACTS_DIR}/**/*.zasm`],
-    { nodir: true }
+    { onlyFiles: true }
   );
 
   for (const contract of contracts) {
