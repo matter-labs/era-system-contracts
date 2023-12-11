@@ -6,6 +6,8 @@ use multivm::interface::{
 use multivm::vm_latest::{HistoryDisabled, ToTracerPointer, Vm};
 use once_cell::sync::OnceCell;
 use std::process;
+
+use multivm::interface::{ExecutionResult, Halt};
 use std::{env, sync::Arc};
 use tracing_subscriber::fmt;
 use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;
@@ -127,27 +129,74 @@ fn execute_internal_bootloader_test() {
         let mut vm: Vm<_, HistoryDisabled> =
             Vm::new(l1_batch_env.clone(), system_env.clone(), storage.clone());
         let test_result = Arc::new(OnceCell::default());
+        let requested_assert = Arc::new(OnceCell::default());
+        let test_name = Arc::new(OnceCell::default());
 
-        let custom_tracers = BootloaderTestTracer::new(test_result.clone()).into_tracer_pointer();
+        let custom_tracers = BootloaderTestTracer::new(
+            test_result.clone(),
+            requested_assert.clone(),
+            test_name.clone(),
+        )
+        .into_tracer_pointer();
 
         // Let's insert transactions into slots. They are not executed, but the tests can run functions against them.
         let json_str = include_str!("test_transactions/0.json");
         let tx: Transaction = serde_json::from_str(json_str).unwrap();
         vm.push_transaction(tx);
 
-        vm.inspect(custom_tracers.into(), VmExecutionMode::Bootloader);
+        let result = vm.inspect(custom_tracers.into(), VmExecutionMode::Bootloader);
+        let mut test_result = Arc::into_inner(test_result).unwrap().into_inner();
+        let requested_assert = Arc::into_inner(requested_assert).unwrap().into_inner();
+        let test_name = Arc::into_inner(test_name)
+            .unwrap()
+            .into_inner()
+            .unwrap_or_default();
 
-        let test_result = test_result.get().unwrap();
-        match &test_result.result {
-            Ok(_) => println!("{} {}", "[PASS]".green(), test_result.test_name),
+        if test_result.is_none() {
+            test_result = Some(if let Some(requested_assert) = requested_assert {
+                match &result.result {
+                    ExecutionResult::Success { .. } => Err(format!(
+                        "Should have failed with {}, but run succesfully.",
+                        requested_assert
+                    )),
+                    ExecutionResult::Revert { output } => Err(format!(
+                        "Should have failed with {}, but run reverted with {}.",
+                        requested_assert,
+                        output.to_user_friendly_string()
+                    )),
+                    ExecutionResult::Halt { reason } => {
+                        if let Halt::UnexpectedVMBehavior(reason) = reason {
+                            let reason = reason.strip_prefix("Assertion error: ").unwrap();
+                            if reason == requested_assert {
+                                Ok(())
+                            } else {
+                                Err(format!(
+                                        "Should have failed with `{}`, but failed with different assert `{}`",
+                                        requested_assert, reason
+                                    ))
+                            }
+                        } else {
+                            Err(format!(
+                                "Should have failed with `{}`, but halted with`{}`",
+                                requested_assert, reason
+                            ))
+                        }
+                    }
+                }
+            } else {
+                match &result.result {
+                    ExecutionResult::Success { .. } => Ok(()),
+                    ExecutionResult::Revert { output } => Err(output.to_user_friendly_string()),
+                    ExecutionResult::Halt { reason } => Err(reason.to_string()),
+                }
+            });
+        }
+
+        match &test_result.unwrap() {
+            Ok(_) => println!("{} {}", "[PASS]".green(), test_name),
             Err(error_info) => {
                 tests_failed += 1;
-                println!(
-                    "{} {} {}",
-                    "[FAIL]".red(),
-                    test_result.test_name,
-                    error_info
-                )
+                println!("{} {} {}", "[FAIL]".red(), test_name, error_info)
             }
         }
     }

@@ -5,7 +5,7 @@ use once_cell::sync::OnceCell;
 
 use multivm::interface::{
     dyn_tracers::vm_1_4_0::DynTracer,
-    tracer::{TracerExecutionStatus, TracerExecutionStopReason, VmExecutionStopReason},
+    tracer::{TracerExecutionStatus, TracerExecutionStopReason},
 };
 use multivm::vm_latest::{BootloaderState, HistoryMode, SimpleMemory, VmTracer, ZkSyncVmState};
 use multivm::zk_evm_1_4_0::tracing::{BeforeExecutionData, VmLocalStateData};
@@ -14,29 +14,27 @@ use zksync_state::{StoragePtr, WriteStorage};
 
 use crate::hook::TestVmHook;
 
-#[derive(Debug)]
-pub struct TestResult {
-    pub test_name: String,
-    pub result: Result<(), String>,
-}
-
 /// Bootloader test tracer that is executing while the bootloader tests are running.
 /// It can check the assers, return information about the running tests (and amount of tests) etc.
 pub struct BootloaderTestTracer {
     /// Set if the currently running test has failed.
-    test_result: Arc<OnceCell<TestResult>>,
+    test_result: Arc<OnceCell<Result<(), String>>>,
     /// Set, if the currently running test should fail with a given assert.
-    requested_assert: Option<String>,
+    requested_assert: Arc<OnceCell<String>>,
 
-    test_name: Option<String>,
+    test_name: Arc<OnceCell<String>>,
 }
 
 impl BootloaderTestTracer {
-    pub fn new(test_result: Arc<OnceCell<TestResult>>) -> Self {
+    pub fn new(
+        test_result: Arc<OnceCell<Result<(), String>>>,
+        requested_assert: Arc<OnceCell<String>>,
+        test_name: Arc<OnceCell<String>>,
+    ) -> Self {
         BootloaderTestTracer {
             test_result,
-            requested_assert: None,
-            test_name: None,
+            requested_assert,
+            test_name,
         }
     }
 }
@@ -57,19 +55,16 @@ impl<S, H: HistoryMode> DynTracer<S, SimpleMemory<H>> for BootloaderTestTracer {
         if let TestVmHook::AssertEqFailed(a, b, msg) = &hook {
             let result = format!("Assert failed: {} is not equal to {}: {}", a, b, msg);
 
-            self.test_result
-                .set(TestResult {
-                    test_name: self.test_name.clone().unwrap_or("".to_owned()),
-                    result: Err(result.clone()),
-                })
-                .unwrap();
+            self.test_result.set(Err(result.clone())).unwrap();
         }
         if let TestVmHook::RequestedAssert(requested_assert) = &hook {
-            self.requested_assert = Some(requested_assert.clone())
+            let _ = self.requested_assert.set(requested_assert.clone());
         }
 
         if let TestVmHook::TestStart(test_name) = &hook {
-            self.test_name = Some(test_name.clone());
+            self.test_name
+                .set(test_name.clone())
+                .expect("Test already started");
         }
     }
 }
@@ -80,67 +75,10 @@ impl<S: WriteStorage, H: HistoryMode> VmTracer<S, H> for BootloaderTestTracer {
         _state: &mut ZkSyncVmState<S, H>,
         _bootloader_state: &mut BootloaderState,
     ) -> TracerExecutionStatus {
-        if let Some(TestResult {
-            test_name: _,
-            result: Err(_),
-        }) = self.test_result.get()
-        {
+        if let Some(Err(_)) = self.test_result.get() {
             TracerExecutionStatus::Stop(TracerExecutionStopReason::Finish)
         } else {
             TracerExecutionStatus::Continue
         }
-    }
-
-    fn after_vm_execution(
-        &mut self,
-        _state: &mut ZkSyncVmState<S, H>,
-        _bootloader_state: &BootloaderState,
-        _stop_reason: VmExecutionStopReason,
-    ) {
-        // let r = if let Some(requested_assert) = &self.requested_assert {
-        //     match &result.result {
-        //         ExecutionResult::Success { .. } => Err(format!(
-        //             "Should have failed with {}, but run succesfully.",
-        //             requested_assert
-        //         )),
-        //         ExecutionResult::Revert { output } => Err(format!(
-        //             "Should have failed with {}, but run reverted with {}.",
-        //             requested_assert,
-        //             output.to_user_friendly_string()
-        //         )),
-        //         ExecutionResult::Halt { reason } => {
-        //             if let Halt::UnexpectedVMBehavior(reason) = reason {
-        //                 let reason = reason.strip_prefix("Assertion error: ").unwrap();
-        //                 if reason == requested_assert {
-        //                     Ok(())
-        //                 } else {
-        //                     Err(format!(
-        //                         "Should have failed with `{}`, but failed with different assert `{}`",
-        //                         requested_assert, reason
-        //                     ))
-        //                 }
-        //             } else {
-        //                 Err(format!(
-        //                     "Should have failed with `{}`, but halted with`{}`",
-        //                     requested_assert, reason
-        //                 ))
-        //             }
-        //         }
-        //     }
-        // } else {
-        //     match &result.result {
-        //         ExecutionResult::Success { .. } => Ok(()),
-        //         ExecutionResult::Revert { output } => Err(output.to_user_friendly_string()),
-        //         ExecutionResult::Halt { reason } => Err(reason.to_string()),
-        //     }
-        // };
-        // if self.test_result.get().is_none() {
-        //     self.test_result
-        //         .set(TestResult {
-        //             test_name: self.test_name.clone().unwrap_or("".to_owned()),
-        //             result: r,
-        //         })
-        //         .unwrap();
-        // }
     }
 }
