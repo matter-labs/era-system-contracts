@@ -2504,7 +2504,7 @@ checksum = "e5ce46fe64a9d73be07dcbe690a38ce1b293be448fd8ce1e6c1b8062c9f72c6a"
 [[package]]
 name = "multivm"
 version = "0.1.0"
-source = "git+https://github.com/matter-labs/zksync-era.git?branch=ad-update-sc-paths#c3b6a7836fbee72b55b41dbdf0abb53c064a0f37"
+source = "git+https://github.com/matter-labs/zksync-era.git?branch=ad-update-sc-paths#487a0b52c759c76caf4360c608161464af7f9f4a"
 dependencies = [
  "anyhow",
  "hex",
@@ -5306,7 +5306,7 @@ dependencies = [
 [[package]]
 name = "vlog"
 version = "0.1.0"
-source = "git+https://github.com/matter-labs/zksync-era.git?branch=ad-update-sc-paths#c3b6a7836fbee72b55b41dbdf0abb53c064a0f37"
+source = "git+https://github.com/matter-labs/zksync-era.git?branch=ad-update-sc-paths#487a0b52c759c76caf4360c608161464af7f9f4a"
 dependencies = [
  "chrono",
  "sentry",
@@ -5874,7 +5874,7 @@ dependencies = [
 [[package]]
 name = "zksync_basic_types"
 version = "0.1.0"
-source = "git+https://github.com/matter-labs/zksync-era.git?branch=ad-update-sc-paths#c3b6a7836fbee72b55b41dbdf0abb53c064a0f37"
+source = "git+https://github.com/matter-labs/zksync-era.git?branch=ad-update-sc-paths#487a0b52c759c76caf4360c608161464af7f9f4a"
 dependencies = [
  "serde",
  "serde_json",
@@ -5949,7 +5949,7 @@ dependencies = [
 [[package]]
 name = "zksync_contracts"
 version = "0.1.0"
-source = "git+https://github.com/matter-labs/zksync-era.git?branch=ad-update-sc-paths#c3b6a7836fbee72b55b41dbdf0abb53c064a0f37"
+source = "git+https://github.com/matter-labs/zksync-era.git?branch=ad-update-sc-paths#487a0b52c759c76caf4360c608161464af7f9f4a"
 dependencies = [
  "envy",
  "ethabi",
@@ -5963,7 +5963,7 @@ dependencies = [
 [[package]]
 name = "zksync_crypto"
 version = "0.1.0"
-source = "git+https://github.com/matter-labs/zksync-era.git?branch=ad-update-sc-paths#c3b6a7836fbee72b55b41dbdf0abb53c064a0f37"
+source = "git+https://github.com/matter-labs/zksync-era.git?branch=ad-update-sc-paths#487a0b52c759c76caf4360c608161464af7f9f4a"
 dependencies = [
  "base64 0.13.1",
  "blake2 0.10.6 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -5978,7 +5978,7 @@ dependencies = [
 [[package]]
 name = "zksync_dal"
 version = "0.1.0"
-source = "git+https://github.com/matter-labs/zksync-era.git?branch=ad-update-sc-paths#c3b6a7836fbee72b55b41dbdf0abb53c064a0f37"
+source = "git+https://github.com/matter-labs/zksync-era.git?branch=ad-update-sc-paths#487a0b52c759c76caf4360c608161464af7f9f4a"
 dependencies = [
  "anyhow",
  "bigdecimal",
@@ -6011,7 +6011,7 @@ dependencies = [
 [[package]]
 name = "zksync_health_check"
 version = "0.1.0"
-source = "git+https://github.com/matter-labs/zksync-era.git?branch=ad-update-sc-paths#c3b6a7836fbee72b55b41dbdf0abb53c064a0f37"
+source = "git+https://github.com/matter-labs/zksync-era.git?branch=ad-update-sc-paths#487a0b52c759c76caf4360c608161464af7f9f4a"
 dependencies = [
  "async-trait",
  "futures",
@@ -6024,7 +6024,7 @@ dependencies = [
 [[package]]
 name = "zksync_mini_merkle_tree"
 version = "0.1.0"
-source = "git+https://github.com/matter-labs/zksync-era.git?branch=ad-update-sc-paths#c3b6a7836fbee72b55b41dbdf0abb53c064a0f37"
+source = "git+https://github.com/matter-labs/zksync-era.git?branch=ad-update-sc-paths#487a0b52c759c76caf4360c608161464af7f9f4a"
 dependencies = [
  "once_cell",
  "zksync_basic_types",
@@ -6068,7 +6068,7 @@ dependencies = [
 [[package]]
 name = "zksync_state"
 version = "0.1.0"
-source = "git+https://github.com/matter-labs/zksync-era.git?branch=ad-update-sc-paths#c3b6a7836fbee72b55b41dbdf0abb53c064a0f37"
+source = "git+https://github.com/matter-labs/zksync-era.git?branch=ad-update-sc-paths#487a0b52c759c76caf4360c608161464af7f9f4a"
 dependencies = [
  "anyhow",
  "itertools 0.10.5",
@@ -6085,7 +6085,7 @@ dependencies = [
 [[package]]
 name = "zksync_storage"
 version = "0.1.0"
-source = "git+https://github.com/matter-labs/zksync-era.git?branch=ad-update-sc-paths#c3b6a7836fbee72b55b41dbdf0abb53c064a0f37"
+source = "git+https://github.com/matter-labs/zksync-era.git?branch=ad-update-sc-paths#487a0b52c759c76caf4360c608161464af7f9f4a"
 dependencies = [
  "num_cpus",
  "once_cell",
@@ -6097,7 +6097,7 @@ dependencies = [
 [[package]]
 name = "zksync_system_constants"
 version = "0.1.0"
-source = "git+https://github.com/matter-labs/zksync-era.git?branch=ad-update-sc-paths#c3b6a7836fbee72b55b41dbdf0abb53c064a0f37"
+source = "git+https://github.com/matter-labs/zksync-era.git?branch=ad-update-sc-paths#487a0b52c759c76caf4360c608161464af7f9f4a"
 dependencies = [
  "anyhow",
  "bigdecimal",
@@ -6115,7 +6115,7 @@ dependencies = [
 [[package]]
 name = "zksync_types"
 version = "0.1.0"
-source = "git+https://github.com/matter-labs/zksync-era.git?branch=ad-update-sc-paths#c3b6a7836fbee72b55b41dbdf0abb53c064a0f37"
+source = "git+https://github.com/matter-labs/zksync-era.git?branch=ad-update-sc-paths#487a0b52c759c76caf4360c608161464af7f9f4a"
 dependencies = [
  "anyhow",
  "blake2 0.10.6 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -6149,7 +6149,7 @@ dependencies = [
 [[package]]
 name = "zksync_utils"
 version = "0.1.0"
-source = "git+https://github.com/matter-labs/zksync-era.git?branch=ad-update-sc-paths#c3b6a7836fbee72b55b41dbdf0abb53c064a0f37"
+source = "git+https://github.com/matter-labs/zksync-era.git?branch=ad-update-sc-paths#487a0b52c759c76caf4360c608161464af7f9f4a"
 dependencies = [
  "anyhow",
  "bigdecimal",
