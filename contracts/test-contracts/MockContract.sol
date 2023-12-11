@@ -5,36 +5,54 @@ pragma solidity ^0.8.0;
 contract MockContract {
     event Called(uint256 value, bytes data);
 
-    struct Result {
+    struct CallResult {
+        bytes calldata_;
         bool failure;
         bytes returnData;
     }
 
-    // The mapping from calldata to call result, will return empty return data with successful result by default.
-    mapping(bytes => Result) results;
+    CallResult[] private results;
+
+    constructor() {
+        // Clean results if mock was redeployed.
+        delete results;
+    }
 
     // This function call will not pass to fallback, but this is fine for the tests.
-    function setResult(bytes calldata _calldata, Result calldata result) external {
-        results[_calldata] = result;
+    function setResult(CallResult calldata result) external {
+        for(uint256 i = 0; i < results.length; i++) {
+            if(keccak256(results[i].calldata_) == keccak256(result.calldata_)) {
+                results[i] = result;
+                return;
+            }
+        }
+        results.push(result);
     }
 
     fallback() external payable {
-        uint256 len;
-        assembly {
-            len := calldatasize()
-        }
-        bytes memory data = new bytes(len);
-        assembly {
-            calldatacopy(add(data, 0x20), 0, len)
+        bytes memory data = msg.data;
+
+        // empty return data with successful result by default.
+        bool failure;
+        bytes memory returnData;
+
+        for(uint256 i = 0; i < results.length; i++) {
+            if(keccak256(results[i].calldata_) == keccak256(data)) {
+                failure = results[i].failure;
+                returnData = results[i].returnData;
+                break;
+            }
         }
 
-        bool failure = results[data].failure;
-        bytes memory returnData = results[data].returnData;
-
-        // Most likely that's some call to perform some action, so context is not static.
+        // Emitting event only if empty successful result expected.
+        // Can fail if call context is static, but usually it's not a case,
+        // because view/pure call without return data doesn't make sense.
+        // Useful, because for such calls we can check for this event,
+        // to be sure that the needed call was made.
         if (!failure && returnData.length == 0) {
             emit Called(msg.value, data);
         }
+
         assembly {
             switch failure
             case 0 {

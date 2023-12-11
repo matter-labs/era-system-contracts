@@ -7,7 +7,7 @@ import type { BootloaderUtilities } from "../typechain-types";
 import { BootloaderUtilities__factory } from "../typechain-types";
 import { signedTxToTransactionData } from "./shared/transactions";
 import { getWallets, deployContractOnAddress } from "./shared/utils";
-import { BOOTLOADER_UTILITIES_ADDRESS } from "./shared/constants";
+import { TEST_BOOTLOADER_UTILITIES_ADDRESS } from "./shared/constants";
 
 describe("BootloaderUtilities tests", function () {
   let wallet: Wallet;
@@ -15,8 +15,8 @@ describe("BootloaderUtilities tests", function () {
 
   before(async () => {
     wallet = getWallets()[0];
-    await deployContractOnAddress(BOOTLOADER_UTILITIES_ADDRESS, "BootloaderUtilities");
-    bootloaderUtilities = BootloaderUtilities__factory.connect(BOOTLOADER_UTILITIES_ADDRESS, wallet);
+    await deployContractOnAddress(TEST_BOOTLOADER_UTILITIES_ADDRESS, "BootloaderUtilities");
+    bootloaderUtilities = BootloaderUtilities__factory.connect(TEST_BOOTLOADER_UTILITIES_ADDRESS, wallet);
   });
 
   describe("EIP-712 transaction", function () {

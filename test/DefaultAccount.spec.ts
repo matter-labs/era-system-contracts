@@ -3,37 +3,27 @@ import { ethers, network } from "hardhat";
 import * as zksync from "zksync-web3";
 import type { Wallet } from "zksync-web3";
 import { serialize } from "zksync-web3/build/src/utils";
-import type { DefaultAccount, DelegateCaller, L2EthToken, MockContract } from "../typechain-types";
-import { DefaultAccount__factory, L2EthToken__factory, MockContract__factory } from "../typechain-types";
+import type { DefaultAccount, DelegateCaller, MockContract } from "../typechain-types";
+import { DefaultAccount__factory } from "../typechain-types";
 import {
-  BOOTLOADER_FORMAL_ADDRESS,
-  ETH_TOKEN_SYSTEM_CONTRACT_ADDRESS,
-  MSG_VALUE_SYSTEM_CONTRACT_ADDRESS,
-  NONCE_HOLDER_SYSTEM_CONTRACT_ADDRESS,
+  TEST_BOOTLOADER_FORMAL_ADDRESS,
 } from "./shared/constants";
 import { signedTxToTransactionData } from "./shared/transactions";
 import { deployContract, deployContractOnAddress, getWallets, loadArtifact, setCode } from "./shared/utils";
+import {getMock} from "./shared/mocks";
 
-// TODO: more test cases can be added, `DelegateCaller` can be useful.
+// TODO: more test cases can be added.
 describe("DefaultAccount tests", function () {
   let wallet: Wallet;
   let bootloaderAccount: ethers.Signer;
 
   let defaultAccount: DefaultAccount;
   let account: Wallet;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  let mockNonceHolder: MockContract;
-  let mockMsgValueSimulator: MockContract;
-  let mockBootloaderFormalAddress: MockContract;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  let l2EthToken: L2EthToken;
   let callable: MockContract;
   let delegateCaller: DelegateCaller;
   let mockERC20: MockContract;
 
   let paymasterFlowIface: ethers.utils.Interface;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  let nonceHolderIface: ethers.utils.Interface;
   let ERC20Iface: ethers.utils.Interface;
 
   const RANDOM_ADDRESS = ethers.utils.getAddress("0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef");
@@ -42,39 +32,23 @@ describe("DefaultAccount tests", function () {
     wallet = getWallets()[0];
     account = getWallets()[2];
 
-    const defaultAccountArtifact = await loadArtifact("DefaultAccount");
-    await setCode(account.address, defaultAccountArtifact.bytecode);
+    await deployContractOnAddress(account.address, "DefaultAccount")
     defaultAccount = DefaultAccount__factory.connect(account.address, wallet);
 
-    await deployContractOnAddress(NONCE_HOLDER_SYSTEM_CONTRACT_ADDRESS, "MockContract");
-    mockNonceHolder = MockContract__factory.connect(NONCE_HOLDER_SYSTEM_CONTRACT_ADDRESS, wallet);
-
-    await deployContractOnAddress(MSG_VALUE_SYSTEM_CONTRACT_ADDRESS, "MockContract");
-    mockMsgValueSimulator = MockContract__factory.connect(MSG_VALUE_SYSTEM_CONTRACT_ADDRESS, wallet);
-
-    await deployContractOnAddress(BOOTLOADER_FORMAL_ADDRESS, "MockContract");
-    mockBootloaderFormalAddress = MockContract__factory.connect(BOOTLOADER_FORMAL_ADDRESS, wallet);
-
-    l2EthToken = L2EthToken__factory.connect(ETH_TOKEN_SYSTEM_CONTRACT_ADDRESS, wallet);
     callable = (await deployContract("MockContract")) as MockContract;
     delegateCaller = (await deployContract("DelegateCaller")) as DelegateCaller;
     mockERC20 = (await deployContract("MockContract")) as MockContract;
 
     paymasterFlowIface = new ethers.utils.Interface((await loadArtifact("IPaymasterFlow")).abi);
-    nonceHolderIface = new ethers.utils.Interface((await loadArtifact("NonceHolder")).abi);
     ERC20Iface = new ethers.utils.Interface((await loadArtifact("IERC20")).abi);
 
-    await network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: [BOOTLOADER_FORMAL_ADDRESS],
-    });
-    bootloaderAccount = await ethers.getSigner(BOOTLOADER_FORMAL_ADDRESS);
+    bootloaderAccount = await ethers.getImpersonatedSigner(TEST_BOOTLOADER_FORMAL_ADDRESS);
   });
 
   after(async function () {
     await network.provider.request({
       method: "hardhat_stopImpersonatingAccount",
-      params: [BOOTLOADER_FORMAL_ADDRESS],
+      params: [TEST_BOOTLOADER_FORMAL_ADDRESS],
     });
   });
 
@@ -126,7 +100,7 @@ describe("DefaultAccount tests", function () {
       const signedHash = ethers.utils.keccak256(serialize(legacyTx));
 
       const call = {
-        from: BOOTLOADER_FORMAL_ADDRESS,
+        from: TEST_BOOTLOADER_FORMAL_ADDRESS,
         to: defaultAccount.address,
         value: 0,
         data: defaultAccount.interface.encodeFunctionData("validateTransaction", [txHash, signedHash, txData]),
@@ -153,7 +127,7 @@ describe("DefaultAccount tests", function () {
       const signedHash = ethers.utils.keccak256(serialize(legacyTx));
 
       const call = {
-        from: BOOTLOADER_FORMAL_ADDRESS,
+        from: TEST_BOOTLOADER_FORMAL_ADDRESS,
         to: defaultAccount.address,
         value: 0,
         data: defaultAccount.interface.encodeFunctionData("validateTransaction", [txHash, signedHash, txData]),
@@ -228,7 +202,7 @@ describe("DefaultAccount tests", function () {
       const signedHash = ethers.utils.keccak256(serialize(legacyTx));
 
       await expect(await defaultAccount.connect(bootloaderAccount).executeTransaction(txHash, signedHash, txData))
-        .to.emit(mockMsgValueSimulator, "Called")
+        .to.emit(getMock("MsgValueSimulator"), "Called")
         .withArgs(0, "0x");
     });
   });
@@ -275,7 +249,7 @@ describe("DefaultAccount tests", function () {
       const signedHash = ethers.utils.keccak256(serialize(legacyTx));
 
       await expect(defaultAccount.payForTransaction(txHash, signedHash, txData)).to.not.emit(
-        mockBootloaderFormalAddress,
+        getMock("Bootloader"),
         "Called"
       );
     });
@@ -300,7 +274,7 @@ describe("DefaultAccount tests", function () {
       const signedHash = ethers.utils.keccak256(serialize(legacyTx));
 
       await expect(await defaultAccount.connect(bootloaderAccount).payForTransaction(txHash, signedHash, txData))
-        .to.emit(mockBootloaderFormalAddress, "Called")
+        .to.emit(getMock("Bootloader"), "Called")
         .withArgs(50000 * 200, "0x");
     });
   });
@@ -338,7 +312,8 @@ describe("DefaultAccount tests", function () {
     });
 
     it("successfully prepared", async () => {
-      await mockERC20.setResult(ERC20Iface.encodeFunctionData("allowance", [account.address, RANDOM_ADDRESS]), {
+      await mockERC20.setResult({
+        calldata_: ERC20Iface.encodeFunctionData("allowance", [account.address, RANDOM_ADDRESS]),
         failure: false,
         returnData: ethers.constants.HashZero,
       });
@@ -402,7 +377,7 @@ describe("DefaultAccount tests", function () {
       // the fallback is behaving correctly
       const calldata = delegateCaller.interface.encodeFunctionData("delegateCall", [defaultAccount.address]);
       const call = {
-        from: BOOTLOADER_FORMAL_ADDRESS,
+        from: TEST_BOOTLOADER_FORMAL_ADDRESS,
         to: delegateCaller.address,
         value: 0,
         data: calldata,
@@ -415,7 +390,7 @@ describe("DefaultAccount tests", function () {
       // the fallback is behaving correctly
       const calldata = delegateCaller.interface.encodeFunctionData("delegateCall", [defaultAccount.address]);
       const call = {
-        from: BOOTLOADER_FORMAL_ADDRESS,
+        from: TEST_BOOTLOADER_FORMAL_ADDRESS,
         to: delegateCaller.address,
         value: 3223,
         data: calldata,

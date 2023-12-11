@@ -9,6 +9,7 @@ import { Provider, utils, Wallet } from "zksync-web3";
 import { Language } from "../../scripts/constants";
 import { readYulBytecode, readZasmBytecode } from "../../scripts/utils";
 import { AccountCodeStorage__factory, ContractDeployer__factory } from "../../typechain-types";
+import { REAL_DEPLOYER_SYSTEM_CONTRACT_ADDRESS, REAL_ACCOUNT_CODE_STORAGE_SYSTEM_CONTRACT_ADDRESS } from "./constants";
 
 const RICH_WALLETS = [
   {
@@ -28,9 +29,6 @@ const RICH_WALLETS = [
     privateKey: "0x850683b40d4a740aa6e745f889a6fdc8327be76e122f5aba645a5b02d0248db8",
   },
 ];
-
-export const REAL_DEPLOYER_SYSTEM_CONTRACT_ADDRESS = "0x0000000000000000000000000000000000008006";
-export const REAL_ACCOUNT_CODE_STORAGE_SYSTEM_CONTRACT_ADDRESS = "0x0000000000000000000000000000000000008002";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const provider = new Provider((hre.network.config as any).url);
@@ -116,7 +114,7 @@ async function deployBytecode(bytecode: string): Promise<Contract> {
 
 export async function deployContractOnAddress(address: string, name: string) {
   const artifact = await loadArtifact(name);
-  await setCode(address, artifact.bytecode);
+  await setCode(address, artifact.bytecode, true);
 }
 
 export async function publishBytecode(bytecode: BytesLike) {
@@ -136,7 +134,7 @@ export async function getCode(address: string): Promise<string> {
 }
 
 // Force deploy bytecode on the address
-export async function setCode(address: string, bytecode: BytesLike) {
+export async function setCode(address: string, bytecode: BytesLike, callConstructor: boolean = false) {
   // TODO: think about factoryDeps with eth_sendTransaction
   try {
     // publish bytecode in a separate tx
@@ -145,36 +143,21 @@ export async function setCode(address: string, bytecode: BytesLike) {
     // ignore error
   }
 
-  await network.provider.request({
-    method: "hardhat_impersonateAccount",
-    params: [REAL_DEPLOYER_SYSTEM_CONTRACT_ADDRESS],
-  });
-
-  const deployerAccount = await ethers.getSigner(REAL_DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
+  const deployerAccount = await ethers.getImpersonatedSigner(REAL_DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
   const deployerContract = ContractDeployer__factory.connect(REAL_DEPLOYER_SYSTEM_CONTRACT_ADDRESS, deployerAccount);
 
   const deployment = {
     bytecodeHash: zksync.utils.hashBytecode(bytecode),
     newAddress: address,
-    callConstructor: false,
+    callConstructor,
     value: 0,
     input: "0x",
   };
   await deployerContract.forceDeployOnAddress(deployment, ethers.constants.AddressZero);
-
-  await network.provider.request({
-    method: "hardhat_stopImpersonatingAccount",
-    params: [REAL_DEPLOYER_SYSTEM_CONTRACT_ADDRESS],
-  });
 }
 
 export async function setConstructingCodeHash(address: string, bytecode: string) {
-  await network.provider.request({
-    method: "hardhat_impersonateAccount",
-    params: [REAL_DEPLOYER_SYSTEM_CONTRACT_ADDRESS],
-  });
-
-  const deployerAccount = await ethers.getSigner(REAL_DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
+  const deployerAccount = await ethers.getImpersonatedSigner(REAL_DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
   const accountCodeStorage = AccountCodeStorage__factory.connect(
     REAL_ACCOUNT_CODE_STORAGE_SYSTEM_CONTRACT_ADDRESS,
     deployerAccount

@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { ethers, network } from "hardhat";
 import type { ComplexUpgrader, MockContract } from "../typechain-types";
 import { ComplexUpgrader__factory } from "../typechain-types";
-import { COMPLEX_UPGRADER_CONTRACT_ADDRESS, FORCE_DEPLOYER_ADDRESS } from "./shared/constants";
+import { TEST_COMPLEX_UPGRADER_CONTRACT_ADDRESS, TEST_FORCE_DEPLOYER_ADDRESS } from "./shared/constants";
 import { deployContract, deployContractOnAddress, getWallets } from "./shared/utils";
 
 describe("ComplexUpgrader tests", function () {
@@ -11,8 +11,8 @@ describe("ComplexUpgrader tests", function () {
 
   before(async () => {
     const wallet = (await getWallets())[0];
-    await deployContractOnAddress(COMPLEX_UPGRADER_CONTRACT_ADDRESS, "ComplexUpgrader");
-    complexUpgrader = ComplexUpgrader__factory.connect(COMPLEX_UPGRADER_CONTRACT_ADDRESS, wallet);
+    await deployContractOnAddress(TEST_COMPLEX_UPGRADER_CONTRACT_ADDRESS, "ComplexUpgrader");
+    complexUpgrader = ComplexUpgrader__factory.connect(TEST_COMPLEX_UPGRADER_CONTRACT_ADDRESS, wallet);
     dummyUpgrade = (await deployContract("MockContract")) as MockContract;
   });
 
@@ -24,20 +24,15 @@ describe("ComplexUpgrader tests", function () {
     });
 
     it("successfully upgraded", async () => {
-      await network.provider.request({
-        method: "hardhat_impersonateAccount",
-        params: [FORCE_DEPLOYER_ADDRESS],
-      });
-
-      const force_deployer = await ethers.getSigner(FORCE_DEPLOYER_ADDRESS);
+      const force_deployer = await ethers.getImpersonatedSigner(TEST_FORCE_DEPLOYER_ADDRESS);
 
       await expect(complexUpgrader.connect(force_deployer).upgrade(dummyUpgrade.address, "0xdeadbeef"))
-        .to.emit(dummyUpgrade.attach(COMPLEX_UPGRADER_CONTRACT_ADDRESS), "Called")
+        .to.emit(dummyUpgrade.attach(TEST_COMPLEX_UPGRADER_CONTRACT_ADDRESS), "Called")
         .withArgs(0, "0xdeadbeef");
 
       await network.provider.request({
         method: "hardhat_stopImpersonatingAccount",
-        params: [FORCE_DEPLOYER_ADDRESS],
+        params: [TEST_FORCE_DEPLOYER_ADDRESS],
       });
     });
   });

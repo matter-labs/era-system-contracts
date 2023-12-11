@@ -2,7 +2,7 @@ import { expect } from "chai";
 import { ethers, network } from "hardhat";
 import type { ImmutableSimulator } from "../typechain-types";
 import { ImmutableSimulator__factory } from "../typechain-types";
-import { DEPLOYER_SYSTEM_CONTRACT_ADDRESS, IMMUTABLE_SIMULATOR_SYSTEM_CONTRACT_ADDRESS } from "./shared/constants";
+import { TEST_DEPLOYER_SYSTEM_CONTRACT_ADDRESS, TEST_IMMUTABLE_SIMULATOR_SYSTEM_CONTRACT_ADDRESS } from "./shared/constants";
 import { deployContractOnAddress, getWallets } from "./shared/utils";
 
 describe("ImmutableSimulator tests", function () {
@@ -22,8 +22,8 @@ describe("ImmutableSimulator tests", function () {
 
   before(async () => {
     const wallet = getWallets()[0];
-    await deployContractOnAddress(IMMUTABLE_SIMULATOR_SYSTEM_CONTRACT_ADDRESS, "ImmutableSimulator");
-    immutableSimulator = ImmutableSimulator__factory.connect(IMMUTABLE_SIMULATOR_SYSTEM_CONTRACT_ADDRESS, wallet);
+    await deployContractOnAddress(TEST_IMMUTABLE_SIMULATOR_SYSTEM_CONTRACT_ADDRESS, "ImmutableSimulator");
+    immutableSimulator = ImmutableSimulator__factory.connect(TEST_IMMUTABLE_SIMULATOR_SYSTEM_CONTRACT_ADDRESS, wallet);
   });
 
   describe("setImmutables", function () {
@@ -36,16 +36,16 @@ describe("ImmutableSimulator tests", function () {
     it("successfully set", async () => {
       await network.provider.request({
         method: "hardhat_impersonateAccount",
-        params: [DEPLOYER_SYSTEM_CONTRACT_ADDRESS],
+        params: [TEST_DEPLOYER_SYSTEM_CONTRACT_ADDRESS],
       });
 
-      const deployer_account = await ethers.getSigner(DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
+      const deployer_account = await ethers.getSigner(TEST_DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
 
       await immutableSimulator.connect(deployer_account).setImmutables(RANDOM_ADDRESS, IMMUTABLES_DATA);
 
       await network.provider.request({
         method: "hardhat_stopImpersonatingAccount",
-        params: [DEPLOYER_SYSTEM_CONTRACT_ADDRESS],
+        params: [TEST_DEPLOYER_SYSTEM_CONTRACT_ADDRESS],
       });
 
       for (const immutable of IMMUTABLES_DATA) {

@@ -1,52 +1,42 @@
 import { expect } from "chai";
 import { ethers, network } from "hardhat";
 import type { Wallet } from "zksync-web3";
-import type { AccountCodeStorage, MockContract } from "../typechain-types";
-import { AccountCodeStorage__factory, MockContract__factory } from "../typechain-types";
+import type { AccountCodeStorage } from "../typechain-types";
+import { AccountCodeStorage__factory } from "../typechain-types";
 import {
-  DEPLOYER_SYSTEM_CONTRACT_ADDRESS,
+  TEST_DEPLOYER_SYSTEM_CONTRACT_ADDRESS,
   EMPTY_STRING_KECCAK,
-  ACCOUNT_CODE_STORAGE_SYSTEM_CONTRACT_ADDRESS,
-  NONCE_HOLDER_SYSTEM_CONTRACT_ADDRESS,
+  TEST_ACCOUNT_CODE_STORAGE_SYSTEM_CONTRACT_ADDRESS,
   ONE_BYTES32_HEX,
 } from "./shared/constants";
-import { getWallets, deployContractOnAddress, loadArtifact } from "./shared/utils";
+import { getWallets, deployContractOnAddress } from "./shared/utils";
+import {prepareEnvironment, setResult} from "./shared/mocks";
 
 describe("AccountCodeStorage tests", function () {
   let wallet: Wallet;
   let deployerAccount: ethers.Signer;
 
   let accountCodeStorage: AccountCodeStorage;
-  let mockNonceHolder: MockContract;
-
-  let nonceHolderIface: ethers.utils.Interface;
 
   const CONSTRUCTING_BYTECODE_HASH = "0x0101FFFFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF";
   const CONSTRUCTED_BYTECODE_HASH = "0x0100FFFFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF";
   const RANDOM_ADDRESS = "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef";
 
   before(async () => {
+    await prepareEnvironment();
+
     wallet = getWallets()[0];
 
-    await deployContractOnAddress(ACCOUNT_CODE_STORAGE_SYSTEM_CONTRACT_ADDRESS, "AccountCodeStorage");
-    accountCodeStorage = AccountCodeStorage__factory.connect(ACCOUNT_CODE_STORAGE_SYSTEM_CONTRACT_ADDRESS, wallet);
+    await deployContractOnAddress(TEST_ACCOUNT_CODE_STORAGE_SYSTEM_CONTRACT_ADDRESS, "AccountCodeStorage");
+    accountCodeStorage = AccountCodeStorage__factory.connect(TEST_ACCOUNT_CODE_STORAGE_SYSTEM_CONTRACT_ADDRESS, wallet);
 
-    await deployContractOnAddress(NONCE_HOLDER_SYSTEM_CONTRACT_ADDRESS, "MockContract");
-    mockNonceHolder = MockContract__factory.connect(NONCE_HOLDER_SYSTEM_CONTRACT_ADDRESS, wallet);
-
-    nonceHolderIface = new ethers.utils.Interface((await loadArtifact("NonceHolder")).abi);
-
-    await network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: [DEPLOYER_SYSTEM_CONTRACT_ADDRESS],
-    });
-    deployerAccount = await ethers.getSigner(DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
+    deployerAccount = await ethers.getImpersonatedSigner(TEST_DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
   });
 
   after(async () => {
     await network.provider.request({
       method: "hardhat_stopImpersonatingAccount",
-      params: [DEPLOYER_SYSTEM_CONTRACT_ADDRESS],
+      params: [TEST_DEPLOYER_SYSTEM_CONTRACT_ADDRESS],
     });
   });
 
@@ -168,10 +158,10 @@ describe("AccountCodeStorage tests", function () {
     });
 
     it("EOA with non-zero nonce", async () => {
-      await mockNonceHolder.setResult(nonceHolderIface.encodeFunctionData("getRawNonce", [RANDOM_ADDRESS]), {
+      await setResult("NonceHolder", "getRawNonce", [RANDOM_ADDRESS], {
         failure: false,
         returnData: ONE_BYTES32_HEX,
-      });
+      })
       expect(await accountCodeStorage.getCodeHash(RANDOM_ADDRESS)).to.be.eq(EMPTY_STRING_KECCAK);
     });
 
@@ -196,10 +186,10 @@ describe("AccountCodeStorage tests", function () {
     });
 
     it("zero", async () => {
-      await mockNonceHolder.setResult(nonceHolderIface.encodeFunctionData("getRawNonce", [RANDOM_ADDRESS]), {
+      await setResult("NonceHolder", "getRawNonce", [RANDOM_ADDRESS], {
         failure: false,
         returnData: ethers.constants.HashZero,
-      });
+      })
       expect(await accountCodeStorage.getCodeHash(RANDOM_ADDRESS)).to.be.eq(ethers.constants.HashZero);
     });
   });
@@ -242,7 +232,7 @@ describe("AccountCodeStorage tests", function () {
 // Utility function to unset code hash for the specified address.
 // Deployer system contract should be impersonated
 async function unsetCodeHash(accountCodeStorage: AccountCodeStorage, address: string) {
-  const deployerAccount = await ethers.getImpersonatedSigner(DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
+  const deployerAccount = await ethers.getImpersonatedSigner(TEST_DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
 
   await accountCodeStorage.connect(deployerAccount).storeAccountConstructedCodeHash(address, ethers.constants.HashZero);
 }
