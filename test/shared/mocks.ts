@@ -49,7 +49,7 @@ export async function setResult(
 ) {
   const mock = getMock(contractName);
   const calldata = encodeCalldata(contractName, functionName, args);
-  await mock.setResult({ calldata_: calldata, failure: result.failure, returnData: result.returnData });
+  await mock.setResult({ input: calldata, failure: result.failure, returnData: result.returnData });
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

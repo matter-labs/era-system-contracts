@@ -311,7 +311,7 @@ describe("DefaultAccount tests", function () {
 
     it("successfully prepared", async () => {
       await mockERC20.setResult({
-        calldata_: ERC20Iface.encodeFunctionData("allowance", [account.address, RANDOM_ADDRESS]),
+        input: ERC20Iface.encodeFunctionData("allowance", [account.address, RANDOM_ADDRESS]),
         failure: false,
         returnData: ethers.constants.HashZero,
       });

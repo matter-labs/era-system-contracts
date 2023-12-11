@@ -6,7 +6,7 @@ contract MockContract {
     event Called(uint256 value, bytes data);
 
     struct CallResult {
-        bytes calldata_;
+        bytes input;
         bool failure;
         bytes returnData;
     }
@@ -20,8 +20,9 @@ contract MockContract {
 
     // This function call will not pass to fallback, but this is fine for the tests.
     function setResult(CallResult calldata result) external {
+        bytes32 inputKeccak = keccak256(result.input);
         for (uint256 i = 0; i < results.length; i++) {
-            if (keccak256(results[i].calldata_) == keccak256(result.calldata_)) {
+            if (keccak256(results[i].input) == inputKeccak) {
                 results[i] = result;
                 return;
             }
@@ -31,13 +32,14 @@ contract MockContract {
 
     fallback() external payable {
         bytes memory data = msg.data;
+        bytes32 inputKeccak = keccak256(data);
 
         // empty return data with successful result by default.
         bool failure;
         bytes memory returnData;
 
         for (uint256 i = 0; i < results.length; i++) {
-            if (keccak256(results[i].calldata_) == keccak256(data)) {
+            if (keccak256(results[i].input) == inputKeccak) {
                 failure = results[i].failure;
                 returnData = results[i].returnData;
                 break;
