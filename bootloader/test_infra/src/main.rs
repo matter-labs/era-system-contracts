@@ -1,15 +1,15 @@
 use crate::{test_count_tracer::TestCountTracer, tracer::BootloaderTestTracer};
 use colored::Colorize;
+use multivm::interface::{
+    L1BatchEnv, L2BlockEnv, SystemEnv, TxExecutionMode, VmExecutionMode, VmInterface,
+};
+use multivm::vm_latest::{HistoryDisabled, ToTracerPointer, Vm};
 use once_cell::sync::OnceCell;
 use std::process;
 use std::{env, sync::Arc};
 use tracing_subscriber::fmt;
 use tracing_subscriber::prelude::__tracing_subscriber_SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
-use vm::{
-    HistoryDisabled, L1BatchEnv, L2BlockEnv, SystemEnv, TxExecutionMode, Vm, VmExecutionMode,
-    VmTracer,
-};
 use zksync_contracts::{
     read_zbin_bytecode, BaseSystemContracts, ContractLanguage, SystemContractCode,
     SystemContractsRepo,
@@ -93,20 +93,15 @@ fn execute_internal_bootloader_test() {
             ))
             .to_rc_ptr();
 
-        let mut vm = Vm::new(
-            l1_batch_env.clone(),
-            system_env.clone(),
-            storage.clone(),
-            HistoryDisabled,
-        );
+        let mut vm: Vm<_, HistoryDisabled> =
+            Vm::new(l1_batch_env.clone(), system_env.clone(), storage.clone());
 
         let test_count = Arc::new(OnceCell::default());
-        let custom_tracers = vec![Box::new(TestCountTracer::new(test_count.clone()))
-            as Box<dyn VmTracer<StorageView<InMemoryStorage>, HistoryDisabled>>];
+        let custom_tracers = TestCountTracer::new(test_count.clone()).into_tracer_pointer();
 
         // We're using a TestCountTracer (and passing 0 as fee account) - this should cause the bootloader
         // test framework to report number of tests via VM hook.
-        vm.inspect(custom_tracers, VmExecutionMode::Bootloader);
+        vm.inspect(custom_tracers.into(), VmExecutionMode::Bootloader);
 
         test_count.get().unwrap().clone()
     };
@@ -129,23 +124,18 @@ fn execute_internal_bootloader_test() {
         // We are passing id of the test in location (0) where we normally put the operator.
         // This is then picked up by the testing framework.
         l1_batch_env.fee_account = zksync_types::H160::from(u256_to_h256(U256::from(test_id)));
-        let mut vm = Vm::new(
-            l1_batch_env.clone(),
-            system_env.clone(),
-            storage.clone(),
-            HistoryDisabled,
-        );
+        let mut vm: Vm<_, HistoryDisabled> =
+            Vm::new(l1_batch_env.clone(), system_env.clone(), storage.clone());
         let test_result = Arc::new(OnceCell::default());
 
-        let custom_tracers = vec![Box::new(BootloaderTestTracer::new(test_result.clone()))
-            as Box<dyn VmTracer<StorageView<InMemoryStorage>, HistoryDisabled>>];
+        let custom_tracers = BootloaderTestTracer::new(test_result.clone()).into_tracer_pointer();
 
         // Let's insert transactions into slots. They are not executed, but the tests can run functions against them.
         let json_str = include_str!("test_transactions/0.json");
         let tx: Transaction = serde_json::from_str(json_str).unwrap();
         vm.push_transaction(tx);
 
-        vm.inspect(custom_tracers, VmExecutionMode::Bootloader);
+        vm.inspect(custom_tracers.into(), VmExecutionMode::Bootloader);
 
         let test_result = test_result.get().unwrap();
         match &test_result.result {

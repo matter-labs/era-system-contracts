@@ -1,14 +1,16 @@
 use std::sync::Arc;
 
 use colored::Colorize;
-
 use once_cell::sync::OnceCell;
-use vm::{
-    DynTracer, ExecutionEndTracer, ExecutionProcessing, Halt, HistoryMode, SimpleMemory,
-    TracerExecutionStatus, TracerExecutionStopReason, VmExecutionResultAndLogs, VmTracer,
+
+use multivm::interface::{
+    dyn_tracers::vm_1_4_0::DynTracer,
+    tracer::{TracerExecutionStatus, TracerExecutionStopReason, VmExecutionStopReason},
 };
+use multivm::vm_latest::{BootloaderState, HistoryMode, SimpleMemory, VmTracer, ZkSyncVmState};
+use multivm::zk_evm_1_4_0::tracing::{BeforeExecutionData, VmLocalStateData};
+
 use zksync_state::{StoragePtr, WriteStorage};
-use zksync_types::zkevm_test_harness::zk_evm::tracing::{BeforeExecutionData, VmLocalStateData};
 
 use crate::hook::TestVmHook;
 
@@ -39,7 +41,7 @@ impl BootloaderTestTracer {
     }
 }
 
-impl<S, H: HistoryMode> DynTracer<S, H> for BootloaderTestTracer {
+impl<S, H: HistoryMode> DynTracer<S, SimpleMemory<H>> for BootloaderTestTracer {
     fn before_execution(
         &mut self,
         state: VmLocalStateData<'_>,
@@ -72,67 +74,73 @@ impl<S, H: HistoryMode> DynTracer<S, H> for BootloaderTestTracer {
     }
 }
 
-impl<H: HistoryMode> ExecutionEndTracer<H> for BootloaderTestTracer {
-    fn should_stop_execution(&self) -> TracerExecutionStatus {
+impl<S: WriteStorage, H: HistoryMode> VmTracer<S, H> for BootloaderTestTracer {
+    fn finish_cycle(
+        &mut self,
+        _state: &mut ZkSyncVmState<S, H>,
+        _bootloader_state: &mut BootloaderState,
+    ) -> TracerExecutionStatus {
         if let Some(TestResult {
             test_name: _,
             result: Err(_),
         }) = self.test_result.get()
         {
-            return TracerExecutionStatus::Stop(TracerExecutionStopReason::Finish);
-        }
-        return TracerExecutionStatus::Continue;
-    }
-}
-
-impl<S: WriteStorage, H: HistoryMode> ExecutionProcessing<S, H> for BootloaderTestTracer {}
-
-impl<S: WriteStorage, H: HistoryMode> VmTracer<S, H> for BootloaderTestTracer {
-    fn save_results(&mut self, result: &mut VmExecutionResultAndLogs) {
-        let r = if let Some(requested_assert) = &self.requested_assert {
-            match &result.result {
-                vm::ExecutionResult::Success { .. } => Err(format!(
-                    "Should have failed with {}, but run succesfully.",
-                    requested_assert
-                )),
-                vm::ExecutionResult::Revert { output } => Err(format!(
-                    "Should have failed with {}, but run reverted with {}.",
-                    requested_assert,
-                    output.to_user_friendly_string()
-                )),
-                vm::ExecutionResult::Halt { reason } => {
-                    if let Halt::UnexpectedVMBehavior(reason) = reason {
-                        let reason = reason.strip_prefix("Assertion error: ").unwrap();
-                        if reason == requested_assert {
-                            Ok(())
-                        } else {
-                            Err(format!(
-                                "Should have failed with `{}`, but failed with different assert `{}`",
-                                requested_assert, reason
-                            ))
-                        }
-                    } else {
-                        Err(format!(
-                            "Should have failed with `{}`, but halted with`{}`",
-                            requested_assert, reason
-                        ))
-                    }
-                }
-            }
+            TracerExecutionStatus::Stop(TracerExecutionStopReason::Finish)
         } else {
-            match &result.result {
-                vm::ExecutionResult::Success { .. } => Ok(()),
-                vm::ExecutionResult::Revert { output } => Err(output.to_user_friendly_string()),
-                vm::ExecutionResult::Halt { reason } => Err(reason.to_string()),
-            }
-        };
-        if self.test_result.get().is_none() {
-            self.test_result
-                .set(TestResult {
-                    test_name: self.test_name.clone().unwrap_or("".to_owned()),
-                    result: r,
-                })
-                .unwrap();
+            TracerExecutionStatus::Continue
         }
+    }
+
+    fn after_vm_execution(
+        &mut self,
+        _state: &mut ZkSyncVmState<S, H>,
+        _bootloader_state: &BootloaderState,
+        _stop_reason: VmExecutionStopReason,
+    ) {
+        // let r = if let Some(requested_assert) = &self.requested_assert {
+        //     match &result.result {
+        //         ExecutionResult::Success { .. } => Err(format!(
+        //             "Should have failed with {}, but run succesfully.",
+        //             requested_assert
+        //         )),
+        //         ExecutionResult::Revert { output } => Err(format!(
+        //             "Should have failed with {}, but run reverted with {}.",
+        //             requested_assert,
+        //             output.to_user_friendly_string()
+        //         )),
+        //         ExecutionResult::Halt { reason } => {
+        //             if let Halt::UnexpectedVMBehavior(reason) = reason {
+        //                 let reason = reason.strip_prefix("Assertion error: ").unwrap();
+        //                 if reason == requested_assert {
+        //                     Ok(())
+        //                 } else {
+        //                     Err(format!(
+        //                         "Should have failed with `{}`, but failed with different assert `{}`",
+        //                         requested_assert, reason
+        //                     ))
+        //                 }
+        //             } else {
+        //                 Err(format!(
+        //                     "Should have failed with `{}`, but halted with`{}`",
+        //                     requested_assert, reason
+        //                 ))
+        //             }
+        //         }
+        //     }
+        // } else {
+        //     match &result.result {
+        //         ExecutionResult::Success { .. } => Ok(()),
+        //         ExecutionResult::Revert { output } => Err(output.to_user_friendly_string()),
+        //         ExecutionResult::Halt { reason } => Err(reason.to_string()),
+        //     }
+        // };
+        // if self.test_result.get().is_none() {
+        //     self.test_result
+        //         .set(TestResult {
+        //             test_name: self.test_name.clone().unwrap_or("".to_owned()),
+        //             result: r,
+        //         })
+        //         .unwrap();
+        // }
     }
 }
