@@ -18,7 +18,7 @@ import {
   publishBytecode,
   setConstructingCodeHash,
 } from "./shared/utils";
-import {prepareEnvironment, setResult} from "./shared/mocks";
+import { prepareEnvironment, setResult } from "./shared/mocks";
 
 describe("ContractDeployer tests", function () {
   let wallet: Wallet;
@@ -137,21 +137,27 @@ describe("ContractDeployer tests", function () {
     });
 
     it("EOA", async () => {
-      await setResult("AccountCodeStorage", "getRawCodeHash", [RANDOM_ADDRESS],
-          { failure: false, returnData: ethers.constants.HashZero });
+      await setResult("AccountCodeStorage", "getRawCodeHash", [RANDOM_ADDRESS], {
+        failure: false,
+        returnData: ethers.constants.HashZero,
+      });
       expect(await contractDeployer.extendedAccountVersion(RANDOM_ADDRESS)).to.be.eq(AA_VERSION_1);
     });
 
     it("Empty address", async () => {
-      await setResult("AccountCodeStorage", "getRawCodeHash", [EMPTY_KERNEL_ADDRESS],
-          { failure: false, returnData: ethers.constants.HashZero });
+      await setResult("AccountCodeStorage", "getRawCodeHash", [EMPTY_KERNEL_ADDRESS], {
+        failure: false,
+        returnData: ethers.constants.HashZero,
+      });
       // Now testing that the system contracts with empty bytecode are still treated as AA_VERSION_NONE
       expect(await contractDeployer.extendedAccountVersion(EMPTY_KERNEL_ADDRESS)).to.be.eq(AA_VERSION_NONE);
     });
 
     it("not AA", async () => {
-      await setResult("AccountCodeStorage", "getRawCodeHash", [RANDOM_ADDRESS],
-          { failure: false, returnData: ONE_BYTES32_HEX });
+      await setResult("AccountCodeStorage", "getRawCodeHash", [RANDOM_ADDRESS], {
+        failure: false,
+        returnData: ONE_BYTES32_HEX,
+      });
       expect(await contractDeployer.extendedAccountVersion(RANDOM_ADDRESS)).to.be.eq(AA_VERSION_NONE);
     });
   });
@@ -194,17 +200,25 @@ describe("ContractDeployer tests", function () {
     let expectedAddress: string;
 
     before(async () => {
-      await setResult("NonceHolder", "incrementDeploymentNonce", [contractDeployerSystemCall.address],
-          { failure: false, returnData: "0x00000000000000000000000000000000000000000000000000000000deadbeef" });
+      await setResult("NonceHolder", "incrementDeploymentNonce", [contractDeployerSystemCall.address], {
+        failure: false,
+        returnData: "0x00000000000000000000000000000000000000000000000000000000deadbeef",
+      });
 
       expectedAddress = utils.createAddress(contractDeployerSystemCall.address, "0xdeadbeef");
-      await setResult("AccountCodeStorage", "getCodeHash", [expectedAddress],
-          { failure: false, returnData: ethers.constants.HashZero });
-      await setResult("NonceHolder", "getRawNonce", [expectedAddress],
-          { failure: false, returnData: ethers.constants.HashZero });
+      await setResult("AccountCodeStorage", "getCodeHash", [expectedAddress], {
+        failure: false,
+        returnData: ethers.constants.HashZero,
+      });
+      await setResult("NonceHolder", "getRawNonce", [expectedAddress], {
+        failure: false,
+        returnData: ethers.constants.HashZero,
+      });
 
-      await setResult("KnownCodesStorage", "getMarker", [utils.hashBytecode(deployableArtifact.bytecode)],
-          { failure: false, returnData: ONE_BYTES32_HEX });
+      await setResult("KnownCodesStorage", "getMarker", [utils.hashBytecode(deployableArtifact.bytecode)], {
+        failure: false,
+        returnData: ONE_BYTES32_HEX,
+      });
 
       // We still need to set in the real account code storage to make VM decommitment work.
       await publishBytecode(deployableArtifact.bytecode);
@@ -234,8 +248,12 @@ describe("ContractDeployer tests", function () {
     });
 
     it("not known bytecode hash failed", async () => {
-      await setResult("KnownCodesStorage", "getMarker", ["0x0100FFFFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF"],
-          { failure: false, returnData: ethers.constants.HashZero });
+      await setResult(
+        "KnownCodesStorage",
+        "getMarker",
+        ["0x0100FFFFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF"],
+        { failure: false, returnData: ethers.constants.HashZero }
+      );
       await expect(
         contractDeployerSystemCall.createAccount(
           ethers.constants.HashZero,
@@ -289,8 +307,10 @@ describe("ContractDeployer tests", function () {
     let expectedAddress: string;
 
     before(async () => {
-      await setResult("NonceHolder", "incrementDeploymentNonce", [contractDeployerSystemCall.address],
-          { failure: false, returnData: "0x00000000000000000000000000000000000000000000000000000000deadbee1" });
+      await setResult("NonceHolder", "incrementDeploymentNonce", [contractDeployerSystemCall.address], {
+        failure: false,
+        returnData: "0x00000000000000000000000000000000000000000000000000000000deadbee1",
+      });
 
       expectedAddress = utils.create2Address(
         contractDeployerSystemCall.address,
@@ -298,12 +318,18 @@ describe("ContractDeployer tests", function () {
         "0x1234567891234567891234512222122167891123456789123456787654323456",
         "0xdeadbeef"
       );
-      await setResult("AccountCodeStorage", "getCodeHash", [expectedAddress],
-          { failure: false, returnData: ethers.constants.HashZero });
-      await setResult("NonceHolder", "getRawNonce", [expectedAddress],
-          { failure: false, returnData: ethers.constants.HashZero });
-      await setResult("KnownCodesStorage", "getMarker", [utils.hashBytecode(deployableArtifact.bytecode)],
-          { failure: false, returnData: ONE_BYTES32_HEX });
+      await setResult("AccountCodeStorage", "getCodeHash", [expectedAddress], {
+        failure: false,
+        returnData: ethers.constants.HashZero,
+      });
+      await setResult("NonceHolder", "getRawNonce", [expectedAddress], {
+        failure: false,
+        returnData: ethers.constants.HashZero,
+      });
+      await setResult("KnownCodesStorage", "getMarker", [utils.hashBytecode(deployableArtifact.bytecode)], {
+        failure: false,
+        returnData: ONE_BYTES32_HEX,
+      });
 
       // We still need to set in the real account code storage to make VM decommitment work.
       await publishBytecode(deployableArtifact.bytecode);
@@ -339,12 +365,20 @@ describe("ContractDeployer tests", function () {
         "0x1234567891234567891234512222122167891123456789123456787654323456",
         "0x"
       );
-      await setResult("AccountCodeStorage", "getCodeHash", [expectedAddress],
-          { failure: false, returnData: ethers.constants.HashZero });
-      await setResult("NonceHolder", "getRawNonce", [expectedAddress],
-          { failure: false, returnData: ethers.constants.HashZero });
-      await setResult("KnownCodesStorage", "getMarker", ["0x0100FFFFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF"],
-          { failure: false, returnData: ethers.constants.HashZero });
+      await setResult("AccountCodeStorage", "getCodeHash", [expectedAddress], {
+        failure: false,
+        returnData: ethers.constants.HashZero,
+      });
+      await setResult("NonceHolder", "getRawNonce", [expectedAddress], {
+        failure: false,
+        returnData: ethers.constants.HashZero,
+      });
+      await setResult(
+        "KnownCodesStorage",
+        "getMarker",
+        ["0x0100FFFFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF"],
+        { failure: false, returnData: ethers.constants.HashZero }
+      );
       await expect(
         contractDeployerSystemCall.create2Account(
           "0x1234567891234567891234512222122167891123456789123456787654323456",
@@ -374,8 +408,10 @@ describe("ContractDeployer tests", function () {
     });
 
     it("already deployed failed", async () => {
-      await setResult("AccountCodeStorage", "getCodeHash", [expectedAddress],
-          { failure: false, returnData: utils.hashBytecode(deployableArtifact.bytecode) });
+      await setResult("AccountCodeStorage", "getCodeHash", [expectedAddress], {
+        failure: false,
+        returnData: utils.hashBytecode(deployableArtifact.bytecode),
+      });
       await expect(
         contractDeployerSystemCall.create2Account(
           "0x1234567891234567891234512222122167891123456789123456787654323456",
@@ -384,8 +420,10 @@ describe("ContractDeployer tests", function () {
           AA_VERSION_NONE
         )
       ).to.be.revertedWith("Code hash is non-zero");
-      await setResult("AccountCodeStorage", "getCodeHash", [expectedAddress],
-          { failure: false, returnData: ethers.constants.HashZero });
+      await setResult("AccountCodeStorage", "getCodeHash", [expectedAddress], {
+        failure: false,
+        returnData: ethers.constants.HashZero,
+      });
     });
 
     it("non-zero value deployed", async () => {
@@ -412,16 +450,24 @@ describe("ContractDeployer tests", function () {
     let expectedAddress;
 
     before(async () => {
-      await setResult("NonceHolder", "incrementDeploymentNonce", [contractDeployerSystemCall.address],
-          { failure: false, returnData: "0x00000000000000000000000000000000000000000000000000000000deadbee2" });
+      await setResult("NonceHolder", "incrementDeploymentNonce", [contractDeployerSystemCall.address], {
+        failure: false,
+        returnData: "0x00000000000000000000000000000000000000000000000000000000deadbee2",
+      });
 
       expectedAddress = utils.createAddress(contractDeployerSystemCall.address, "0xdeadbee2");
-      await setResult("AccountCodeStorage", "getCodeHash", [expectedAddress],
-          { failure: false, returnData: ethers.constants.HashZero });
-      await setResult("NonceHolder", "getRawNonce", [expectedAddress],
-          { failure: false, returnData: ethers.constants.HashZero });
-      await setResult("KnownCodesStorage", "getMarker", [utils.hashBytecode(deployableArtifact.bytecode)],
-          { failure: false, returnData: ONE_BYTES32_HEX });
+      await setResult("AccountCodeStorage", "getCodeHash", [expectedAddress], {
+        failure: false,
+        returnData: ethers.constants.HashZero,
+      });
+      await setResult("NonceHolder", "getRawNonce", [expectedAddress], {
+        failure: false,
+        returnData: ethers.constants.HashZero,
+      });
+      await setResult("KnownCodesStorage", "getMarker", [utils.hashBytecode(deployableArtifact.bytecode)], {
+        failure: false,
+        returnData: ONE_BYTES32_HEX,
+      });
 
       // We still need to set in the real account code storage to make VM decommitment work.
       await publishBytecode(deployableArtifact.bytecode);
@@ -456,9 +502,10 @@ describe("ContractDeployer tests", function () {
     let expectedAddress: string;
 
     before(async () => {
-      await setResult("NonceHolder", "incrementDeploymentNonce", [contractDeployerSystemCall.address],
-          { failure: false, returnData: "0x00000000000000000000000000000000000000000000000000000000deadbee3" });
-
+      await setResult("NonceHolder", "incrementDeploymentNonce", [contractDeployerSystemCall.address], {
+        failure: false,
+        returnData: "0x00000000000000000000000000000000000000000000000000000000deadbee3",
+      });
 
       expectedAddress = utils.create2Address(
         contractDeployerSystemCall.address,
@@ -466,12 +513,18 @@ describe("ContractDeployer tests", function () {
         ethers.constants.HashZero,
         "0xabcd"
       );
-      await setResult("AccountCodeStorage", "getCodeHash", [expectedAddress],
-          { failure: false, returnData: ethers.constants.HashZero, });
-      await setResult("NonceHolder", "getRawNonce", [expectedAddress],
-          { failure: false, returnData: ethers.constants.HashZero, });
-      await setResult("KnownCodesStorage", "getMarker", [utils.hashBytecode(deployableArtifact.bytecode)],
-          { failure: false, returnData: ONE_BYTES32_HEX });
+      await setResult("AccountCodeStorage", "getCodeHash", [expectedAddress], {
+        failure: false,
+        returnData: ethers.constants.HashZero,
+      });
+      await setResult("NonceHolder", "getRawNonce", [expectedAddress], {
+        failure: false,
+        returnData: ethers.constants.HashZero,
+      });
+      await setResult("KnownCodesStorage", "getMarker", [utils.hashBytecode(deployableArtifact.bytecode)], {
+        failure: false,
+        returnData: ONE_BYTES32_HEX,
+      });
 
       // We still need to set in the real account code storage to make VM decommitment work.
       await publishBytecode(deployableArtifact.bytecode);
@@ -517,8 +570,12 @@ describe("ContractDeployer tests", function () {
     });
 
     it("not known bytecode hash failed", async () => {
-      await setResult("KnownCodesStorage", "getMarker", ["0x0100FFFFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF"],
-          { failure: false, returnData: ethers.constants.HashZero });
+      await setResult(
+        "KnownCodesStorage",
+        "getMarker",
+        ["0x0100FFFFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF"],
+        { failure: false, returnData: ethers.constants.HashZero }
+      );
       const deploymentData = {
         bytecodeHash: "0x0100FFFFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF",
         newAddress: RANDOM_ADDRESS,
@@ -532,8 +589,10 @@ describe("ContractDeployer tests", function () {
     });
 
     it("successfully deployed", async () => {
-      await setResult("KnownCodesStorage", "getMarker", [utils.hashBytecode(deployableArtifact.bytecode)],
-          { failure: false, returnData: ONE_BYTES32_HEX });
+      await setResult("KnownCodesStorage", "getMarker", [utils.hashBytecode(deployableArtifact.bytecode)], {
+        failure: false,
+        returnData: ONE_BYTES32_HEX,
+      });
       const deploymentData = {
         bytecodeHash: utils.hashBytecode(deployableArtifact.bytecode),
         newAddress: RANDOM_ADDRESS,
@@ -575,8 +634,10 @@ describe("ContractDeployer tests", function () {
     });
 
     it("successfully deployed", async () => {
-      await setResult("KnownCodesStorage", "getMarker", [utils.hashBytecode(deployableArtifact.bytecode)],
-          { failure: false, returnData: ONE_BYTES32_HEX });
+      await setResult("KnownCodesStorage", "getMarker", [utils.hashBytecode(deployableArtifact.bytecode)], {
+        failure: false,
+        returnData: ONE_BYTES32_HEX,
+      });
 
       // We still need to set in the real account code storage to make VM decommitment work.
       await publishBytecode(deployableArtifact.bytecode);

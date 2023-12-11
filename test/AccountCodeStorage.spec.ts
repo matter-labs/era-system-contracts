@@ -10,7 +10,7 @@ import {
   ONE_BYTES32_HEX,
 } from "./shared/constants";
 import { getWallets, deployContractOnAddress } from "./shared/utils";
-import {prepareEnvironment, setResult} from "./shared/mocks";
+import { prepareEnvironment, setResult } from "./shared/mocks";
 
 describe("AccountCodeStorage tests", function () {
   let wallet: Wallet;
@@ -161,7 +161,7 @@ describe("AccountCodeStorage tests", function () {
       await setResult("NonceHolder", "getRawNonce", [RANDOM_ADDRESS], {
         failure: false,
         returnData: ONE_BYTES32_HEX,
-      })
+      });
       expect(await accountCodeStorage.getCodeHash(RANDOM_ADDRESS)).to.be.eq(EMPTY_STRING_KECCAK);
     });
 
@@ -189,7 +189,7 @@ describe("AccountCodeStorage tests", function () {
       await setResult("NonceHolder", "getRawNonce", [RANDOM_ADDRESS], {
         failure: false,
         returnData: ethers.constants.HashZero,
-      })
+      });
       expect(await accountCodeStorage.getCodeHash(RANDOM_ADDRESS)).to.be.eq(ethers.constants.HashZero);
     });
   });

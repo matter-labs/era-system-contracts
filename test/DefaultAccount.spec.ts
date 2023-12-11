@@ -5,12 +5,10 @@ import type { Wallet } from "zksync-web3";
 import { serialize } from "zksync-web3/build/src/utils";
 import type { DefaultAccount, DelegateCaller, MockContract } from "../typechain-types";
 import { DefaultAccount__factory } from "../typechain-types";
-import {
-  TEST_BOOTLOADER_FORMAL_ADDRESS,
-} from "./shared/constants";
+import { TEST_BOOTLOADER_FORMAL_ADDRESS } from "./shared/constants";
 import { signedTxToTransactionData } from "./shared/transactions";
-import { deployContract, deployContractOnAddress, getWallets, loadArtifact, setCode } from "./shared/utils";
-import {getMock} from "./shared/mocks";
+import { deployContract, deployContractOnAddress, getWallets, loadArtifact } from "./shared/utils";
+import { getMock } from "./shared/mocks";
 
 // TODO: more test cases can be added.
 describe("DefaultAccount tests", function () {
@@ -32,7 +30,7 @@ describe("DefaultAccount tests", function () {
     wallet = getWallets()[0];
     account = getWallets()[2];
 
-    await deployContractOnAddress(account.address, "DefaultAccount")
+    await deployContractOnAddress(account.address, "DefaultAccount");
     defaultAccount = DefaultAccount__factory.connect(account.address, wallet);
 
     callable = (await deployContract("MockContract")) as MockContract;

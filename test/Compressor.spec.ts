@@ -4,16 +4,16 @@ import { BigNumber } from "ethers";
 import { ethers, network } from "hardhat";
 import * as zksync from "zksync-web3";
 import type { Wallet } from "zksync-web3";
-import type { Compressor, MockContract } from "../typechain-types";
-import { Compressor__factory, MockContract__factory } from "../typechain-types";
+import type { Compressor } from "../typechain-types";
+import { Compressor__factory } from "../typechain-types";
 import {
   TEST_BOOTLOADER_FORMAL_ADDRESS,
   TEST_COMPRESSOR_CONTRACT_ADDRESS,
   TEST_L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS,
   TWO_IN_256,
 } from "./shared/constants";
-import { deployContractOnAddress, getWallets, loadArtifact } from "./shared/utils";
-import {encodeCalldata, getMock, prepareEnvironment, setResult} from "./shared/mocks";
+import { deployContractOnAddress, getWallets } from "./shared/utils";
+import { encodeCalldata, getMock, prepareEnvironment, setResult } from "./shared/mocks";
 
 describe("Compressor tests", function () {
   let wallet: Wallet;
@@ -101,12 +101,12 @@ describe("Compressor tests", function () {
       await setResult("L1Messenger", "sendToL1", [COMPRESSED_BYTECODE], {
         failure: false,
         returnData: ethers.constants.HashZero,
-      })
+      });
       await expect(compressor.connect(bootloaderAccount).publishCompressedBytecode(BYTECODE, COMPRESSED_BYTECODE))
         .to.emit(getMock("KnownCodesStorage"), "Called")
         .withArgs(
           0,
-            await encodeCalldata("KnownCodesStorage", "markBytecodeAsPublished", [zksync.utils.hashBytecode(BYTECODE)])
+          await encodeCalldata("KnownCodesStorage", "markBytecodeAsPublished", [zksync.utils.hashBytecode(BYTECODE)])
         );
     });
   });

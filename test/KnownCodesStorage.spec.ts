@@ -9,7 +9,7 @@ import {
   TEST_KNOWN_CODE_STORAGE_CONTRACT_ADDRESS,
 } from "./shared/constants";
 import { deployContractOnAddress, getWallets } from "./shared/utils";
-import {encodeCalldata, getMock, prepareEnvironment} from "./shared/mocks";
+import { encodeCalldata, getMock, prepareEnvironment } from "./shared/mocks";
 
 describe("KnownCodesStorage tests", function () {
   let wallet: Wallet;

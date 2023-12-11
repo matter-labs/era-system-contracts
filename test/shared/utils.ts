@@ -2,7 +2,7 @@ import { Deployer } from "@matterlabs/hardhat-zksync-deploy";
 import type { ZkSyncArtifact } from "@matterlabs/hardhat-zksync-deploy/dist/types";
 import type { BytesLike } from "ethers";
 import * as hre from "hardhat";
-import { ethers, network } from "hardhat";
+import { ethers } from "hardhat";
 import * as zksync from "zksync-web3";
 import type { Contract } from "zksync-web3";
 import { Provider, utils, Wallet } from "zksync-web3";

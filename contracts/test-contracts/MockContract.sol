@@ -20,8 +20,8 @@ contract MockContract {
 
     // This function call will not pass to fallback, but this is fine for the tests.
     function setResult(CallResult calldata result) external {
-        for(uint256 i = 0; i < results.length; i++) {
-            if(keccak256(results[i].calldata_) == keccak256(result.calldata_)) {
+        for (uint256 i = 0; i < results.length; i++) {
+            if (keccak256(results[i].calldata_) == keccak256(result.calldata_)) {
                 results[i] = result;
                 return;
             }
@@ -36,8 +36,8 @@ contract MockContract {
         bool failure;
         bytes memory returnData;
 
-        for(uint256 i = 0; i < results.length; i++) {
-            if(keccak256(results[i].calldata_) == keccak256(data)) {
+        for (uint256 i = 0; i < results.length; i++) {
+            if (keccak256(results[i].calldata_) == keccak256(data)) {
                 failure = results[i].failure;
                 returnData = results[i].returnData;
                 break;
