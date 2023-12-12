@@ -74,6 +74,7 @@ contract L2EthToken is IEthToken, ISystemContract {
 
         // Send the L2 log, a user could use it as proof of the withdrawal
         bytes memory message = _getL1WithdrawMessage(_l1Receiver, amount);
+        // TODO: gas limit issue
         L1_MESSENGER_CONTRACT.sendToL1(message);
 
         emit Withdrawal(msg.sender, _l1Receiver, amount);
