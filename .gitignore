@@ -16,3 +16,4 @@ yarn-error.log*
 
 .vscode
 target/
+era_test_node.log
