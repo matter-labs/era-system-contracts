@@ -79,10 +79,6 @@ contract L2EthToken is IEthToken, ISystemContract {
         emit Withdrawal(msg.sender, _l1Receiver, amount);
     }
 
-    function withdrawShouldOnlyEmitWithdrawal() external payable {
-        emit Withdrawal(msg.sender, address(0), 0);
-    }
-
     /// @notice Initiate the ETH withdrawal, with the sent message. The funds will be available to claim on L1 `finalizeEthWithdrawal` method.
     /// @param _l1Receiver The address on L1 to receive the funds.
     /// @param _additionalData Additional data to be sent to L1 with the withdrawal.
