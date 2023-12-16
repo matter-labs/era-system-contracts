@@ -1,6 +1,8 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { Provider, Wallet } from "zksync-web3";
+import type { Wallet } from "zksync-web3";
+import { Provider } from "zksync-web3";
+import { IMailbox__factory } from "../typechain-types";
 import type { L2EthToken } from "../typechain-types";
 import { deployContract, getWallets } from "./shared/utils";
 import * as hre from "hardhat";
@@ -14,7 +16,6 @@ describe("L2EthToken tests", () => {
   let l2EthToken: L2EthToken;
   let bootloaderAccount: ethers.Signer;
   let l1Receiver: Wallet;
-  let gasPrice: BigNumber;
 
   before(async () => {
     await prepareEnvironment();
@@ -23,120 +24,203 @@ describe("L2EthToken tests", () => {
     l1Receiver = getWallets()[2];
     l2EthToken = (await deployContract("L2EthToken")) as L2EthToken;
     bootloaderAccount = await ethers.getImpersonatedSigner(TEST_BOOTLOADER_FORMAL_ADDRESS);
-    gasPrice = await ethers.provider.getGasPrice();
   });
 
-  it("mint", async () => {
-    const initialSupply: BigNumber = await l2EthToken.totalSupply();
-    const initialBalanceOfWallet: BigNumber = await l2EthToken.balanceOf(walletFrom.address);
-    const amountToMint: BigNumber = ethers.utils.parseEther("10.0");
+  describe("mint", () => {
+    it("successful", async () => {
+      const initialSupply: BigNumber = await l2EthToken.totalSupply();
+      const initialBalanceOfWallet: BigNumber = await l2EthToken.balanceOf(walletFrom.address);
+      const amountToMint: BigNumber = ethers.utils.parseEther("10.0");
 
-    await expect(l2EthToken.connect(bootloaderAccount).mint(walletFrom.address, amountToMint))
-      .to.emit(l2EthToken, "Mint")
-      .withArgs(walletFrom.address, amountToMint);
+      await expect(l2EthToken.connect(bootloaderAccount).mint(walletFrom.address, amountToMint))
+        .to.emit(l2EthToken, "Mint")
+        .withArgs(walletFrom.address, amountToMint);
 
-    const finalSupply: BigNumber = await l2EthToken.totalSupply();
-    const balanceOfWallet: BigNumber = await l2EthToken.balanceOf(walletFrom.address);
+      const finalSupply: BigNumber = await l2EthToken.totalSupply();
+      const balanceOfWallet: BigNumber = await l2EthToken.balanceOf(walletFrom.address);
 
-    expect(finalSupply).to.equal(initialSupply.add(amountToMint));
-    expect(balanceOfWallet).to.equal(initialBalanceOfWallet.add(amountToMint));
-  });
-
-  it("withdraw", async () => {
-    const iface = new ethers.utils.Interface([
-      "function finalizeEthWithdrawal(uint256, uint256, uint16, bytes, bytes32[])",
-    ]);
-    const selector = iface.getSighash("finalizeEthWithdrawal");
-    const amountToWidthdraw: BigNumber = ethers.utils.parseEther("1.0");
-
-    const message: string = ethers.utils.solidityPack(
-      ["bytes4", "address", "uint256"],
-      [selector, l1Receiver.address, amountToWidthdraw]
-    );
-
-    await setResult("L1Messenger", "sendToL1", [message], {
-      failure: false,
-      returnData: ethers.utils.defaultAbiCoder.encode(["bytes32"], [ethers.utils.keccak256(message)]),
+      expect(finalSupply).to.equal(initialSupply.add(amountToMint));
+      expect(balanceOfWallet).to.equal(initialBalanceOfWallet.add(amountToMint));
     });
 
-    const amountToWithdraw: BigNumber = ethers.utils.parseEther("1.0");
-    await expect(
-      l2EthToken
-        .connect(walletFrom)
-        .withdraw(l1Receiver.address, { value: amountToWithdraw, gasLimit: 5000000, gasPrice })
-    ).to.emit(l2EthToken, "Withdrawal");
+    it("not called by bootloader", async () => {
+      const amountToMint: BigNumber = ethers.utils.parseEther("10.0");
+      await expect(l2EthToken.connect(walletTo.address).mint(walletFrom.address, amountToMint)).to.be.rejectedWith(
+        "Callable only by the bootloader"
+      );
+    });
   });
 
-  it("withdrawWithMessage", async () => {
-    const iface = new ethers.utils.Interface([
-      "function finalizeEthWithdrawal(uint256, uint256, uint16, bytes, bytes32[])",
-    ]);
-    const selector = iface.getSighash("finalizeEthWithdrawal");
-    const amountToWidthdraw: BigNumber = ethers.utils.parseEther("1.0");
-    const additionalData: string = ethers.utils.defaultAbiCoder.encode(["string"], ["additional data"]);
-    const message: string = ethers.utils.solidityPack(
-      ["bytes4", "address", "uint256", "address", "bytes"],
-      [selector, l1Receiver.address, amountToWidthdraw, walletFrom.address, additionalData]
-    );
+  describe("transfer", () => {
+    it("transfer successfully", async () => {
+      await l2EthToken.connect(bootloaderAccount).mint(walletFrom.address, ethers.utils.parseEther("100.0"));
 
-    await setResult("L1Messenger", "sendToL1", [message], {
-      failure: false,
-      returnData: ethers.utils.defaultAbiCoder.encode(["bytes32"], [ethers.utils.keccak256(message)]),
+      const senderBalandeBeforeTransfer: BigNumber = await l2EthToken.balanceOf(walletFrom.address);
+      const recipientBalanceBeforeTransfer: BigNumber = await l2EthToken.balanceOf(walletTo.address);
+
+      const amountToTransfer = ethers.utils.parseEther("10.0");
+
+      await expect(
+        l2EthToken.connect(bootloaderAccount).transferFromTo(walletFrom.address, walletTo.address, amountToTransfer)
+      )
+        .to.emit(l2EthToken, "Transfer")
+        .withArgs(walletFrom.address, walletTo.address, amountToTransfer);
+
+      const senderBalanceAfterTransfer: BigNumber = await l2EthToken.balanceOf(walletFrom.address);
+      const recipientBalanceAfterTransfer: BigNumber = await l2EthToken.balanceOf(walletTo.address);
+      expect(senderBalanceAfterTransfer).to.be.eq(senderBalandeBeforeTransfer.sub(amountToTransfer));
+      expect(recipientBalanceAfterTransfer).to.be.eq(recipientBalanceBeforeTransfer.add(amountToTransfer));
     });
 
-    const amountToWithdraw: BigNumber = ethers.utils.parseEther("1.0");
+    it("no tranfser due to insufficient balance", async () => {
+      await l2EthToken.connect(bootloaderAccount).mint(walletFrom.address, ethers.utils.parseEther("5.0"));
+      const amountToTransfer: BigNumber = ethers.utils.parseEther("100000000000000000.0");
 
-    await expect(
-      l2EthToken.connect(walletFrom).withdrawWithMessage(l1Receiver.address, additionalData, {
-        value: amountToWithdraw,
-        gasLimit: 5000000,
-        gasPrice,
-      })
-    ).to.emit(l2EthToken, "WithdrawalWithMessage");
+      await expect(
+        l2EthToken.connect(bootloaderAccount).transferFromTo(walletFrom.address, walletTo.address, amountToTransfer)
+      ).to.be.rejectedWith("Transfer amount exceeds balance");
+    });
+
+    it("no transfer - require special access", async () => {
+      const provider: Provider = new Provider((hre.network.config as any).url);
+      const maliciousWallet: Wallet = ethers.Wallet.createRandom().connect(provider);
+      await l2EthToken.connect(bootloaderAccount).mint(maliciousWallet.address, ethers.utils.parseEther("20.0"));
+
+      const amountToTransfer: BigNumber = ethers.utils.parseEther("20.0");
+
+      await expect(
+        l2EthToken.connect(maliciousWallet).transferFromTo(maliciousWallet.address, walletTo.address, amountToTransfer)
+      ).to.be.rejectedWith("Only system contracts with special access can call this method");
+    });
   });
 
-  it("transfer successfully", async () => {
-    await l2EthToken.connect(bootloaderAccount).mint(walletFrom.address, ethers.utils.parseEther("100.0"));
+  describe("balanceOf", () => {
+    it("correct balance", async () => {
+      const amountToMint: BigNumber = ethers.utils.parseEther("10.0");
+      await l2EthToken.connect(bootloaderAccount).mint(walletFrom.address, amountToMint);
+      const balance = await l2EthToken.balanceOf(walletFrom.address);
+      expect(balance).to.equal(ethers.utils.parseEther("115.0"));
+    });
 
-    const senderBalandeBeforeTransfer: BigNumber = await l2EthToken.balanceOf(walletFrom.address);
-    const recipientBalanceBeforeTransfer: BigNumber = await l2EthToken.balanceOf(walletTo.address);
-
-    const amountToTransfer = ethers.utils.parseEther("10.0");
-
-    await expect(
-      l2EthToken.connect(bootloaderAccount).transferFromTo(walletFrom.address, walletTo.address, amountToTransfer)
-    )
-      .to.emit(l2EthToken, "Transfer")
-      .withArgs(walletFrom.address, walletTo.address, amountToTransfer);
-
-    const senderBalanceAfterTransfer: BigNumber = await l2EthToken.balanceOf(walletFrom.address);
-    const recipientBalanceAfterTransfer: BigNumber = await l2EthToken.balanceOf(walletTo.address);
-    expect(senderBalanceAfterTransfer).to.be.eq(senderBalandeBeforeTransfer.sub(amountToTransfer));
-    expect(recipientBalanceAfterTransfer).to.be.eq(recipientBalanceBeforeTransfer.add(amountToTransfer));
+    it("wrong address", async () => {
+      const balance = await l2EthToken.balanceOf("0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef");
+      expect(balance).to.equal(0);
+    });
   });
 
-  it("no tranfser due to insufficient balance", async () => {
-    await l2EthToken.connect(bootloaderAccount).mint(walletFrom.address, ethers.utils.parseEther("5.0"));
-    const amountToTransfer: BigNumber = ethers.utils.parseEther("100000000000000000.0");
-
-    await expect(
-      l2EthToken.connect(bootloaderAccount).transferFromTo(walletFrom.address, walletTo.address, amountToTransfer)
-    ).to.be.rejectedWith("Transfer amount exceeds balance");
+  describe("name", () => {
+    it("correct name", async () => {
+      const name = await l2EthToken.name();
+      expect(name).to.equal("Ether");
+    });
   });
 
-  it("no transfer - require special access", async () => {
-    const provider: Provider = new Provider((hre.network.config as any).url);
-    const maliciousData = {
-      address: "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
-      privateKey: "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
-    };
-    const maliciousWallet: Wallet = new Wallet(maliciousData.privateKey, provider);
-    await l2EthToken.connect(bootloaderAccount).mint(maliciousWallet.address, ethers.utils.parseEther("20.0"));
+  describe("symbol", () => {
+    it("correct symbol", async () => {
+      const symbol = await l2EthToken.symbol();
+      expect(symbol).to.equal("ETH");
+    });
+  });
 
-    const amountToTransfer: BigNumber = ethers.utils.parseEther("20.0");
+  describe("decimals", () => {
+    it("correct decimals", async () => {
+      const decimals = await l2EthToken.decimals();
+      expect(decimals).to.equal(18);
+    });
+  });
 
-    await expect(
-      l2EthToken.connect(maliciousWallet).transferFromTo(maliciousWallet.address, walletTo.address, amountToTransfer)
-    ).to.be.rejectedWith("Only system contracts with special access can call this method");
+  describe("withdraw", () => {
+    it("successful, correct contract balance and total supply", async () => {
+      const iface = IMailbox__factory.createInterface();
+      const selector = iface.getSighash("finalizeEthWithdrawal");
+      const amountToWithdraw: BigNumber = ethers.utils.parseEther("1.0");
+
+      const message: string = ethers.utils.solidityPack(
+        ["bytes4", "address", "uint256"],
+        [selector, l1Receiver.address, amountToWithdraw]
+      );
+
+      await setResult("L1Messenger", "sendToL1", [message], {
+        failure: false,
+        returnData: ethers.utils.defaultAbiCoder.encode(["bytes32"], [ethers.utils.keccak256(message)]),
+      });
+
+      const amountToMint: BigNumber = ethers.utils.parseEther("100.0");
+      await l2EthToken.connect(bootloaderAccount).mint(l2EthToken.address, amountToMint);
+
+      const balanceBeforeWithdrawal: BigNumber = await l2EthToken.balanceOf(l2EthToken.address);
+      const totalSupplyBefore = await l2EthToken.totalSupply();
+
+      await expect(l2EthToken.connect(walletFrom).withdraw(l1Receiver.address, { value: amountToWithdraw }))
+        .to.emit(l2EthToken, "Withdrawal")
+        .withArgs(walletFrom.address, l1Receiver.address, amountToWithdraw);
+
+      const balanceAfterWithdrawal: BigNumber = await l2EthToken.balanceOf(l2EthToken.address);
+      const totalSupplyAfter = await l2EthToken.totalSupply();
+
+      expect(balanceAfterWithdrawal).to.equal(balanceBeforeWithdrawal.sub(amountToWithdraw));
+      expect(totalSupplyAfter).to.equal(totalSupplyBefore.sub(amountToWithdraw));
+    });
+
+    it("big amount to withdraw, underflow contract balance", async () => {
+      const iface = IMailbox__factory.createInterface();
+      const selector = iface.getSighash("finalizeEthWithdrawal");
+      const amountToWithdraw: BigNumber = ethers.utils.parseEther("300.0");
+
+      const message: string = ethers.utils.solidityPack(
+        ["bytes4", "address", "uint256"],
+        [selector, l1Receiver.address, amountToWithdraw]
+      );
+
+      await setResult("L1Messenger", "sendToL1", [message], {
+        failure: false,
+        returnData: ethers.utils.defaultAbiCoder.encode(["bytes32"], [ethers.utils.keccak256(message)]),
+      });
+
+      const amountToMint: BigNumber = ethers.utils.parseEther("100.0");
+      await l2EthToken.connect(bootloaderAccount).mint(l2EthToken.address, amountToMint);
+
+      const balanceBeforeWithdrawal: BigNumber = await l2EthToken.balanceOf(l2EthToken.address);
+
+      await expect(l2EthToken.connect(walletFrom).withdraw(l1Receiver.address, { value: amountToWithdraw }))
+        .to.emit(l2EthToken, "Withdrawal")
+        .withArgs(walletFrom.address, l1Receiver.address, amountToWithdraw);
+
+      const balanceAfterWithdrawal: BigNumber = await l2EthToken.balanceOf(l2EthToken.address);
+      expect(balanceAfterWithdrawal).not.equal(balanceBeforeWithdrawal.sub(amountToWithdraw));
+    });
+  });
+
+  describe("withdrawWithMessage", () => {
+    it("successful", async () => {
+      const iface = IMailbox__factory.createInterface();
+      const selector = iface.getSighash("finalizeEthWithdrawal");
+      const amountToWidthdraw: BigNumber = ethers.utils.parseEther("1.0");
+      const additionalData: string = ethers.utils.defaultAbiCoder.encode(["string"], ["additional data"]);
+      const message: string = ethers.utils.solidityPack(
+        ["bytes4", "address", "uint256", "address", "bytes"],
+        [selector, l1Receiver.address, amountToWidthdraw, walletFrom.address, additionalData]
+      );
+
+      await setResult("L1Messenger", "sendToL1", [message], {
+        failure: false,
+        returnData: ethers.utils.defaultAbiCoder.encode(["bytes32"], [ethers.utils.keccak256(message)]),
+      });
+
+      const amountToWithdraw: BigNumber = ethers.utils.parseEther("1.0");
+      const totalSupplyBefore = await l2EthToken.totalSupply();
+      const balanceBeforeWithdrawal: BigNumber = await l2EthToken.balanceOf(l2EthToken.address);
+      await expect(
+        l2EthToken.connect(walletFrom).withdrawWithMessage(l1Receiver.address, additionalData, {
+          value: amountToWithdraw,
+        })
+      )
+        .to.emit(l2EthToken, "WithdrawalWithMessage")
+        .withArgs(walletFrom.address, l1Receiver.address, amountToWithdraw, additionalData);
+      const totalSupplyAfter = await l2EthToken.totalSupply();
+      const balanceAfterWithdrawal: BigNumber = await l2EthToken.balanceOf(l2EthToken.address);
+      expect(balanceAfterWithdrawal).to.equal(balanceBeforeWithdrawal.sub(amountToWithdraw));
+      expect(totalSupplyAfter).to.equal(totalSupplyBefore.sub(amountToWithdraw));
+    });
   });
 });
