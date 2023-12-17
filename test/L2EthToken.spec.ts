@@ -2,12 +2,12 @@ import { expect } from "chai";
 import { ethers } from "hardhat";
 import type { Wallet } from "zksync-web3";
 import { Provider } from "zksync-web3";
-import { IMailbox__factory } from "../typechain-types";
+import { IMailbox__factory, L2EthToken__factory } from "../typechain-types";
 import type { L2EthToken } from "../typechain-types";
-import { deployContract, getWallets } from "./shared/utils";
+import { deployContract, deployContractOnAddress, getWallets } from "./shared/utils";
 import * as hre from "hardhat";
 import type { BigNumber } from "ethers";
-import { TEST_BOOTLOADER_FORMAL_ADDRESS } from "./shared/constants";
+import { TEST_BOOTLOADER_FORMAL_ADDRESS, TEST_ETH_TOKEN_SYSTEM_CONTRACT_ADDRESS } from "./shared/constants";
 import { prepareEnvironment, setResult } from "./shared/mocks";
 
 describe("L2EthToken tests", () => {
@@ -22,7 +22,8 @@ describe("L2EthToken tests", () => {
     walletFrom = getWallets()[0];
     walletTo = getWallets()[1];
     l1Receiver = getWallets()[2];
-    l2EthToken = (await deployContract("L2EthToken")) as L2EthToken;
+    (await deployContractOnAddress(TEST_ETH_TOKEN_SYSTEM_CONTRACT_ADDRESS, "L2EthToken"));
+    l2EthToken = L2EthToken__factory.connect(TEST_ETH_TOKEN_SYSTEM_CONTRACT_ADDRESS, walletFrom);
     bootloaderAccount = await ethers.getImpersonatedSigner(TEST_BOOTLOADER_FORMAL_ADDRESS);
   });
 
