@@ -119,6 +119,13 @@
     "sourceCodeHash": "0xdad8be6e926155a362ea05b132ba8b6c634e978a41f79bb6390b870e18049e45"
   },
   {
+    "contractName": "EcPairing",
+    "bytecodePath": "contracts/precompiles/artifacts/EcPairing.yul/EcPairing.yul.zbin",
+    "sourceCodePath": "contracts/precompiles/EcPairing.yul",
+    "bytecodeHash": "0x0100121b7d53456470baebed90d2e914396a939f00617650f495b2fb79f8c453",
+    "sourceCodeHash": "0xbb50650a15ff86b0ee683dd51491b31b785272d1a803b871799af8f07eb7e300"
+  },
+  {
     "contractName": "Ecrecover",
     "bytecodePath": "contracts-preprocessed/precompiles/artifacts/Ecrecover.yul.zbin",
     "sourceCodePath": "contracts-preprocessed/precompiles/Ecrecover.yul",
