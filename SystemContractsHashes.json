@@ -133,6 +133,13 @@
     "sourceCodeHash": "0x6415e127a4e07907fb87d0cbdf480fff8c70326c4f2f670af0cf3248862e4df4"
   },
   {
+    "contractName": "P256VERIFY",
+    "bytecodePath": "contracts/precompiles/artifacts/P256VERIFY.yul/P256VERIFY.yul.zbin",
+    "sourceCodePath": "contracts/precompiles/P256VERIFY.yul",
+    "bytecodeHash": "0x01000457cda003df87f344df89739fceda8009bcdc7d01a40e5876b4ffdb36ad",
+    "sourceCodeHash": "0x0848c3e7c3a8c9fb83af459236d7ff5e4a517e1fe6c42d7573f6d28f8ce61527"
+  },
+  {
     "contractName": "SHA256",
     "bytecodePath": "contracts-preprocessed/precompiles/artifacts/SHA256.yul.zbin",
     "sourceCodePath": "contracts-preprocessed/precompiles/SHA256.yul",
