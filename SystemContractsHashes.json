@@ -133,6 +133,13 @@
     "sourceCodeHash": "0x6415e127a4e07907fb87d0cbdf480fff8c70326c4f2f670af0cf3248862e4df4"
   },
   {
+    "contractName": "Modexp",
+    "bytecodePath": "contracts/precompiles/artifacts/Modexp.yul/Modexp.yul.zbin",
+    "sourceCodePath": "contracts/precompiles/Modexp.yul",
+    "bytecodeHash": "0x0100016725e802186cd5d9a99af93fb5e22a0381340cce53fa6830e6ba74ef2f",
+    "sourceCodeHash": "0xa8d9278c662b67eb9efd2a44b2ab8fe5dfb4428cd3138bf1dcc10f99cac040a6"
+  },
+  {
     "contractName": "SHA256",
     "bytecodePath": "contracts-preprocessed/precompiles/artifacts/SHA256.yul.zbin",
     "sourceCodePath": "contracts-preprocessed/precompiles/SHA256.yul",
