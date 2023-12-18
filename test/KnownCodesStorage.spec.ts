@@ -1,6 +1,6 @@
 import { expect } from "chai";
-import { ethers } from "ethers";
-import { network } from "hardhat";
+import type { Signer } from "ethers";
+import { ethers, network } from "hardhat";
 import type { Wallet } from "zksync-ethers";
 import type { KnownCodesStorage, MockL1Messenger } from "../typechain-types";
 import { MockL1Messenger__factory } from "../typechain-types";
@@ -15,8 +15,8 @@ describe("KnownCodesStorage tests", function () {
   let wallet: Wallet;
   let knownCodesStorage: KnownCodesStorage;
   let mockL1Messenger: MockL1Messenger;
-  let bootloaderAccount: ethers.Signer;
-  let compressorAccount: ethers.Signer;
+  let bootloaderAccount: Signer;
+  let compressorAccount: Signer;
 
   let _l1MessengerCode: string;
 
@@ -33,7 +33,7 @@ describe("KnownCodesStorage tests", function () {
 
     _l1MessengerCode = await getCode(L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS);
     const l1MessengerArtifact = await loadArtifact("MockL1Messenger");
-    await setCode(L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS, l1MessengerArtifact.bytecode, wallet.provider);
+    await setCode(L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS, l1MessengerArtifact.bytecode);
     mockL1Messenger = MockL1Messenger__factory.connect(L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS, wallet);
 
     await network.provider.request({
@@ -44,12 +44,12 @@ describe("KnownCodesStorage tests", function () {
       method: "hardhat_impersonateAccount",
       params: [COMPRESSOR_CONTRACT_ADDRESS],
     });
-    bootloaderAccount = new ethers.VoidSigner(BOOTLOADER_FORMAL_ADDRESS);
-    compressorAccount = new ethers.VoidSigner(COMPRESSOR_CONTRACT_ADDRESS);
+    bootloaderAccount = await ethers.getSigner(BOOTLOADER_FORMAL_ADDRESS);
+    compressorAccount = await ethers.getSigner(COMPRESSOR_CONTRACT_ADDRESS);
   });
 
   after(async () => {
-    await setCode(L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS, _l1MessengerCode, wallet.provider);
+    await setCode(L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS, _l1MessengerCode);
     await network.provider.request({
       method: "hardhat_stopImpersonatingAccount",
       params: [BOOTLOADER_FORMAL_ADDRESS],

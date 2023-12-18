@@ -8,7 +8,7 @@ import type {
   NonceHolder,
 } from "../typechain-types";
 import { expect } from "chai";
-import { network } from "hardhat";
+import { ethers, network } from "hardhat";
 import * as zksync from "zksync-ethers";
 import { serializeEip712 } from "zksync-ethers/build/src/utils";
 import { DefaultAccount__factory, L2EthToken__factory, NonceHolder__factory } from "../typechain-types";
@@ -19,18 +19,18 @@ import {
 } from "./shared/constants";
 import { signedTxToTransactionData } from "./shared/transactions";
 import { deployContract, getWallets, loadArtifact, setCode } from "./shared/utils";
-import { ethers } from "ethers";
+import type { Signer, Interface } from "ethers";
 
 describe("DefaultAccount tests", function () {
   let wallet: Wallet;
   let account: Wallet;
   let defaultAccount: DefaultAccount;
-  let bootloader: ethers.Signer;
+  let bootloader: Signer;
   let nonceHolder: NonceHolder;
   let l2EthToken: L2EthToken;
   let callable: Callable;
   let mockERC20Approve: MockERC20Approve;
-  let paymasterFlowInterface: ethers.Interface;
+  let paymasterFlowInterface: Interface;
   let delegateCaller: DelegateCaller;
 
   const RANDOM_ADDRESS = ethers.getAddress("0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef");
@@ -39,7 +39,7 @@ describe("DefaultAccount tests", function () {
     wallet = getWallets()[0];
     account = getWallets()[2];
     const defaultAccountArtifact = await loadArtifact("DefaultAccount");
-    await setCode(account.address, defaultAccountArtifact.bytecode, wallet.provider);
+    await setCode(account.address, defaultAccountArtifact.bytecode);
     defaultAccount = DefaultAccount__factory.connect(account.address, wallet);
     nonceHolder = NonceHolder__factory.connect(NONCE_HOLDER_SYSTEM_CONTRACT_ADDRESS, wallet);
     l2EthToken = L2EthToken__factory.connect(ETH_TOKEN_SYSTEM_CONTRACT_ADDRESS, wallet);
@@ -54,7 +54,7 @@ describe("DefaultAccount tests", function () {
       method: "hardhat_impersonateAccount",
       params: [BOOTLOADER_FORMAL_ADDRESS],
     });
-    bootloader = new ethers.VoidSigner(BOOTLOADER_FORMAL_ADDRESS);
+    bootloader = await ethers.getSigner(BOOTLOADER_FORMAL_ADDRESS);
   });
 
   after(async function () {

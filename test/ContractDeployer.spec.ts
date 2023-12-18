@@ -2,7 +2,7 @@ import type { ZkSyncArtifact } from "@matterlabs/hardhat-zksync-deploy/dist/type
 import type { Wallet } from "zksync-ethers";
 import type { ContractDeployer, NonceHolder } from "../typechain-types";
 import { expect } from "chai";
-import { network } from "hardhat";
+import { ethers, network } from "hardhat";
 import { Contract, utils } from "zksync-ethers";
 import { ContractDeployer__factory, Deployable__factory, NonceHolder__factory } from "../typechain-types";
 import {
@@ -11,7 +11,7 @@ import {
   NONCE_HOLDER_SYSTEM_CONTRACT_ADDRESS,
 } from "./shared/constants";
 import { deployContract, getCode, getWallets, loadArtifact, publishBytecode, setCode } from "./shared/utils";
-import { ethers } from "ethers";
+import type { Signer } from "ethers";
 
 describe("ContractDeployer tests", function () {
   let wallet: Wallet;
@@ -20,8 +20,8 @@ describe("ContractDeployer tests", function () {
   let contractDeployerNotSystemCall: ContractDeployer;
   let nonceHolder: NonceHolder;
   let deployableArtifact: ZkSyncArtifact;
-  let deployerAccount: ethers.Signer;
-  let forceDeployer: ethers.Signer;
+  let deployerAccount: Signer;
+  let forceDeployer: Signer;
 
   const EOA = ethers.getAddress("0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef");
   const RANDOM_ADDRESS = ethers.getAddress("0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbee1");
@@ -74,8 +74,8 @@ describe("ContractDeployer tests", function () {
       method: "hardhat_impersonateAccount",
       params: [FORCE_DEPLOYER_ADDRESS],
     });
-    deployerAccount = new ethers.VoidSigner(DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
-    forceDeployer = new ethers.VoidSigner(FORCE_DEPLOYER_ADDRESS);
+    deployerAccount = await ethers.getSigner(DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
+    forceDeployer = await ethers.getSigner(FORCE_DEPLOYER_ADDRESS);
   });
 
   after(async () => {
@@ -87,7 +87,7 @@ describe("ContractDeployer tests", function () {
       method: "hardhat_stopImpersonatingAccount",
       params: [FORCE_DEPLOYER_ADDRESS],
     });
-    await setCode(DEPLOYER_SYSTEM_CONTRACT_ADDRESS, _contractDeployerCode, wallet.provider);
+    await setCode(DEPLOYER_SYSTEM_CONTRACT_ADDRESS, _contractDeployerCode);
   });
 
   describe("updateAccountVersion", function () {

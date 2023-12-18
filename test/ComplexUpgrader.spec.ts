@@ -29,7 +29,7 @@ describe("ComplexUpgrader tests", function () {
         params: [FORCE_DEPLOYER_ADDRESS],
       });
 
-      const force_deployer = new ethers.VoidSigner(FORCE_DEPLOYER_ADDRESS);
+      const force_deployer = await ethers.getSigner(FORCE_DEPLOYER_ADDRESS);
 
       await expect(
         complexUpgrader

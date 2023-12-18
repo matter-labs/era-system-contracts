@@ -1,15 +1,15 @@
 import type { Wallet } from "zksync-ethers";
 import type { AccountCodeStorage } from "../typechain-types";
 import { expect } from "chai";
-import { ethers } from "ethers";
-import { network } from "hardhat";
+import { ethers, network } from "hardhat";
 import { DEPLOYER_SYSTEM_CONTRACT_ADDRESS, EMPTY_STRING_KECCAK } from "./shared/constants";
 import { deployContract, getWallets } from "./shared/utils";
+import type { Signer } from "ethers";
 
 describe("AccountCodeStorage tests", function () {
   let wallet: Wallet;
   let accountCodeStorage: AccountCodeStorage;
-  let deployerAccount: ethers.Signer;
+  let deployerAccount: Signer;
 
   const CONSTRUCTING_BYTECODE_HASH = "0x0101FFFFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF";
   const CONSTRUCTED_BYTECODE_HASH = "0x0100FFFFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF";
@@ -23,7 +23,7 @@ describe("AccountCodeStorage tests", function () {
       method: "hardhat_impersonateAccount",
       params: [DEPLOYER_SYSTEM_CONTRACT_ADDRESS],
     });
-    deployerAccount = new ethers.VoidSigner(DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
+    deployerAccount = await ethers.getSigner(DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
   });
 
   after(async () => {
@@ -226,7 +226,7 @@ describe("AccountCodeStorage tests", function () {
 // Utility function to unset code hash for the specified address.
 // Deployer system contract should be impersonated
 async function unsetCodeHash(accountCodeStorage: AccountCodeStorage, address: string) {
-  const deployerAccount = new ethers.VoidSigner(DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
+  const deployerAccount = await ethers.getSigner(DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
 
   await accountCodeStorage.connect(deployerAccount).storeAccountConstructedCodeHash(address, ethers.ZeroHash);
 }

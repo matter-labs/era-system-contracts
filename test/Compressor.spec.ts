@@ -1,9 +1,8 @@
-import type { BytesLike } from "ethers";
+import type { BytesLike, Signer } from "ethers";
 import type { Wallet } from "zksync-ethers";
 import type { Compressor } from "../typechain-types";
 import { expect } from "chai";
-import { ethers } from "ethers";
-import { network } from "hardhat";
+import { ethers, network } from "hardhat";
 import * as zksync from "zksync-ethers";
 import { MockKnownCodesStorage__factory } from "../typechain-types";
 import {
@@ -17,8 +16,8 @@ import { deployContract, getCode, getWallets, loadArtifact, setCode } from "./sh
 describe("Compressor tests", function () {
   let wallet: Wallet;
   let compressor: Compressor;
-  let bootloader: ethers.Signer;
-  let l1Messenger: ethers.Signer;
+  let bootloader: Signer;
+  let l1Messenger: Signer;
 
   let _knownCodesStorageCode: string;
 
@@ -27,19 +26,19 @@ describe("Compressor tests", function () {
     compressor = (await deployContract("Compressor")) as unknown as Compressor;
     _knownCodesStorageCode = await getCode(KNOWN_CODE_STORAGE_CONTRACT_ADDRESS);
     const mockKnownCodesStorageArtifact = await loadArtifact("MockKnownCodesStorage");
-    await setCode(KNOWN_CODE_STORAGE_CONTRACT_ADDRESS, mockKnownCodesStorageArtifact.bytecode, wallet.provider);
+    await setCode(KNOWN_CODE_STORAGE_CONTRACT_ADDRESS, mockKnownCodesStorageArtifact.bytecode);
 
     await network.provider.request({
       method: "hardhat_impersonateAccount",
       params: [BOOTLOADER_FORMAL_ADDRESS],
     });
-    bootloader = new ethers.VoidSigner(BOOTLOADER_FORMAL_ADDRESS);
+    bootloader = await ethers.getSigner(BOOTLOADER_FORMAL_ADDRESS);
 
     await network.provider.request({
       method: "hardhat_impersonateAccount",
       params: [L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS],
     });
-    l1Messenger = new ethers.VoidSigner(L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS);
+    l1Messenger = await ethers.getSigner(L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS);
   });
 
   after(async function () {
@@ -77,7 +76,7 @@ describe("Compressor tests", function () {
         params: [BOOTLOADER_FORMAL_ADDRESS],
       });
 
-      const bootloader = new ethers.VoidSigner(BOOTLOADER_FORMAL_ADDRESS);
+      const bootloader = await ethers.getSigner(BOOTLOADER_FORMAL_ADDRESS);
 
       const BYTECODE = "0xdeadbeefdeadbeef";
       const COMPRESSED_BYTECODE = "0x0001deadbeefdeadbeef0001";
@@ -97,7 +96,7 @@ describe("Compressor tests", function () {
         params: [BOOTLOADER_FORMAL_ADDRESS],
       });
 
-      const bootloader = new ethers.VoidSigner(BOOTLOADER_FORMAL_ADDRESS);
+      const bootloader = await ethers.getSigner(BOOTLOADER_FORMAL_ADDRESS);
 
       const BYTECODE = "0xdeadbeefdeadbeef1111111111111111";
       const COMPRESSED_BYTECODE = "0x0002deadbeefdeadbeef111111111111111100000000";
@@ -117,7 +116,7 @@ describe("Compressor tests", function () {
         params: [BOOTLOADER_FORMAL_ADDRESS],
       });
 
-      const bootloader = new ethers.VoidSigner(BOOTLOADER_FORMAL_ADDRESS);
+      const bootloader = await ethers.getSigner(BOOTLOADER_FORMAL_ADDRESS);
 
       const BYTECODE = "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef";
       const COMPRESSED_BYTECODE = "0x0001deadbeefdeadbeef000000000000";
@@ -138,7 +137,7 @@ describe("Compressor tests", function () {
         params: [BOOTLOADER_FORMAL_ADDRESS],
       });
 
-      const bootloader = new ethers.VoidSigner(BOOTLOADER_FORMAL_ADDRESS);
+      const bootloader = await ethers.getSigner(BOOTLOADER_FORMAL_ADDRESS);
 
       const BYTECODE = "0x" + "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef".repeat(2);
       const COMPRESSED_BYTECODE = "0x0001deadbeefdeadbeef" + "0000".repeat(4 * 2);
@@ -158,7 +157,7 @@ describe("Compressor tests", function () {
         params: [BOOTLOADER_FORMAL_ADDRESS],
       });
 
-      const bootloader = new ethers.VoidSigner(BOOTLOADER_FORMAL_ADDRESS);
+      const bootloader = await ethers.getSigner(BOOTLOADER_FORMAL_ADDRESS);
 
       const BYTECODE =
         "0x000200000000000200010000000103550000006001100270000000150010019d0000000101200190000000080000c13d0000000001000019004e00160000040f0000000101000039004e00160000040f0000001504000041000000150510009c000000000104801900000040011002100000000001310019000000150320009c0000000002048019000000600220021000000000012100190000004f0001042e000000000100001900000050000104300000008002000039000000400020043f0000000002000416000000000110004c000000240000613d000000000120004c0000004d0000c13d000000200100003900000100001004430000012000000443000001000100003900000040020000390000001d03000041004e000a0000040f000000000120004c0000004d0000c13d0000000001000031000000030110008c0000004d0000a13d0000000101000367000000000101043b0000001601100197000000170110009c0000004d0000c13d0000000101000039000000000101041a0000000202000039000000000202041a000000400300043d00000040043000390000001805200197000000000600041a0000000000540435000000180110019700000020043000390000000000140435000000a0012002700000001901100197000000600430003900000000001404350000001a012001980000001b010000410000000001006019000000b8022002700000001c02200197000000000121019f0000008002300039000000000012043500000018016001970000000000130435000000400100043d0000000002130049000000a0022000390000000003000019004e000a0000040f004e00140000040f0000004e000004320000004f0001042e000000500001043000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ffffffffffffffff000000000000000000000000000000000000000000000000000000008903573000000000000000000000000000000000000000000000000000000000000000000000000000000000ffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000ffffff0000000000008000000000000000000000000000000000000000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80000000000000000000000000000000000000000000000000000000000000007fffff00000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";

@@ -107,7 +107,7 @@ export async function getCode(address: string): Promise<string> {
 }
 
 // Force deploy bytecode on the address
-export async function setCode(address: string, bytecode: BytesLike, provider: Provider) {
+export async function setCode(address: string, bytecode: BytesLike) {
   // TODO: think about factoryDeps with eth_sendTransaction
   try {
     // publish bytecode in a separate tx
@@ -121,7 +121,7 @@ export async function setCode(address: string, bytecode: BytesLike, provider: Pr
     params: [DEPLOYER_SYSTEM_CONTRACT_ADDRESS],
   });
 
-  const deployerAccount = new ethers.VoidSigner(DEPLOYER_SYSTEM_CONTRACT_ADDRESS, provider);
+  const deployerAccount = await ethers.getSigner(DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
   const deployerContract = ContractDeployer__factory.connect(DEPLOYER_SYSTEM_CONTRACT_ADDRESS, deployerAccount);
 
   const deployment = {
