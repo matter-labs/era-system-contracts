@@ -96,9 +96,8 @@ describe("L2EthToken tests", () => {
   });
 
   describe("balanceOf", () => {
-    it("walletFrom correct balance", async () => {
+    it("walletFrom address", async () => {
       const amountToMint: BigNumber = ethers.utils.parseEther("10.0");
-      console.log("Waddress ", walletFrom.address);
 
       await l2EthToken.connect(bootloaderAccount).mint(walletFrom.address, amountToMint);
       const balance = await l2EthToken.balanceOf(walletFrom.address);
@@ -106,7 +105,10 @@ describe("L2EthToken tests", () => {
     });
 
     it("address larger than 20 bytes", async () => {
-      const largerAddress = ethers.BigNumber.from(walletFrom.address).add(ethers.BigNumber.from(2).pow(96)).toHexString();
+      const randomNum = Math.floor(Math.random() * 96) + 1;
+      const randomExtra = ethers.BigNumber.from(2).pow(randomNum);
+      const largerAddress = ethers.BigNumber.from(walletFrom.address).add(randomExtra).toHexString();
+
       const amountToMint: BigNumber = ethers.utils.parseEther("10.0");
       await l2EthToken.connect(bootloaderAccount).mint(largerAddress, amountToMint);
       const balance = await l2EthToken.balanceOf(largerAddress);
