@@ -1,9 +1,9 @@
 import type { ZkSyncArtifact } from "@matterlabs/hardhat-zksync-deploy/dist/types";
-import { expect } from "chai";
-import { ethers, network } from "hardhat";
 import type { Wallet } from "zksync-ethers";
-import { Contract, utils } from "zksync-ethers";
 import type { ContractDeployer, NonceHolder } from "../typechain-types";
+import { expect } from "chai";
+import { network } from "hardhat";
+import { Contract, utils } from "zksync-ethers";
 import { ContractDeployer__factory, Deployable__factory, NonceHolder__factory } from "../typechain-types";
 import {
   DEPLOYER_SYSTEM_CONTRACT_ADDRESS,
@@ -11,6 +11,7 @@ import {
   NONCE_HOLDER_SYSTEM_CONTRACT_ADDRESS,
 } from "./shared/constants";
 import { deployContract, getCode, getWallets, loadArtifact, publishBytecode, setCode } from "./shared/utils";
+import { ethers } from "ethers";
 
 describe("ContractDeployer tests", function () {
   let wallet: Wallet;
@@ -44,19 +45,23 @@ describe("ContractDeployer tests", function () {
 
     nonceHolder = NonceHolder__factory.connect(NONCE_HOLDER_SYSTEM_CONTRACT_ADDRESS, wallet);
 
-    const contractDeployerSystemCallContract = await deployContract("SystemCaller", [contractDeployer.address]);
+    const contractDeployerSystemCallContract = await deployContract("SystemCaller", [
+      await contractDeployer.getAddress(),
+    ]);
     contractDeployerSystemCall = new Contract(
-      contractDeployerSystemCallContract.address,
+      await contractDeployerSystemCallContract.getAddress(),
       contractDeployerArtifact.abi,
       wallet
-    ) as ContractDeployer;
+    ) as unknown as ContractDeployer;
 
-    const contractDeployerNotSystemCallContract = await deployContract("NotSystemCaller", [contractDeployer.address]);
+    const contractDeployerNotSystemCallContract = await deployContract("NotSystemCaller", [
+      await contractDeployer.getAddress(),
+    ]);
     contractDeployerNotSystemCall = new Contract(
-      contractDeployerNotSystemCallContract.address,
+      await contractDeployerNotSystemCallContract.getAddress(),
       contractDeployerArtifact.abi,
       wallet
-    ) as ContractDeployer;
+    ) as unknown as ContractDeployer;
 
     deployableArtifact = await loadArtifact("Deployable");
     await publishBytecode(deployableArtifact.bytecode);
@@ -69,8 +74,8 @@ describe("ContractDeployer tests", function () {
       method: "hardhat_impersonateAccount",
       params: [FORCE_DEPLOYER_ADDRESS],
     });
-    deployerAccount = await ethers.getSigner(DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
-    forceDeployer = await ethers.getSigner(FORCE_DEPLOYER_ADDRESS);
+    deployerAccount = new ethers.VoidSigner(DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
+    forceDeployer = new ethers.VoidSigner(FORCE_DEPLOYER_ADDRESS);
   });
 
   after(async () => {
@@ -93,23 +98,23 @@ describe("ContractDeployer tests", function () {
     });
 
     it("from none to version1", async () => {
-      expect((await contractDeployer.getAccountInfo(contractDeployerSystemCall.address)).supportedAAVersion).to.be.eq(
-        AA_VERSION_NONE
-      );
+      expect(
+        (await contractDeployer.getAccountInfo(await contractDeployerSystemCall.getAddress())).supportedAAVersion
+      ).to.be.eq(AA_VERSION_NONE);
       await contractDeployerSystemCall.updateAccountVersion(AA_VERSION_1);
-      expect((await contractDeployer.getAccountInfo(contractDeployerSystemCall.address)).supportedAAVersion).to.be.eq(
-        AA_VERSION_1
-      );
+      expect(
+        (await contractDeployer.getAccountInfo(await contractDeployerSystemCall.getAddress())).supportedAAVersion
+      ).to.be.eq(AA_VERSION_1);
     });
 
     it("from version1 to none", async () => {
-      expect((await contractDeployer.getAccountInfo(contractDeployerSystemCall.address)).supportedAAVersion).to.be.eq(
-        AA_VERSION_1
-      );
+      expect(
+        (await contractDeployer.getAccountInfo(await contractDeployerSystemCall.getAddress())).supportedAAVersion
+      ).to.be.eq(AA_VERSION_1);
       await contractDeployerSystemCall.updateAccountVersion(AA_VERSION_NONE);
-      expect((await contractDeployer.getAccountInfo(contractDeployerSystemCall.address)).supportedAAVersion).to.be.eq(
-        AA_VERSION_NONE
-      );
+      expect(
+        (await contractDeployer.getAccountInfo(await contractDeployerSystemCall.getAddress())).supportedAAVersion
+      ).to.be.eq(AA_VERSION_NONE);
     });
   });
 
@@ -121,19 +126,19 @@ describe("ContractDeployer tests", function () {
     });
 
     it("success from sequential to arbitrary", async () => {
-      expect((await contractDeployer.getAccountInfo(contractDeployerSystemCall.address)).nonceOrdering).to.be.eq(
-        NONCE_ORDERING_SEQUENTIAL
-      );
+      expect(
+        (await contractDeployer.getAccountInfo(await contractDeployerSystemCall.getAddress())).nonceOrdering
+      ).to.be.eq(NONCE_ORDERING_SEQUENTIAL);
       await contractDeployerSystemCall.updateNonceOrdering(NONCE_ORDERING_ARBITRARY);
-      expect((await contractDeployer.getAccountInfo(contractDeployerSystemCall.address)).nonceOrdering).to.be.eq(
-        NONCE_ORDERING_ARBITRARY
-      );
+      expect(
+        (await contractDeployer.getAccountInfo(await contractDeployerSystemCall.getAddress())).nonceOrdering
+      ).to.be.eq(NONCE_ORDERING_ARBITRARY);
     });
 
     it("failed from arbitrary to sequential", async () => {
-      expect((await contractDeployer.getAccountInfo(contractDeployerSystemCall.address)).nonceOrdering).to.be.eq(
-        NONCE_ORDERING_ARBITRARY
-      );
+      expect(
+        (await contractDeployer.getAccountInfo(await contractDeployerSystemCall.getAddress())).nonceOrdering
+      ).to.be.eq(NONCE_ORDERING_ARBITRARY);
       await expect(contractDeployerSystemCall.updateNonceOrdering(NONCE_ORDERING_SEQUENTIAL)).to.be.revertedWith(
         "It is only possible to change from sequential to arbitrary ordering"
       );
@@ -151,7 +156,9 @@ describe("ContractDeployer tests", function () {
   describe("extendedAccountVersion", function () {
     it("account abstraction contract", async () => {
       await contractDeployerSystemCall.updateAccountVersion(AA_VERSION_1);
-      expect(await contractDeployer.extendedAccountVersion(contractDeployerSystemCall.address)).to.be.eq(AA_VERSION_1);
+      expect(await contractDeployer.extendedAccountVersion(await contractDeployerSystemCall.getAddress())).to.be.eq(
+        AA_VERSION_1
+      );
       await contractDeployerSystemCall.updateAccountVersion(AA_VERSION_NONE);
     });
 
@@ -168,7 +175,7 @@ describe("ContractDeployer tests", function () {
     });
 
     it("not AA", async () => {
-      expect(await contractDeployer.extendedAccountVersion(contractDeployerSystemCall.address)).to.be.eq(
+      expect(await contractDeployer.extendedAccountVersion(await contractDeployerSystemCall.getAddress())).to.be.eq(
         AA_VERSION_NONE
       );
     });
@@ -212,7 +219,7 @@ describe("ContractDeployer tests", function () {
     it("non system call failed", async () => {
       await expect(
         contractDeployerNotSystemCall.createAccount(
-          ethers.constants.HashZero,
+          ethers.ZeroHash,
           utils.hashBytecode(deployableArtifact.bytecode),
           "0x",
           AA_VERSION_NONE
@@ -222,19 +229,14 @@ describe("ContractDeployer tests", function () {
 
     it("zero bytecode hash failed", async () => {
       await expect(
-        contractDeployerSystemCall.createAccount(
-          ethers.constants.HashZero,
-          ethers.constants.HashZero,
-          "0x",
-          AA_VERSION_NONE
-        )
+        contractDeployerSystemCall.createAccount(ethers.ZeroHash, ethers.ZeroHash, "0x", AA_VERSION_NONE)
       ).to.be.revertedWith("BytecodeHash cannot be zero");
     });
 
     it("not known bytecode hash failed", async () => {
       await expect(
         contractDeployerSystemCall.createAccount(
-          ethers.constants.HashZero,
+          ethers.ZeroHash,
           "0x0100FFFFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEFDEADBEEF",
           "0x",
           AA_VERSION_NONE
@@ -247,7 +249,7 @@ describe("ContractDeployer tests", function () {
       const expectedAddress = utils.createAddress(wallet.address, nonce);
       await expect(
         contractDeployer.createAccount(
-          ethers.constants.HashZero,
+          ethers.ZeroHash,
           utils.hashBytecode(deployableArtifact.bytecode),
           "0xdeadbeef",
           AA_VERSION_NONE
@@ -267,7 +269,7 @@ describe("ContractDeployer tests", function () {
       const expectedAddress = utils.createAddress(wallet.address, nonce);
       await expect(
         contractDeployer.createAccount(
-          ethers.constants.HashZero,
+          ethers.ZeroHash,
           utils.hashBytecode(deployableArtifact.bytecode),
           "0x",
           AA_VERSION_NONE,
@@ -300,7 +302,7 @@ describe("ContractDeployer tests", function () {
       await expect(
         contractDeployerSystemCall.create2Account(
           "0x1234567891234567891234512222122167891123456789123456787654323456",
-          ethers.constants.HashZero,
+          ethers.ZeroHash,
           "0x",
           AA_VERSION_NONE
         )
@@ -357,12 +359,12 @@ describe("ContractDeployer tests", function () {
       const expectedAddress = utils.create2Address(
         wallet.address,
         utils.hashBytecode(deployableArtifact.bytecode),
-        ethers.constants.HashZero,
+        ethers.ZeroHash,
         "0x"
       );
       await expect(
         contractDeployer.create2Account(
-          ethers.constants.HashZero,
+          ethers.ZeroHash,
           utils.hashBytecode(deployableArtifact.bytecode),
           "0x",
           AA_VERSION_NONE,
@@ -382,20 +384,14 @@ describe("ContractDeployer tests", function () {
   describe("create", function () {
     it("non system call failed", async () => {
       await expect(
-        contractDeployerNotSystemCall.create(
-          ethers.constants.HashZero,
-          utils.hashBytecode(deployableArtifact.bytecode),
-          "0x"
-        )
+        contractDeployerNotSystemCall.create(ethers.ZeroHash, utils.hashBytecode(deployableArtifact.bytecode), "0x")
       ).to.be.revertedWith("This method require system call flag");
     });
 
     it("successfully deployed", async () => {
       const nonce = await nonceHolder.getDeploymentNonce(wallet.address);
       const expectedAddress = utils.createAddress(wallet.address, nonce);
-      await expect(
-        contractDeployer.create(ethers.constants.HashZero, utils.hashBytecode(deployableArtifact.bytecode), "0x12")
-      )
+      await expect(contractDeployer.create(ethers.ZeroHash, utils.hashBytecode(deployableArtifact.bytecode), "0x12"))
         .to.emit(contractDeployer, "ContractDeployed")
         .withArgs(wallet.address, utils.hashBytecode(deployableArtifact.bytecode), expectedAddress)
         .to.emit(Deployable__factory.connect(expectedAddress, wallet), "Deployed")
@@ -409,11 +405,7 @@ describe("ContractDeployer tests", function () {
   describe("create2", function () {
     it("non system call failed", async () => {
       await expect(
-        contractDeployerNotSystemCall.create2(
-          ethers.constants.HashZero,
-          utils.hashBytecode(deployableArtifact.bytecode),
-          "0x"
-        )
+        contractDeployerNotSystemCall.create2(ethers.ZeroHash, utils.hashBytecode(deployableArtifact.bytecode), "0x")
       ).to.be.revertedWith("This method require system call flag");
     });
 
@@ -528,9 +520,9 @@ describe("ContractDeployer tests", function () {
       ];
       await expect(contractDeployer.connect(forceDeployer).forceDeployOnAddresses(deploymentData))
         .to.emit(contractDeployer, "ContractDeployed")
-        .withArgs(forceDeployer.address, utils.hashBytecode(deployableArtifact.bytecode), RANDOM_ADDRESS_2)
+        .withArgs(await forceDeployer.getAddress(), utils.hashBytecode(deployableArtifact.bytecode), RANDOM_ADDRESS_2)
         .to.emit(contractDeployer, "ContractDeployed")
-        .withArgs(forceDeployer.address, utils.hashBytecode(deployableArtifact.bytecode), RANDOM_ADDRESS_3)
+        .withArgs(await forceDeployer.getAddress(), utils.hashBytecode(deployableArtifact.bytecode), RANDOM_ADDRESS_3)
         .to.emit(Deployable__factory.connect(RANDOM_ADDRESS_2, wallet), "Deployed")
         .withArgs(0, "0x")
         .to.not.emit(Deployable__factory.connect(RANDOM_ADDRESS_3, wallet), "Deployed");

@@ -1,8 +1,8 @@
+import type { Wallet } from "zksync-ethers";
+import type { AccountCodeStorage } from "../typechain-types";
 import { expect } from "chai";
 import { ethers } from "ethers";
 import { network } from "hardhat";
-import type { Wallet } from "zksync-ethers";
-import type { AccountCodeStorage } from "../typechain-types";
 import { DEPLOYER_SYSTEM_CONTRACT_ADDRESS, EMPTY_STRING_KECCAK } from "./shared/constants";
 import { deployContract, getWallets } from "./shared/utils";
 

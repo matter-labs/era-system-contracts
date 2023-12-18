@@ -1,9 +1,16 @@
+import type { Wallet } from "zksync-ethers";
+import type {
+  Callable,
+  DefaultAccount,
+  DelegateCaller,
+  L2EthToken,
+  MockERC20Approve,
+  NonceHolder,
+} from "../typechain-types";
 import { expect } from "chai";
 import { network } from "hardhat";
 import * as zksync from "zksync-ethers";
-import type { Wallet } from "zksync-ethers";
 import { serializeEip712 } from "zksync-ethers/build/src/utils";
-import type { Callable, DefaultAccount, L2EthToken, MockERC20Approve, NonceHolder } from "../typechain-types";
 import { DefaultAccount__factory, L2EthToken__factory, NonceHolder__factory } from "../typechain-types";
 import {
   BOOTLOADER_FORMAL_ADDRESS,
@@ -36,9 +43,9 @@ describe("DefaultAccount tests", function () {
     defaultAccount = DefaultAccount__factory.connect(account.address, wallet);
     nonceHolder = NonceHolder__factory.connect(NONCE_HOLDER_SYSTEM_CONTRACT_ADDRESS, wallet);
     l2EthToken = L2EthToken__factory.connect(ETH_TOKEN_SYSTEM_CONTRACT_ADDRESS, wallet);
-    callable = (await deployContract("Callable")) as Callable;
-    delegateCaller = (await deployContract("DelegateCaller")) as DelegateCaller;
-    mockERC20Approve = (await deployContract("MockERC20Approve")) as MockERC20Approve;
+    callable = (await deployContract("Callable")) as unknown as Callable;
+    delegateCaller = (await deployContract("DelegateCaller")) as unknown as DelegateCaller;
+    mockERC20Approve = (await deployContract("MockERC20Approve")) as unknown as MockERC20Approve;
 
     const paymasterFlowInterfaceArtifact = await loadArtifact("IPaymasterFlow");
     paymasterFlowInterface = new ethers.Interface(paymasterFlowInterfaceArtifact.abi);
@@ -47,7 +54,7 @@ describe("DefaultAccount tests", function () {
       method: "hardhat_impersonateAccount",
       params: [BOOTLOADER_FORMAL_ADDRESS],
     });
-    bootloader = await ethers.getSigner(BOOTLOADER_FORMAL_ADDRESS);
+    bootloader = new ethers.VoidSigner(BOOTLOADER_FORMAL_ADDRESS);
   });
 
   after(async function () {
@@ -64,22 +71,22 @@ describe("DefaultAccount tests", function () {
         type: 0,
         to: RANDOM_ADDRESS,
         from: account.address,
-        nonce: nonce,
+        nonce: Number(nonce),
         data: "0x",
         value: 0,
         gasLimit: 50000,
       });
       const txBytes = await account.signTransaction(legacyTx);
-      const parsedTx = zksync.utils.parseTransaction(txBytes);
+      const parsedTx = zksync.utils.parseEip712(txBytes);
       const txData = signedTxToTransactionData(parsedTx)!;
 
-      const txHash = parsedTx.hash;
+      const txHash = parsedTx.hash!;
       delete legacyTx.from;
-      const signedHash = ethers.keccak256(serialize(legacyTx));
+      const signedHash = ethers.keccak256(serializeEip712(legacyTx));
 
       const call = {
         from: wallet.address,
-        to: defaultAccount.address,
+        to: await defaultAccount.getAddress(),
         value: 0,
         data: defaultAccount.interface.encodeFunctionData("validateTransaction", [txHash, signedHash, txData]),
       };
@@ -92,27 +99,27 @@ describe("DefaultAccount tests", function () {
         type: 0,
         to: RANDOM_ADDRESS,
         from: account.address,
-        nonce,
+        nonce: Number(nonce),
         data: "0x",
         value: 0,
         gasLimit: 50000,
       });
       const txBytes = await account.signTransaction(legacyTx);
-      const parsedTx = zksync.utils.parseTransaction(txBytes);
-      parsedTx.s = "0x0FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0";
+      const parsedTx = zksync.utils.parseEip712(txBytes);
+      parsedTx.signature = "0x0FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0";
       const txData = signedTxToTransactionData(parsedTx)!;
 
-      const txHash = parsedTx.hash;
+      const txHash = parsedTx.hash!;
       delete legacyTx.from;
       const signedHash = ethers.keccak256(serializeEip712(legacyTx));
 
       const call = {
         from: BOOTLOADER_FORMAL_ADDRESS,
-        to: defaultAccount.address,
+        to: await defaultAccount.getAddress(),
         value: 0,
         data: defaultAccount.interface.encodeFunctionData("validateTransaction", [txHash, signedHash, txData]),
       };
-      expect(await bootloader.provider.call(call)).to.be.eq(ethers.ZeroHash);
+      expect(await bootloader.call(call)).to.be.eq(ethers.ZeroHash);
     });
 
     it("valid tx", async () => {
@@ -121,27 +128,27 @@ describe("DefaultAccount tests", function () {
         type: 0,
         to: RANDOM_ADDRESS,
         from: account.address,
-        nonce: nonce,
+        nonce: Number(nonce),
         data: "0x",
         value: 0,
         gasLimit: 50000,
       });
       const txBytes = await account.signTransaction(legacyTx);
-      const parsedTx = zksync.utils.parseTransaction(txBytes);
+      const parsedTx = zksync.utils.parseEip712(txBytes);
       const txData = signedTxToTransactionData(parsedTx)!;
 
-      const txHash = parsedTx.hash;
+      const txHash = parsedTx.hash!;
       delete legacyTx.from;
-      const signedHash = ethers.keccak256(serialize(legacyTx));
+      const signedHash = ethers.keccak256(serializeEip712(legacyTx));
 
       const call = {
         from: BOOTLOADER_FORMAL_ADDRESS,
-        to: defaultAccount.address,
+        to: await defaultAccount.getAddress(),
         value: 0,
         data: defaultAccount.interface.encodeFunctionData("validateTransaction", [txHash, signedHash, txData]),
       };
-      expect(await bootloader.provider.call(call)).to.be.eq(
-        defaultAccount.interface.getSighash("validateTransaction") + "0".repeat(56)
+      expect(await bootloader.call(call)).to.be.eq(
+        defaultAccount.interface.getFunction("validateTransaction").selector + "0".repeat(56)
       );
     });
   });
@@ -151,20 +158,20 @@ describe("DefaultAccount tests", function () {
       const nonce = await nonceHolder.getMinNonce(account.address);
       const legacyTx = await account.populateTransaction({
         type: 0,
-        to: callable.address,
+        to: await callable.getAddress(),
         from: account.address,
-        nonce: nonce,
+        nonce: Number(nonce),
         data: "0xdeadbeef",
         value: 5,
         gasLimit: 50000,
       });
       const txBytes = await account.signTransaction(legacyTx);
-      const parsedTx = zksync.utils.parseTransaction(txBytes);
+      const parsedTx = zksync.utils.parseEip712(txBytes);
       const txData = signedTxToTransactionData(parsedTx)!;
 
-      const txHash = parsedTx.hash;
+      const txHash = parsedTx.hash!;
       delete legacyTx.from;
-      const signedHash = ethers.keccak256(serialize(legacyTx));
+      const signedHash = ethers.keccak256(serializeEip712(legacyTx));
 
       await expect(await defaultAccount.executeTransaction(txHash, signedHash, txData)).to.not.emit(callable, "Called");
     });
@@ -173,20 +180,20 @@ describe("DefaultAccount tests", function () {
       const nonce = await nonceHolder.getMinNonce(account.address);
       const legacyTx = await account.populateTransaction({
         type: 0,
-        to: callable.address,
+        to: await callable.getAddress(),
         from: account.address,
-        nonce: nonce,
+        nonce: Number(nonce),
         data: "0xdeadbeef",
         value: 5,
         gasLimit: 50000,
       });
       const txBytes = await account.signTransaction(legacyTx);
-      const parsedTx = zksync.utils.parseTransaction(txBytes);
+      const parsedTx = zksync.utils.parseEip712(txBytes);
       const txData = signedTxToTransactionData(parsedTx)!;
 
-      const txHash = parsedTx.hash;
+      const txHash = parsedTx.hash!;
       delete legacyTx.from;
-      const signedHash = ethers.keccak256(serialize(legacyTx));
+      const signedHash = ethers.keccak256(serializeEip712(legacyTx));
 
       await expect(await defaultAccount.connect(bootloader).executeTransaction(txHash, signedHash, txData))
         .to.emit(callable, "Called")
@@ -199,15 +206,15 @@ describe("DefaultAccount tests", function () {
       const nonce = await nonceHolder.getMinNonce(account.address);
       const legacyTx = await account.populateTransaction({
         type: 0,
-        to: callable.address,
+        to: await callable.getAddress(),
         from: account.address,
-        nonce: nonce,
+        nonce: Number(nonce),
         data: "0xdeadbeef",
         value: 5,
         gasLimit: 50000,
       });
       const txBytes = await account.signTransaction(legacyTx);
-      const parsedTx = zksync.utils.parseTransaction(txBytes);
+      const parsedTx = zksync.utils.parseEip712(txBytes);
       const txData = signedTxToTransactionData(parsedTx)!;
 
       delete legacyTx.from;
@@ -221,25 +228,25 @@ describe("DefaultAccount tests", function () {
       const nonce = await nonceHolder.getMinNonce(account.address);
       const legacyTx = await account.populateTransaction({
         type: 0,
-        to: callable.address,
+        to: await callable.getAddress(),
         from: account.address,
-        nonce: nonce,
+        nonce: Number(nonce),
         data: "0xdeadbeef",
         value: 5,
         gasLimit: 50000,
         gasPrice: 200,
       });
       const txBytes = await account.signTransaction(legacyTx);
-      const parsedTx = zksync.utils.parseTransaction(txBytes);
+      const parsedTx = zksync.utils.parseEip712(txBytes);
       const txData = signedTxToTransactionData(parsedTx)!;
 
-      const txHash = parsedTx.hash;
+      const txHash = parsedTx.hash!;
       delete legacyTx.from;
-      const signedHash = ethers.keccak256(serialize(legacyTx));
+      const signedHash = ethers.keccak256(serializeEip712(legacyTx));
 
-      const balanceBefore = await l2EthToken.balanceOf(defaultAccount.address);
+      const balanceBefore = await l2EthToken.balanceOf(await defaultAccount.getAddress());
       await defaultAccount.payForTransaction(txHash, signedHash, txData);
-      const balanceAfter = await l2EthToken.balanceOf(defaultAccount.address);
+      const balanceAfter = await l2EthToken.balanceOf(await defaultAccount.getAddress());
       expect(balanceAfter).to.be.eq(balanceBefore);
     });
 
@@ -247,21 +254,21 @@ describe("DefaultAccount tests", function () {
       const nonce = await nonceHolder.getMinNonce(account.address);
       const legacyTx = await account.populateTransaction({
         type: 0,
-        to: callable.address,
+        to: await callable.getAddress(),
         from: account.address,
-        nonce: nonce,
+        nonce: Number(nonce),
         data: "0xdeadbeef",
         value: 5,
         gasLimit: 50000,
         gasPrice: 200,
       });
       const txBytes = await account.signTransaction(legacyTx);
-      const parsedTx = zksync.utils.parseTransaction(txBytes);
+      const parsedTx = zksync.utils.parseEip712(txBytes);
       const txData = signedTxToTransactionData(parsedTx)!;
 
-      const txHash = parsedTx.hash;
+      const txHash = parsedTx.hash!;
       delete legacyTx.from;
-      const signedHash = ethers.keccak256(serialize(legacyTx));
+      const signedHash = ethers.keccak256(serializeEip712(legacyTx));
 
       await expect(await defaultAccount.connect(bootloader).payForTransaction(txHash, signedHash, txData))
         .to.emit(l2EthToken, "Transfer")
@@ -273,7 +280,7 @@ describe("DefaultAccount tests", function () {
     it("non-deployer ignored", async () => {
       const eip712Tx = await account.populateTransaction({
         type: 113,
-        to: callable.address,
+        to: await callable.getAddress(),
         from: account.address,
         data: "0x",
         value: 0,
@@ -285,7 +292,7 @@ describe("DefaultAccount tests", function () {
           paymasterParams: {
             paymaster: RANDOM_ADDRESS,
             paymasterInput: paymasterFlowInterface.encodeFunctionData("approvalBased", [
-              mockERC20Approve.address,
+              await mockERC20Approve.getAddress(),
               2023,
               "0x",
             ]),
@@ -293,22 +300,21 @@ describe("DefaultAccount tests", function () {
         },
       });
       const signedEip712Tx = await account.signTransaction(eip712Tx);
-      const parsedEIP712tx = zksync.utils.parseTransaction(signedEip712Tx);
+      const parsedEIP712tx = zksync.utils.parseEip712(signedEip712Tx);
 
       const eip712TxData = signedTxToTransactionData(parsedEIP712tx)!;
-      const eip712TxHash = parsedEIP712tx.hash;
+      const eip712TxHash = parsedEIP712tx.hash!;
       const eip712SignedHash = zksync.EIP712Signer.getSignedDigest(eip712Tx);
 
-      await expect(await defaultAccount.prepareForPaymaster(eip712TxHash, eip712SignedHash, eip712TxData)).to.not.emit(
-        mockERC20Approve,
-        "Approved"
-      );
+      await expect(
+        await defaultAccount.prepareForPaymaster(ethers.toBeArray(eip712TxHash), eip712SignedHash, eip712TxData)
+      ).to.not.emit(mockERC20Approve, "Approved");
     });
 
     it("successfully prepared", async () => {
       const eip712Tx = await account.populateTransaction({
         type: 113,
-        to: callable.address,
+        to: await callable.getAddress(),
         from: account.address,
         data: "0x",
         value: 0,
@@ -320,7 +326,7 @@ describe("DefaultAccount tests", function () {
           paymasterParams: {
             paymaster: RANDOM_ADDRESS,
             paymasterInput: paymasterFlowInterface.encodeFunctionData("approvalBased", [
-              mockERC20Approve.address,
+              await mockERC20Approve.getAddress(),
               2023,
               "0x",
             ]),
@@ -328,14 +334,16 @@ describe("DefaultAccount tests", function () {
         },
       });
       const signedEip712Tx = await account.signTransaction(eip712Tx);
-      const parsedEIP712tx = zksync.utils.parseTransaction(signedEip712Tx);
+      const parsedEIP712tx = zksync.utils.parseEip712(signedEip712Tx);
 
       const eip712TxData = signedTxToTransactionData(parsedEIP712tx)!;
-      const eip712TxHash = parsedEIP712tx.hash;
+      const eip712TxHash = parsedEIP712tx.hash!;
       const eip712SignedHash = zksync.EIP712Signer.getSignedDigest(eip712Tx);
 
       await expect(
-        await defaultAccount.connect(bootloader).prepareForPaymaster(eip712TxHash, eip712SignedHash, eip712TxData)
+        await defaultAccount
+          .connect(bootloader)
+          .prepareForPaymaster(ethers.toBeArray(eip712TxHash), eip712SignedHash, eip712TxData)
       )
         .to.emit(mockERC20Approve, "Approved")
         .withArgs(RANDOM_ADDRESS, 2023);
@@ -346,7 +354,7 @@ describe("DefaultAccount tests", function () {
     it("zero value", async () => {
       const call = {
         from: wallet.address,
-        to: defaultAccount.address,
+        to: await defaultAccount.getAddress(),
         value: 0,
         data: "0x872384894899834939049043904390390493434343434344433443433434344234234234",
       };
@@ -357,7 +365,7 @@ describe("DefaultAccount tests", function () {
       it("non-deployer ignored", async () => {
         const eip712Tx = await account.populateTransaction({
           type: 113,
-          to: callable.address,
+          to: await callable.getAddress(),
           from: account.address,
           data: "0x",
           value: 0,
@@ -369,7 +377,7 @@ describe("DefaultAccount tests", function () {
             paymasterParams: {
               paymaster: RANDOM_ADDRESS,
               paymasterInput: paymasterFlowInterface.encodeFunctionData("approvalBased", [
-                mockERC20Approve.address,
+                await mockERC20Approve.getAddress(),
                 2023,
                 "0x",
               ]),
@@ -377,21 +385,21 @@ describe("DefaultAccount tests", function () {
           },
         });
         const signedEip712Tx = await account.signTransaction(eip712Tx);
-        const parsedEIP712tx = zksync.utils.parseTransaction(signedEip712Tx);
+        const parsedEIP712tx = zksync.utils.parseEip712(signedEip712Tx);
 
         const eip712TxData = signedTxToTransactionData(parsedEIP712tx)!;
-        const eip712TxHash = parsedEIP712tx.hash;
+        const eip712TxHash = parsedEIP712tx.hash!;
         const eip712SignedHash = zksync.EIP712Signer.getSignedDigest(eip712Tx);
 
         await expect(
-          await defaultAccount.prepareForPaymaster(eip712TxHash, eip712SignedHash, eip712TxData)
+          await defaultAccount.prepareForPaymaster(ethers.toBeArray(eip712TxHash), eip712SignedHash, eip712TxData)
         ).to.not.emit(mockERC20Approve, "Approved");
       });
 
       it("successfully prepared", async () => {
         const eip712Tx = await account.populateTransaction({
           type: 113,
-          to: callable.address,
+          to: await callable.getAddress(),
           from: account.address,
           data: "0x",
           value: 0,
@@ -403,7 +411,7 @@ describe("DefaultAccount tests", function () {
             paymasterParams: {
               paymaster: RANDOM_ADDRESS,
               paymasterInput: paymasterFlowInterface.encodeFunctionData("approvalBased", [
-                mockERC20Approve.address,
+                await mockERC20Approve.getAddress(),
                 2023,
                 "0x",
               ]),
@@ -411,14 +419,16 @@ describe("DefaultAccount tests", function () {
           },
         });
         const signedEip712Tx = await account.signTransaction(eip712Tx);
-        const parsedEIP712tx = zksync.utils.parseTransaction(signedEip712Tx);
+        const parsedEIP712tx = zksync.utils.parseEip712(signedEip712Tx);
 
         const eip712TxData = signedTxToTransactionData(parsedEIP712tx)!;
-        const eip712TxHash = parsedEIP712tx.hash;
-        const eip712SignedHash = zksync.EIP712Signer.getSignedDigest(eip712Tx);
+        const eip712TxHash = parsedEIP712tx.hash!;
+        const eip712SignedHash = zksync.EIP712Signer.getSignedDigest(eip712Tx)!;
 
         await expect(
-          await defaultAccount.connect(bootloader).prepareForPaymaster(eip712TxHash, eip712SignedHash, eip712TxData)
+          await defaultAccount
+            .connect(bootloader)
+            .prepareForPaymaster(ethers.toBeArray(eip712TxHash), eip712SignedHash, eip712TxData)
         )
           .to.emit(mockERC20Approve, "Approved")
           .withArgs(RANDOM_ADDRESS, 2023);
@@ -429,7 +439,7 @@ describe("DefaultAccount tests", function () {
       it("zero value by EOA wallet", async () => {
         const call = {
           from: wallet.address,
-          to: defaultAccount.address,
+          to: await defaultAccount.getAddress(),
           value: 0,
           data: "0x872384894899834939049043904390390493434343434344433443433434344234234234",
         };
@@ -439,7 +449,7 @@ describe("DefaultAccount tests", function () {
       it("non-zero value by EOA wallet", async () => {
         const call = {
           from: wallet.address,
-          to: defaultAccount.address,
+          to: await defaultAccount.getAddress(),
           value: 3223,
           data: "0x87238489489983493904904390431212224343434344433443433434344234234234",
         };
@@ -449,10 +459,12 @@ describe("DefaultAccount tests", function () {
       it("zero value by bootloader", async () => {
         // Here we need to ensure that during delegatecalls even if `msg.sender` is the bootloader,
         // the fallback is behaving correctly
-        const calldata = delegateCaller.interface.encodeFunctionData("delegateCall", [defaultAccount.address]);
+        const calldata = delegateCaller.interface.encodeFunctionData("delegateCall", [
+          await defaultAccount.getAddress(),
+        ]);
         const call = {
           from: BOOTLOADER_FORMAL_ADDRESS,
-          to: delegateCaller.address,
+          to: await delegateCaller.getAddress(),
           value: 0,
           data: calldata,
         };
@@ -462,10 +474,12 @@ describe("DefaultAccount tests", function () {
       it("non-zero value by bootloader", async () => {
         // Here we need to ensure that during delegatecalls even if `msg.sender` is the bootloader,
         // the fallback is behaving correctly
-        const calldata = delegateCaller.interface.encodeFunctionData("delegateCall", [defaultAccount.address]);
+        const calldata = delegateCaller.interface.encodeFunctionData("delegateCall", [
+          await defaultAccount.getAddress(),
+        ]);
         const call = {
           from: BOOTLOADER_FORMAL_ADDRESS,
-          to: delegateCaller.address,
+          to: await delegateCaller.getAddress(),
           value: 3223,
           data: calldata,
         };

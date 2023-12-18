@@ -16,7 +16,7 @@ describe("EmptyContract tests", function () {
   it("zero value", async () => {
     const tx = {
       from: wallet.address,
-      to: emptyContract.address,
+      to: await emptyContract.getAddress(),
       value: 0,
       data: "0x1234567890deadbeef1234567890",
     };
@@ -26,7 +26,7 @@ describe("EmptyContract tests", function () {
   it("non-zero value", async () => {
     const tx = {
       from: wallet.address,
-      to: emptyContract.address,
+      to: await emptyContract.getAddress(),
       value: ethers.parseEther("1.0"),
       data: "0x1234567890deadbeef1234567890",
     };
@@ -36,7 +36,7 @@ describe("EmptyContract tests", function () {
   it("empty calldata", async () => {
     const tx = {
       from: wallet.address,
-      to: emptyContract.address,
+      to: await emptyContract.getAddress(),
       data: "",
     };
     expect(await provider.call(tx)).to.be.eq("0x");

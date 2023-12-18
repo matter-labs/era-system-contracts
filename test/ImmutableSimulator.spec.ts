@@ -20,7 +20,7 @@ describe("ImmutableSimulator tests", function () {
   ];
 
   before(async () => {
-    immutableSimulator = (await deployContract("ImmutableSimulator")) as ImmutableSimulator;
+    immutableSimulator = (await deployContract("ImmutableSimulator")) as unknown as ImmutableSimulator;
   });
 
   describe("setImmutables", function () {

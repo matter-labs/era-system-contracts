@@ -1,5 +1,6 @@
 import { expect } from "chai";
-import { ethers, network } from "hardhat";
+import { ethers } from "ethers";
+import { network } from "hardhat";
 import type { Wallet } from "zksync-ethers";
 import type { KnownCodesStorage, MockL1Messenger } from "../typechain-types";
 import { MockL1Messenger__factory } from "../typechain-types";
@@ -28,7 +29,7 @@ describe("KnownCodesStorage tests", function () {
 
   before(async () => {
     wallet = (await getWallets())[0];
-    knownCodesStorage = (await deployContract("KnownCodesStorage")) as KnownCodesStorage;
+    knownCodesStorage = (await deployContract("KnownCodesStorage")) as unknown as KnownCodesStorage;
 
     _l1MessengerCode = await getCode(L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS);
     const l1MessengerArtifact = await loadArtifact("MockL1Messenger");
@@ -43,8 +44,8 @@ describe("KnownCodesStorage tests", function () {
       method: "hardhat_impersonateAccount",
       params: [COMPRESSOR_CONTRACT_ADDRESS],
     });
-    bootloaderAccount = await ethers.getSigner(BOOTLOADER_FORMAL_ADDRESS);
-    compressorAccount = await ethers.getSigner(COMPRESSOR_CONTRACT_ADDRESS);
+    bootloaderAccount = new ethers.VoidSigner(BOOTLOADER_FORMAL_ADDRESS);
+    compressorAccount = new ethers.VoidSigner(COMPRESSOR_CONTRACT_ADDRESS);
   });
 
   after(async () => {

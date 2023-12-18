@@ -1,10 +1,10 @@
-import { expect } from "chai";
 import type { BytesLike } from "ethers";
+import type { Wallet } from "zksync-ethers";
+import type { Compressor } from "../typechain-types";
+import { expect } from "chai";
 import { ethers } from "ethers";
 import { network } from "hardhat";
 import * as zksync from "zksync-ethers";
-import type { Wallet } from "zksync-ethers";
-import type { Compressor } from "../typechain-types";
 import { MockKnownCodesStorage__factory } from "../typechain-types";
 import {
   BOOTLOADER_FORMAL_ADDRESS,

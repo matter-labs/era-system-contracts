@@ -1,6 +1,6 @@
+import type { ComplexUpgrader, DummyUpgrade } from "../typechain-types";
 import { expect } from "chai";
 import { ethers, network } from "hardhat";
-import type { ComplexUpgrader, DummyUpgrade } from "../typechain-types";
 import { FORCE_DEPLOYER_ADDRESS } from "./shared/constants";
 import { deployContract } from "./shared/utils";
 
@@ -16,7 +16,10 @@ describe("ComplexUpgrader tests", function () {
   describe("upgrade", function () {
     it("non force deployer failed to call", async () => {
       await expect(
-        complexUpgrader.upgrade(dummyUpgrade.address, dummyUpgrade.interface.encodeFunctionData("performUpgrade"))
+        complexUpgrader.upgrade(
+          await dummyUpgrade.getAddress(),
+          dummyUpgrade.interface.encodeFunctionData("performUpgrade")
+        )
       ).to.be.revertedWith("Can only be called by FORCE_DEPLOYER");
     });
 
@@ -31,8 +34,8 @@ describe("ComplexUpgrader tests", function () {
       await expect(
         complexUpgrader
           .connect(force_deployer)
-          .upgrade(dummyUpgrade.address, dummyUpgrade.interface.encodeFunctionData("performUpgrade"))
-      ).to.emit(dummyUpgrade.attach(complexUpgrader.address), "Upgraded");
+          .upgrade(await dummyUpgrade.getAddress(), dummyUpgrade.interface.encodeFunctionData("performUpgrade"))
+      ).to.emit(dummyUpgrade.attach(await complexUpgrader.getAddress()), "Upgraded");
 
       await network.provider.request({
         method: "hardhat_stopImpersonatingAccount",

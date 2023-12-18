@@ -1,9 +1,9 @@
+import type { Wallet } from "zksync-ethers";
+import type { BootloaderUtilities } from "../typechain-types";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import * as zksync from "zksync-ethers";
-import type { Wallet } from "zksync-ethers";
 import { serializeEip712 } from "zksync-ethers/build/src/utils";
-import type { BootloaderUtilities } from "../typechain-types";
 import { signedTxToTransactionData } from "./shared/transactions";
 import { deployContract, getWallets } from "./shared/utils";
 

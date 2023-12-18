@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { ethers } from "ethers";
 import type { Wallet } from "zksync-ethers";
 import { Contract } from "zksync-ethers";
 import { Language } from "../scripts/constants";
@@ -20,13 +21,13 @@ describe("EventWriter tests", function () {
       codeName: "EventWriter",
       path: "",
       lang: Language.Yul,
-      address: ethers.constants.AddressZero,
+      address: ethers.ZeroAddress,
     });
     await setCode(EVENT_WRITER_CONTRACT_ADDRESS, eventWriterTestCode);
 
     wallet = (await getWallets())[0];
     eventWriter = new Contract(EVENT_WRITER_CONTRACT_ADDRESS, [], wallet);
-    eventWriterTest = (await deployContract("EventWriterTest")) as EventWriterTest;
+    eventWriterTest = (await deployContract("EventWriterTest")) as unknown as EventWriterTest;
   });
 
   after(async () => {
@@ -34,12 +35,12 @@ describe("EventWriter tests", function () {
   });
 
   it("non system call failed", async () => {
-    await expect(eventWriter.fallback({ data: "0x" })).to.be.reverted;
+    await expect(eventWriter.fallback!({ data: "0x" })).to.be.reverted;
   });
 
   // TODO: anonymous events doesn't work
   it.skip("zero topics", async () => {
-    console.log((await (await eventWriterTest.zeroTopics("0x")).wait()).events);
+    console.log((await (await eventWriterTest.zeroTopics("0x")).wait())!.logs);
     await expect(eventWriterTest.zeroTopics("0x")).to.emit(eventWriterTest, "ZeroTopics").withArgs("0x");
   });
 

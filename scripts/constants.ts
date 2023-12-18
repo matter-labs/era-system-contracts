@@ -14,7 +14,7 @@ export interface SystemContractDescription {
   codeName: string;
 }
 
-export interface YulContractDescrption extends SystemContractDescription {
+export interface YulContractDescription extends SystemContractDescription {
   lang: Language.Yul;
   path: string;
 }
@@ -24,7 +24,7 @@ export interface SolidityContractDescription extends SystemContractDescription {
 }
 
 interface ISystemContracts {
-  [key: string]: YulContractDescrption | SolidityContractDescription;
+  [key: string]: YulContractDescription | SolidityContractDescription;
 }
 
 export const SYSTEM_CONTRACTS: ISystemContracts = {
