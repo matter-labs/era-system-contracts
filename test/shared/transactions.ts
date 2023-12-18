@@ -1,5 +1,5 @@
 import type { BigNumberish, BytesLike, TransactionLike } from "ethers";
-import { ethers, Transaction } from "ethers";
+import { ethers } from "ethers";
 import * as zksync from "zksync-ethers";
 
 // Interface encoding the transaction struct used for AA protocol
