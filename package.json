@@ -19,7 +19,7 @@
     "@matterlabs/hardhat-zksync-chai-matchers": "^1.2.0",
     "@matterlabs/hardhat-zksync-solc": "^1.0.5",
     "@matterlabs/prettier-config": "^1.0.3",
-    "@nomicfoundation/hardhat-chai-matchers": "^1.0.3",
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.2",
     "@nomicfoundation/hardhat-ethers": "^3.0.5",
     "@types/chai": "^4.3.1",
     "@types/lodash": "^4.14.199",
