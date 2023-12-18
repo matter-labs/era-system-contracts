@@ -1,15 +1,12 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import type { Wallet } from "zksync-web3";
-import { Provider } from "zksync-web3";
 import { IMailbox__factory, L2EthToken__factory } from "../typechain-types";
 import type { L2EthToken } from "../typechain-types";
-import { deployContractOnAddress, getWallets } from "./shared/utils";
-import * as hre from "hardhat";
+import { deployContractOnAddress, getWallets, provider } from "./shared/utils";
 import type { BigNumber } from "ethers";
 import { TEST_BOOTLOADER_FORMAL_ADDRESS, TEST_ETH_TOKEN_SYSTEM_CONTRACT_ADDRESS } from "./shared/constants";
 import { prepareEnvironment, setResult } from "./shared/mocks";
-import { provider } from './shared/utils';
 
 describe("L2EthToken tests", () => {
   let walletFrom: Wallet;
@@ -204,9 +201,11 @@ describe("L2EthToken tests", () => {
         .withArgs(walletFrom.address, l1Receiver.address, amountToWithdraw);
 
       const balanceAfterWithdrawal: BigNumber = await l2EthToken.balanceOf(l2EthToken.address);
-      const expectedBalanceAfterWithdrawal = ethers.BigNumber.from(2).pow(256).add(balanceBeforeWithdrawal).sub(amountToWithdraw);
+      const expectedBalanceAfterWithdrawal = ethers.BigNumber.from(2)
+        .pow(256)
+        .add(balanceBeforeWithdrawal)
+        .sub(amountToWithdraw);
       expect(balanceAfterWithdrawal).to.equal(expectedBalanceAfterWithdrawal);
-
     });
   });
 
