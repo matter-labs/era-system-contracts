@@ -1,6 +1,7 @@
 import { expect } from "chai";
-import { ethers, network } from "hardhat";
-import type { Wallet } from "zksync-web3";
+import { ethers } from "ethers";
+import { network } from "hardhat";
+import type { Wallet } from "zksync-ethers";
 import type { AccountCodeStorage } from "../typechain-types";
 import { DEPLOYER_SYSTEM_CONTRACT_ADDRESS, EMPTY_STRING_KECCAK } from "./shared/constants";
 import { deployContract, getWallets } from "./shared/utils";
@@ -16,13 +17,13 @@ describe("AccountCodeStorage tests", function () {
 
   before(async () => {
     wallet = getWallets()[0];
-    accountCodeStorage = (await deployContract("AccountCodeStorage")) as AccountCodeStorage;
+    accountCodeStorage = (await deployContract("AccountCodeStorage")) as unknown as AccountCodeStorage;
 
     await network.provider.request({
       method: "hardhat_impersonateAccount",
       params: [DEPLOYER_SYSTEM_CONTRACT_ADDRESS],
     });
-    deployerAccount = await ethers.getSigner(DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
+    deployerAccount = new ethers.VoidSigner(DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
   });
 
   after(async () => {
@@ -136,7 +137,7 @@ describe("AccountCodeStorage tests", function () {
 
   describe("getRawCodeHash", function () {
     it("zero", async () => {
-      expect(await accountCodeStorage.getRawCodeHash(RANDOM_ADDRESS)).to.be.eq(ethers.constants.HashZero);
+      expect(await accountCodeStorage.getRawCodeHash(RANDOM_ADDRESS)).to.be.eq(ethers.ZeroHash);
     });
 
     it("non-zero", async () => {
@@ -183,13 +184,13 @@ describe("AccountCodeStorage tests", function () {
     });
 
     it("zero", async () => {
-      expect(await accountCodeStorage.getCodeHash(RANDOM_ADDRESS)).to.be.eq(ethers.constants.HashZero);
+      expect(await accountCodeStorage.getCodeHash(RANDOM_ADDRESS)).to.be.eq(ethers.ZeroHash);
     });
   });
 
   describe("getCodeSize", function () {
     it("zero address", async () => {
-      expect(await accountCodeStorage.getCodeSize(ethers.constants.AddressZero)).to.be.eq(0);
+      expect(await accountCodeStorage.getCodeSize(ethers.ZeroHash)).to.be.eq(0);
     });
 
     it("precompile", async () => {
@@ -225,7 +226,7 @@ describe("AccountCodeStorage tests", function () {
 // Utility function to unset code hash for the specified address.
 // Deployer system contract should be impersonated
 async function unsetCodeHash(accountCodeStorage: AccountCodeStorage, address: string) {
-  const deployerAccount = await ethers.getImpersonatedSigner(DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
+  const deployerAccount = new ethers.VoidSigner(DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
 
-  await accountCodeStorage.connect(deployerAccount).storeAccountConstructedCodeHash(address, ethers.constants.HashZero);
+  await accountCodeStorage.connect(deployerAccount).storeAccountConstructedCodeHash(address, ethers.ZeroHash);
 }

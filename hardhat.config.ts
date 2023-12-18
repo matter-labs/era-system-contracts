@@ -1,6 +1,6 @@
 import "@matterlabs/hardhat-zksync-chai-matchers";
 import "@matterlabs/hardhat-zksync-solc";
-import "@nomiclabs/hardhat-ethers";
+import "@nomicfoundation/hardhat-ethers";
 import "@nomiclabs/hardhat-solpp";
 import "@typechain/hardhat";
 

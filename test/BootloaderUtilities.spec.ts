@@ -1,8 +1,8 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import * as zksync from "zksync-web3";
-import type { Wallet } from "zksync-web3";
-import { serialize } from "zksync-web3/build/src/utils";
+import * as zksync from "zksync-ethers";
+import type { Wallet } from "zksync-ethers";
+import { serializeEip712 } from "zksync-ethers/build/src/utils";
 import type { BootloaderUtilities } from "../typechain-types";
 import { signedTxToTransactionData } from "./shared/transactions";
 import { deployContract, getWallets } from "./shared/utils";
@@ -13,7 +13,7 @@ describe("BootloaderUtilities tests", function () {
 
   before(async () => {
     wallet = getWallets()[0];
-    bootloaderUtilities = (await deployContract("BootloaderUtilities")) as BootloaderUtilities;
+    bootloaderUtilities = (await deployContract("BootloaderUtilities")) as unknown as BootloaderUtilities;
   });
 
   describe("EIP-712 transaction", function () {
@@ -31,7 +31,7 @@ describe("BootloaderUtilities tests", function () {
         },
       });
       const signedEip712Tx = await wallet.signTransaction(eip712Tx);
-      const parsedEIP712tx = zksync.utils.parseTransaction(signedEip712Tx);
+      const parsedEIP712tx = zksync.utils.parseEip712(signedEip712Tx);
 
       const eip712TxData = signedTxToTransactionData(parsedEIP712tx)!;
       const expectedEIP712TxHash = parsedEIP712tx.hash;
@@ -55,12 +55,12 @@ describe("BootloaderUtilities tests", function () {
         gasLimit: 50000,
       });
       const txBytes = await wallet.signTransaction(legacyTx);
-      const parsedTx = zksync.utils.parseTransaction(txBytes);
+      const parsedTx = zksync.utils.parseEip712(txBytes);
       const txData = signedTxToTransactionData(parsedTx)!;
 
       const expectedTxHash = parsedTx.hash;
       delete legacyTx.from;
-      const expectedSignedHash = ethers.utils.keccak256(serialize(legacyTx));
+      const expectedSignedHash = ethers.keccak256(serializeEip712(legacyTx));
 
       const proposedHashes = await bootloaderUtilities.getTransactionHashes(txData);
       expect(proposedHashes.txHash).to.be.eq(expectedTxHash);
@@ -77,10 +77,10 @@ describe("BootloaderUtilities tests", function () {
         gasLimit: 50000,
       });
       const txBytes = await wallet.signTransaction(legacyTx);
-      const parsedTx = zksync.utils.parseTransaction(txBytes);
+      const parsedTx = zksync.utils.parseEip712(txBytes);
       const txData = signedTxToTransactionData(parsedTx)!;
 
-      const signature = ethers.utils.arrayify(txData.signature);
+      const signature = ethers.toBeArray(ethers.hexlify(txData.signature));
       signature[64] = 29;
       txData.signature = signature;
 
@@ -100,12 +100,12 @@ describe("BootloaderUtilities tests", function () {
         maxPriorityFeePerGas: 100,
       });
       const signedEip1559Tx = await wallet.signTransaction(eip1559Tx);
-      const parsedEIP1559tx = zksync.utils.parseTransaction(signedEip1559Tx);
+      const parsedEIP1559tx = zksync.utils.parseEip712(signedEip1559Tx);
 
       const EIP1559TxData = signedTxToTransactionData(parsedEIP1559tx)!;
       delete eip1559Tx.from;
       const expectedEIP1559TxHash = parsedEIP1559tx.hash;
-      const expectedEIP1559SignedHash = ethers.utils.keccak256(serialize(eip1559Tx));
+      const expectedEIP1559SignedHash = ethers.keccak256(serializeEip712(eip1559Tx));
 
       const proposedEIP1559Hashes = await bootloaderUtilities.getTransactionHashes(EIP1559TxData);
       expect(proposedEIP1559Hashes.txHash).to.be.eq(expectedEIP1559TxHash);
@@ -123,10 +123,10 @@ describe("BootloaderUtilities tests", function () {
         maxPriorityFeePerGas: 100,
       });
       const signedEip1559Tx = await wallet.signTransaction(eip1559Tx);
-      const parsedEIP1559tx = zksync.utils.parseTransaction(signedEip1559Tx);
+      const parsedEIP1559tx = zksync.utils.parseEip712(signedEip1559Tx);
 
       const EIP1559TxData = signedTxToTransactionData(parsedEIP1559tx)!;
-      const signature = ethers.utils.arrayify(EIP1559TxData.signature);
+      const signature = ethers.toBeArray(ethers.hexlify(EIP1559TxData.signature));
       signature[64] = 0;
       EIP1559TxData.signature = signature;
 
@@ -146,12 +146,12 @@ describe("BootloaderUtilities tests", function () {
         gasPrice: 55000,
       });
       const signedEip2930Tx = await wallet.signTransaction(eip2930Tx);
-      const parsedEIP2930tx = zksync.utils.parseTransaction(signedEip2930Tx);
+      const parsedEIP2930tx = zksync.utils.parseEip712(signedEip2930Tx);
 
       const EIP2930TxData = signedTxToTransactionData(parsedEIP2930tx)!;
       delete eip2930Tx.from;
       const expectedEIP2930TxHash = parsedEIP2930tx.hash;
-      const expectedEIP2930SignedHash = ethers.utils.keccak256(serialize(eip2930Tx));
+      const expectedEIP2930SignedHash = ethers.keccak256(serializeEip712(eip2930Tx));
 
       const proposedEIP2930Hashes = await bootloaderUtilities.getTransactionHashes(EIP2930TxData);
       expect(proposedEIP2930Hashes.txHash).to.be.eq(expectedEIP2930TxHash);
@@ -169,10 +169,10 @@ describe("BootloaderUtilities tests", function () {
         gasPrice: 55000,
       });
       const signedEip2930Tx = await wallet.signTransaction(eip2930Tx);
-      const parsedEIP2930tx = zksync.utils.parseTransaction(signedEip2930Tx);
+      const parsedEIP2930tx = zksync.utils.parseEip712(signedEip2930Tx);
 
       const EIP2930TxData = signedTxToTransactionData(parsedEIP2930tx)!;
-      const signature = ethers.utils.arrayify(EIP2930TxData.signature);
+      const signature = ethers.toBeArray(ethers.hexlify(EIP2930TxData.signature));
       signature[64] = 100;
       EIP2930TxData.signature = signature;
 

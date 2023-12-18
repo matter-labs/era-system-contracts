@@ -1,8 +1,8 @@
 import type { ZkSyncArtifact } from "@matterlabs/hardhat-zksync-deploy/dist/types";
 import { expect } from "chai";
 import { ethers, network } from "hardhat";
-import type { Wallet } from "zksync-web3";
-import { Contract, utils } from "zksync-web3";
+import type { Wallet } from "zksync-ethers";
+import { Contract, utils } from "zksync-ethers";
 import type { ContractDeployer, NonceHolder } from "../typechain-types";
 import { ContractDeployer__factory, Deployable__factory, NonceHolder__factory } from "../typechain-types";
 import {
@@ -22,11 +22,11 @@ describe("ContractDeployer tests", function () {
   let deployerAccount: ethers.Signer;
   let forceDeployer: ethers.Signer;
 
-  const EOA = ethers.utils.getAddress("0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef");
-  const RANDOM_ADDRESS = ethers.utils.getAddress("0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbee1");
-  const RANDOM_ADDRESS_2 = ethers.utils.getAddress("0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbee2");
-  const RANDOM_ADDRESS_3 = ethers.utils.getAddress("0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbee3");
-  const EMPTY_KERNEL_ADDRESS = ethers.utils.getAddress("0x0000000000000000000000000000000000000101");
+  const EOA = ethers.getAddress("0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef");
+  const RANDOM_ADDRESS = ethers.getAddress("0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbee1");
+  const RANDOM_ADDRESS_2 = ethers.getAddress("0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbee2");
+  const RANDOM_ADDRESS_3 = ethers.getAddress("0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbee3");
+  const EMPTY_KERNEL_ADDRESS = ethers.getAddress("0x0000000000000000000000000000000000000101");
   const AA_VERSION_NONE = 0;
   const AA_VERSION_1 = 1;
   const NONCE_ORDERING_SEQUENTIAL = 0;

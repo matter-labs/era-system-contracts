@@ -36,7 +36,7 @@ describe("ImmutableSimulator tests", function () {
         params: [DEPLOYER_SYSTEM_CONTRACT_ADDRESS],
       });
 
-      const deployer_account = await ethers.getSigner(DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
+      const deployer_account = new ethers.VoidSigner(DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
 
       await immutableSimulator.connect(deployer_account).setImmutables(RANDOM_ADDRESS, IMMUTABLES_DATA);
 
@@ -53,7 +53,7 @@ describe("ImmutableSimulator tests", function () {
 
   describe("getImmutable", function () {
     it("zero", async () => {
-      expect(await immutableSimulator.getImmutable(RANDOM_ADDRESS, 333)).to.be.eq(ethers.constants.HashZero);
+      expect(await immutableSimulator.getImmutable(RANDOM_ADDRESS, 333)).to.be.eq(ethers.ZeroHash);
     });
   });
 });

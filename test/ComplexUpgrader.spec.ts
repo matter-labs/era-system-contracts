@@ -9,8 +9,8 @@ describe("ComplexUpgrader tests", function () {
   let dummyUpgrade: DummyUpgrade;
 
   before(async () => {
-    complexUpgrader = (await deployContract("ComplexUpgrader")) as ComplexUpgrader;
-    dummyUpgrade = (await deployContract("DummyUpgrade")) as DummyUpgrade;
+    complexUpgrader = (await deployContract("ComplexUpgrader")) as unknown as ComplexUpgrader;
+    dummyUpgrade = (await deployContract("DummyUpgrade")) as unknown as DummyUpgrade;
   });
 
   describe("upgrade", function () {
@@ -26,7 +26,7 @@ describe("ComplexUpgrader tests", function () {
         params: [FORCE_DEPLOYER_ADDRESS],
       });
 
-      const force_deployer = await ethers.getSigner(FORCE_DEPLOYER_ADDRESS);
+      const force_deployer = new ethers.VoidSigner(FORCE_DEPLOYER_ADDRESS);
 
       await expect(
         complexUpgrader

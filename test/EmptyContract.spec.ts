@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import type { Wallet } from "zksync-web3";
+import type { Wallet } from "zksync-ethers";
 import type { EmptyContract } from "../typechain-types";
 import { deployContract, getWallets, provider } from "./shared/utils";
 
@@ -27,7 +27,7 @@ describe("EmptyContract tests", function () {
     const tx = {
       from: wallet.address,
       to: emptyContract.address,
-      value: ethers.utils.parseEther("1.0"),
+      value: ethers.parseEther("1.0"),
       data: "0x1234567890deadbeef1234567890",
     };
     expect(await provider.call(tx)).to.be.eq("0x");

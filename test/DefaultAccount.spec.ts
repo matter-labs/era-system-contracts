@@ -1,21 +1,9 @@
 import { expect } from "chai";
-import { ethers, network } from "hardhat";
-import * as zksync from "zksync-web3";
-import type { Wallet } from "zksync-web3";
-import { serialize } from "zksync-web3/build/src/utils";
-import type {
-  Callable,
-  DefaultAccount,
-  L2EthToken,
-  MockERC20Approve,
-  NonceHolder,
-  Callable,
-  DefaultAccount,
-  DelegateCaller,
-  L2EthToken,
-  MockERC20Approve,
-  NonceHolder,
-} from "../typechain-types";
+import { network } from "hardhat";
+import * as zksync from "zksync-ethers";
+import type { Wallet } from "zksync-ethers";
+import { serializeEip712 } from "zksync-ethers/build/src/utils";
+import type { Callable, DefaultAccount, L2EthToken, MockERC20Approve, NonceHolder } from "../typechain-types";
 import { DefaultAccount__factory, L2EthToken__factory, NonceHolder__factory } from "../typechain-types";
 import {
   BOOTLOADER_FORMAL_ADDRESS,
@@ -24,6 +12,7 @@ import {
 } from "./shared/constants";
 import { signedTxToTransactionData } from "./shared/transactions";
 import { deployContract, getWallets, loadArtifact, setCode } from "./shared/utils";
+import { ethers } from "ethers";
 
 describe("DefaultAccount tests", function () {
   let wallet: Wallet;
@@ -34,10 +23,10 @@ describe("DefaultAccount tests", function () {
   let l2EthToken: L2EthToken;
   let callable: Callable;
   let mockERC20Approve: MockERC20Approve;
-  let paymasterFlowInterface: ethers.utils.Interface;
+  let paymasterFlowInterface: ethers.Interface;
   let delegateCaller: DelegateCaller;
 
-  const RANDOM_ADDRESS = ethers.utils.getAddress("0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef");
+  const RANDOM_ADDRESS = ethers.getAddress("0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef");
 
   before(async () => {
     wallet = getWallets()[0];
@@ -52,7 +41,7 @@ describe("DefaultAccount tests", function () {
     mockERC20Approve = (await deployContract("MockERC20Approve")) as MockERC20Approve;
 
     const paymasterFlowInterfaceArtifact = await loadArtifact("IPaymasterFlow");
-    paymasterFlowInterface = new ethers.utils.Interface(paymasterFlowInterfaceArtifact.abi);
+    paymasterFlowInterface = new ethers.Interface(paymasterFlowInterfaceArtifact.abi);
 
     await network.provider.request({
       method: "hardhat_impersonateAccount",
@@ -86,7 +75,7 @@ describe("DefaultAccount tests", function () {
 
       const txHash = parsedTx.hash;
       delete legacyTx.from;
-      const signedHash = ethers.utils.keccak256(serialize(legacyTx));
+      const signedHash = ethers.keccak256(serialize(legacyTx));
 
       const call = {
         from: wallet.address,
@@ -103,7 +92,7 @@ describe("DefaultAccount tests", function () {
         type: 0,
         to: RANDOM_ADDRESS,
         from: account.address,
-        nonce: nonce,
+        nonce,
         data: "0x",
         value: 0,
         gasLimit: 50000,
@@ -115,7 +104,7 @@ describe("DefaultAccount tests", function () {
 
       const txHash = parsedTx.hash;
       delete legacyTx.from;
-      const signedHash = ethers.utils.keccak256(serialize(legacyTx));
+      const signedHash = ethers.keccak256(serializeEip712(legacyTx));
 
       const call = {
         from: BOOTLOADER_FORMAL_ADDRESS,
@@ -123,7 +112,7 @@ describe("DefaultAccount tests", function () {
         value: 0,
         data: defaultAccount.interface.encodeFunctionData("validateTransaction", [txHash, signedHash, txData]),
       };
-      expect(await bootloader.provider.call(call)).to.be.eq(ethers.constants.HashZero);
+      expect(await bootloader.provider.call(call)).to.be.eq(ethers.ZeroHash);
     });
 
     it("valid tx", async () => {
@@ -143,7 +132,7 @@ describe("DefaultAccount tests", function () {
 
       const txHash = parsedTx.hash;
       delete legacyTx.from;
-      const signedHash = ethers.utils.keccak256(serialize(legacyTx));
+      const signedHash = ethers.keccak256(serialize(legacyTx));
 
       const call = {
         from: BOOTLOADER_FORMAL_ADDRESS,
@@ -175,7 +164,7 @@ describe("DefaultAccount tests", function () {
 
       const txHash = parsedTx.hash;
       delete legacyTx.from;
-      const signedHash = ethers.utils.keccak256(serialize(legacyTx));
+      const signedHash = ethers.keccak256(serialize(legacyTx));
 
       await expect(await defaultAccount.executeTransaction(txHash, signedHash, txData)).to.not.emit(callable, "Called");
     });
@@ -197,7 +186,7 @@ describe("DefaultAccount tests", function () {
 
       const txHash = parsedTx.hash;
       delete legacyTx.from;
-      const signedHash = ethers.utils.keccak256(serialize(legacyTx));
+      const signedHash = ethers.keccak256(serialize(legacyTx));
 
       await expect(await defaultAccount.connect(bootloader).executeTransaction(txHash, signedHash, txData))
         .to.emit(callable, "Called")
@@ -246,7 +235,7 @@ describe("DefaultAccount tests", function () {
 
       const txHash = parsedTx.hash;
       delete legacyTx.from;
-      const signedHash = ethers.utils.keccak256(serialize(legacyTx));
+      const signedHash = ethers.keccak256(serialize(legacyTx));
 
       const balanceBefore = await l2EthToken.balanceOf(defaultAccount.address);
       await defaultAccount.payForTransaction(txHash, signedHash, txData);
@@ -272,7 +261,7 @@ describe("DefaultAccount tests", function () {
 
       const txHash = parsedTx.hash;
       delete legacyTx.from;
-      const signedHash = ethers.utils.keccak256(serialize(legacyTx));
+      const signedHash = ethers.keccak256(serialize(legacyTx));
 
       await expect(await defaultAccount.connect(bootloader).payForTransaction(txHash, signedHash, txData))
         .to.emit(l2EthToken, "Transfer")

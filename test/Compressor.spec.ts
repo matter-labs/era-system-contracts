@@ -1,9 +1,9 @@
 import { expect } from "chai";
 import type { BytesLike } from "ethers";
-import { BigNumber } from "ethers";
-import { ethers, network } from "hardhat";
-import * as zksync from "zksync-web3";
-import type { Wallet } from "zksync-web3";
+import { ethers } from "ethers";
+import { network } from "hardhat";
+import * as zksync from "zksync-ethers";
+import type { Wallet } from "zksync-ethers";
 import type { Compressor } from "../typechain-types";
 import { MockKnownCodesStorage__factory } from "../typechain-types";
 import {
@@ -24,7 +24,7 @@ describe("Compressor tests", function () {
 
   before(async () => {
     wallet = getWallets()[0];
-    compressor = (await deployContract("Compressor")) as Compressor;
+    compressor = (await deployContract("Compressor")) as unknown as Compressor;
     _knownCodesStorageCode = await getCode(KNOWN_CODE_STORAGE_CONTRACT_ADDRESS);
     const mockKnownCodesStorageArtifact = await loadArtifact("MockKnownCodesStorage");
     await setCode(KNOWN_CODE_STORAGE_CONTRACT_ADDRESS, mockKnownCodesStorageArtifact.bytecode);
@@ -33,13 +33,13 @@ describe("Compressor tests", function () {
       method: "hardhat_impersonateAccount",
       params: [BOOTLOADER_FORMAL_ADDRESS],
     });
-    bootloader = await ethers.getSigner(BOOTLOADER_FORMAL_ADDRESS);
+    bootloader = new ethers.VoidSigner(BOOTLOADER_FORMAL_ADDRESS);
 
     await network.provider.request({
       method: "hardhat_impersonateAccount",
       params: [L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS],
     });
-    l1Messenger = await ethers.getSigner(L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS);
+    l1Messenger = new ethers.VoidSigner(L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS);
   });
 
   after(async function () {
@@ -77,7 +77,7 @@ describe("Compressor tests", function () {
         params: [BOOTLOADER_FORMAL_ADDRESS],
       });
 
-      const bootloader = await ethers.getSigner(BOOTLOADER_FORMAL_ADDRESS);
+      const bootloader = new ethers.VoidSigner(BOOTLOADER_FORMAL_ADDRESS);
 
       const BYTECODE = "0xdeadbeefdeadbeef";
       const COMPRESSED_BYTECODE = "0x0001deadbeefdeadbeef0001";
@@ -97,7 +97,7 @@ describe("Compressor tests", function () {
         params: [BOOTLOADER_FORMAL_ADDRESS],
       });
 
-      const bootloader = await ethers.getSigner(BOOTLOADER_FORMAL_ADDRESS);
+      const bootloader = new ethers.VoidSigner(BOOTLOADER_FORMAL_ADDRESS);
 
       const BYTECODE = "0xdeadbeefdeadbeef1111111111111111";
       const COMPRESSED_BYTECODE = "0x0002deadbeefdeadbeef111111111111111100000000";
@@ -117,7 +117,7 @@ describe("Compressor tests", function () {
         params: [BOOTLOADER_FORMAL_ADDRESS],
       });
 
-      const bootloader = await ethers.getSigner(BOOTLOADER_FORMAL_ADDRESS);
+      const bootloader = new ethers.VoidSigner(BOOTLOADER_FORMAL_ADDRESS);
 
       const BYTECODE = "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef";
       const COMPRESSED_BYTECODE = "0x0001deadbeefdeadbeef000000000000";
@@ -138,7 +138,7 @@ describe("Compressor tests", function () {
         params: [BOOTLOADER_FORMAL_ADDRESS],
       });
 
-      const bootloader = await ethers.getSigner(BOOTLOADER_FORMAL_ADDRESS);
+      const bootloader = new ethers.VoidSigner(BOOTLOADER_FORMAL_ADDRESS);
 
       const BYTECODE = "0x" + "deadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef".repeat(2);
       const COMPRESSED_BYTECODE = "0x0001deadbeefdeadbeef" + "0000".repeat(4 * 2);
@@ -158,7 +158,7 @@ describe("Compressor tests", function () {
         params: [BOOTLOADER_FORMAL_ADDRESS],
       });
 
-      const bootloader = await ethers.getSigner(BOOTLOADER_FORMAL_ADDRESS);
+      const bootloader = new ethers.VoidSigner(BOOTLOADER_FORMAL_ADDRESS);
 
       const BYTECODE =
         "0x000200000000000200010000000103550000006001100270000000150010019d0000000101200190000000080000c13d0000000001000019004e00160000040f0000000101000039004e00160000040f0000001504000041000000150510009c000000000104801900000040011002100000000001310019000000150320009c0000000002048019000000600220021000000000012100190000004f0001042e000000000100001900000050000104300000008002000039000000400020043f0000000002000416000000000110004c000000240000613d000000000120004c0000004d0000c13d000000200100003900000100001004430000012000000443000001000100003900000040020000390000001d03000041004e000a0000040f000000000120004c0000004d0000c13d0000000001000031000000030110008c0000004d0000a13d0000000101000367000000000101043b0000001601100197000000170110009c0000004d0000c13d0000000101000039000000000101041a0000000202000039000000000202041a000000400300043d00000040043000390000001805200197000000000600041a0000000000540435000000180110019700000020043000390000000000140435000000a0012002700000001901100197000000600430003900000000001404350000001a012001980000001b010000410000000001006019000000b8022002700000001c02200197000000000121019f0000008002300039000000000012043500000018016001970000000000130435000000400100043d0000000002130049000000a0022000390000000003000019004e000a0000040f004e00140000040f0000004e000004320000004f0001042e000000500001043000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ffffffffffffffff000000000000000000000000000000000000000000000000000000008903573000000000000000000000000000000000000000000000000000000000000000000000000000000000ffffffffffffffffffffffffffffffffffffffff0000000000000000000000000000000000000000000000000000000000ffffff0000000000008000000000000000000000000000000000000000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80000000000000000000000000000000000000000000000000000000000000007fffff00000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
@@ -190,8 +190,8 @@ describe("Compressor tests", function () {
         {
           key: "0x1234567890123456789012345678901234567890123456789012345678901234",
           index: 0,
-          initValue: BigNumber.from(0),
-          finalValue: BigNumber.from("0x1234567890123456789012345678901234567890123456789012345678901234"),
+          initValue: 0n,
+          finalValue: BigInt("0x1234567890123456789012345678901234567890123456789012345678901234"),
         },
       ];
       const encodedStateDiffs = encodeStateDiffs(stateDiffs);
@@ -207,8 +207,8 @@ describe("Compressor tests", function () {
         {
           key: "0x1234567890123456789012345678901234567890123456789012345678901234",
           index: 0,
-          initValue: BigNumber.from(1),
-          finalValue: BigNumber.from(0),
+          initValue: 1n,
+          finalValue: 0n,
         },
       ];
       const encodedStateDiffs = encodeStateDiffs(stateDiffs);
@@ -224,8 +224,8 @@ describe("Compressor tests", function () {
         {
           key: "0x1234567890123456789012345678901234567890123456789012345678901234",
           index: 1,
-          initValue: BigNumber.from(1),
-          finalValue: BigNumber.from(0),
+          initValue: 1n,
+          finalValue: 0n,
         },
       ];
       const encodedStateDiffs = encodeStateDiffs(stateDiffs);
@@ -241,18 +241,18 @@ describe("Compressor tests", function () {
         {
           key: "0x1234567890123456789012345678901234567890123456789012345678901234",
           index: 1,
-          initValue: BigNumber.from(1),
-          finalValue: BigNumber.from(0),
+          initValue: 1n,
+          finalValue: 0n,
         },
         {
           key: "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
           index: 0,
-          initValue: TWO_IN_256.div(2),
-          finalValue: TWO_IN_256.sub(2),
+          initValue: TWO_IN_256 / 2n,
+          finalValue: TWO_IN_256 - 2n,
         },
       ];
       const encodedStateDiffs = encodeStateDiffs(stateDiffs);
-      stateDiffs[1].finalValue = TWO_IN_256.sub(1);
+      stateDiffs[1].finalValue = TWO_IN_256 - 1n;
       const compressedStateDiffs = compressStateDiffs(3, stateDiffs);
       await expect(
         compressor.connect(l1Messenger).verifyCompressedStateDiffs(2, 3, encodedStateDiffs, compressedStateDiffs)
@@ -264,18 +264,18 @@ describe("Compressor tests", function () {
         {
           key: "0x1234567890123456789012345678901234567890123456789012345678901234",
           index: 255,
-          initValue: BigNumber.from(1),
-          finalValue: BigNumber.from(0),
+          initValue: 1n,
+          finalValue: 0n,
         },
         {
           key: "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef",
           index: 0,
-          initValue: TWO_IN_256.div(2),
-          finalValue: BigNumber.from(1),
+          initValue: TWO_IN_256 / 2n,
+          finalValue: 1n,
         },
       ];
       const encodedStateDiffs = encodeStateDiffs(stateDiffs);
-      stateDiffs[1].finalValue = BigNumber.from(0);
+      stateDiffs[1].finalValue = 0n;
       const compressedStateDiffs = compressStateDiffs(1, stateDiffs);
       await expect(
         compressor.connect(l1Messenger).verifyCompressedStateDiffs(2, 1, encodedStateDiffs, compressedStateDiffs)
@@ -287,12 +287,12 @@ describe("Compressor tests", function () {
         {
           key: "0x1234567890123456789012345678901234567890123456789012345678901235",
           index: 255,
-          initValue: TWO_IN_256.div(2).sub(2),
-          finalValue: TWO_IN_256.div(2).sub(1),
+          initValue: TWO_IN_256 / 2n - 2n,
+          finalValue: TWO_IN_256 / 2n - 1n,
         },
       ];
       const encodedStateDiffs = encodeStateDiffs(stateDiffs);
-      stateDiffs[0].finalValue = TWO_IN_256.div(2);
+      stateDiffs[0].finalValue = TWO_IN_256 / 2n;
       const compressedStateDiffs = compressStateDiffs(1, stateDiffs);
       await expect(
         compressor.connect(l1Messenger).verifyCompressedStateDiffs(1, 1, encodedStateDiffs, compressedStateDiffs)
@@ -304,12 +304,12 @@ describe("Compressor tests", function () {
         {
           key: "0x1234567890123456789012345678901234567890123456789012345678901236",
           index: 0,
-          initValue: TWO_IN_256.div(4),
-          finalValue: TWO_IN_256.div(4).sub(5),
+          initValue: TWO_IN_256 - 4n,
+          finalValue: TWO_IN_256 / 4n - 5n,
         },
       ];
       const encodedStateDiffs = encodeStateDiffs(stateDiffs);
-      stateDiffs[0].finalValue = TWO_IN_256.div(4).sub(1);
+      stateDiffs[0].finalValue = TWO_IN_256 / 4n - 1n;
       const compressedStateDiffs = compressStateDiffs(1, stateDiffs);
       await expect(
         compressor.connect(l1Messenger).verifyCompressedStateDiffs(1, 1, encodedStateDiffs, compressedStateDiffs)
@@ -321,8 +321,8 @@ describe("Compressor tests", function () {
         {
           key: "0x1234567890123456789012345678901234567890123456789012345678901236",
           index: 0,
-          initValue: TWO_IN_256.div(4),
-          finalValue: TWO_IN_256.div(4).sub(5),
+          initValue: TWO_IN_256 / 4n,
+          finalValue: TWO_IN_256 / 4n - 5n,
         },
       ];
       const encodedStateDiffs = encodeStateDiffs(stateDiffs);
@@ -340,22 +340,22 @@ describe("Compressor tests", function () {
         {
           key: "0x1234567890123456789012345678901234567890123456789012345678901236",
           index: 0,
-          initValue: TWO_IN_256.div(4),
-          finalValue: TWO_IN_256.div(4).sub(5),
+          initValue: TWO_IN_256 / 4n,
+          finalValue: TWO_IN_256 / 4n - 5n,
         },
         {
           key: "0x1234567890123456789012345678901234567890123456789012345678901239",
           index: 121,
-          initValue: TWO_IN_256.sub(1),
-          finalValue: BigNumber.from(0),
+          initValue: TWO_IN_256 - 1n,
+          finalValue: 0n,
         },
       ];
       const encodedStateDiffs = encodeStateDiffs(stateDiffs);
       stateDiffs.push({
         key: "0x0234567890123456789012345678901234567890123456789012345678901231",
         index: 0,
-        initValue: BigNumber.from(0),
-        finalValue: BigNumber.from(1),
+        initValue: 0n,
+        finalValue: 1n,
       });
       const compressedStateDiffs = compressStateDiffs(1, stateDiffs);
       await expect(
@@ -368,22 +368,22 @@ describe("Compressor tests", function () {
         {
           key: "0x1234567890123456789012345678901234567890123456789012345678901236",
           index: 0,
-          initValue: TWO_IN_256.div(4),
-          finalValue: TWO_IN_256.div(4).sub(5),
+          initValue: TWO_IN_256 / 4n,
+          finalValue: TWO_IN_256 / 4n - 5n,
         },
         {
           key: "0x1234567890123456789012345678901234567890123456789012345678901239",
           index: 121,
-          initValue: TWO_IN_256.sub(1),
-          finalValue: BigNumber.from(0),
+          initValue: TWO_IN_256 - 1n,
+          finalValue: 0n,
         },
       ];
       const encodedStateDiffs = encodeStateDiffs(stateDiffs);
       stateDiffs.push({
         key: "0x0234567890123456789012345678901234567890123456789012345678901231",
         index: 1,
-        initValue: BigNumber.from(0),
-        finalValue: BigNumber.from(1),
+        initValue: 0n,
+        finalValue: 1n,
       });
       const compressedStateDiffs = compressStateDiffs(1, stateDiffs);
       await expect(
@@ -396,39 +396,39 @@ describe("Compressor tests", function () {
         {
           key: "0x1234567890123456789012345678901234567890123456789012345678901230",
           index: 0,
-          initValue: BigNumber.from("0x1234567890123456789012345678901234567890123456789012345678901231"),
-          finalValue: BigNumber.from("0x1234567890123456789012345678901234567890123456789012345678901230"),
+          initValue: BigInt("0x1234567890123456789012345678901234567890123456789012345678901231"),
+          finalValue: BigInt("0x1234567890123456789012345678901234567890123456789012345678901230"),
         },
         {
           key: "0x1234567890123456789012345678901234567890123456789012345678901232",
           index: 1,
-          initValue: TWO_IN_256.sub(1),
-          finalValue: BigNumber.from(1),
+          initValue: TWO_IN_256 - 1n,
+          finalValue: 1n,
         },
         {
           key: "0x1234567890123456789012345678901234567890123456789012345678901234",
           index: 0,
-          initValue: TWO_IN_256.div(2),
-          finalValue: BigNumber.from(1),
+          initValue: TWO_IN_256 / 2n,
+          finalValue: 1n,
         },
         {
           key: "0x1234567890123456789012345678901234567890123456789012345678901236",
           index: 2323,
-          initValue: BigNumber.from("0x1234567890123456789012345678901234567890123456789012345678901237"),
-          finalValue: BigNumber.from("0x0239329298382323782378478237842378478237847237237872373272373272"),
+          initValue: BigInt("0x1234567890123456789012345678901234567890123456789012345678901237"),
+          finalValue: BigInt("0x0239329298382323782378478237842378478237847237237872373272373272"),
         },
         {
           key: "0x1234567890123456789012345678901234567890123456789012345678901238",
           index: 2,
-          initValue: BigNumber.from(0),
-          finalValue: BigNumber.from(1),
+          initValue: 0n,
+          finalValue: 1n,
         },
       ];
       const encodedStateDiffs = encodeStateDiffs(stateDiffs);
       const compressedStateDiffs = compressStateDiffs(4, stateDiffs);
       const tx = {
         from: L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS,
-        to: compressor.address,
+        to: await compressor.getAddress(),
         data: compressor.interface.encodeFunctionData("verifyCompressedStateDiffs", [
           5,
           4,
@@ -437,7 +437,7 @@ describe("Compressor tests", function () {
         ]),
       };
       // eth_call to get return data
-      expect(await ethers.provider.call(tx)).to.be.eq(ethers.utils.keccak256(encodedStateDiffs));
+      expect(await wallet.call(tx)).to.be.eq(ethers.keccak256(encodedStateDiffs));
     });
   });
 });
@@ -445,19 +445,19 @@ describe("Compressor tests", function () {
 interface StateDiff {
   key: BytesLike;
   index: number;
-  initValue: BigNumber;
-  finalValue: BigNumber;
+  initValue: bigint;
+  finalValue: bigint;
 }
 
 function encodeStateDiffs(stateDiffs: StateDiff[]): string {
   const rawStateDiffs = [];
   for (const stateDiff of stateDiffs) {
     rawStateDiffs.push(
-      ethers.utils.solidityPack(
+      ethers.solidityPacked(
         ["address", "bytes32", "bytes32", "uint64", "uint256", "uint256", "bytes"],
         [
-          ethers.constants.AddressZero,
-          ethers.constants.HashZero,
+          ethers.ZeroAddress,
+          ethers.ZeroAddress,
           stateDiff.key,
           stateDiff.index,
           stateDiff.initValue,
@@ -467,7 +467,7 @@ function encodeStateDiffs(stateDiffs: StateDiff[]): string {
       )
     );
   }
-  return ethers.utils.hexlify(ethers.utils.concat(rawStateDiffs));
+  return ethers.hexlify(ethers.concat(rawStateDiffs));
 }
 
 function compressStateDiffs(enumerationIndexSize: number, stateDiffs: StateDiff[]): string {
@@ -475,24 +475,24 @@ function compressStateDiffs(enumerationIndexSize: number, stateDiffs: StateDiff[
   const initial = [];
   const repeated = [];
   for (const stateDiff of stateDiffs) {
-    const addition = stateDiff.finalValue.sub(stateDiff.initValue).add(TWO_IN_256).mod(TWO_IN_256);
-    const subtraction = stateDiff.initValue.sub(stateDiff.finalValue).add(TWO_IN_256).mod(TWO_IN_256);
+    const addition = (stateDiff.finalValue - stateDiff.initValue + TWO_IN_256) % TWO_IN_256;
+    const subtraction = (stateDiff.initValue - stateDiff.finalValue + TWO_IN_256) % TWO_IN_256;
     let op = 3;
     let min = stateDiff.finalValue;
-    if (addition.lt(min)) {
+    if (addition < min) {
       min = addition;
       op = 1;
     }
-    if (subtraction.lt(min)) {
+    if (subtraction < min) {
       min = subtraction;
       op = 2;
     }
-    if (min.gte(BigNumber.from(2).pow(248))) {
+    if (min <= (2n ^ 248n)) {
       min = stateDiff.finalValue;
       op = 0;
     }
     let len = 0;
-    const minHex = min.eq(0) ? "0x" : min.toHexString();
+    const minHex = min == 0n ? "0x" : ethers.toBeHex(min);
     if (op > 0) {
       len = (minHex.length - 2) / 2;
     }
@@ -500,14 +500,12 @@ function compressStateDiffs(enumerationIndexSize: number, stateDiffs: StateDiff[
     const enumerationIndexType = "uint" + (enumerationIndexSize * 8).toString();
     if (stateDiff.index === 0) {
       num_initial += 1;
-      initial.push(ethers.utils.solidityPack(["bytes32", "uint8", "bytes"], [stateDiff.key, metadata, minHex]));
+      initial.push(ethers.solidityPacked(["bytes32", "uint8", "bytes"], [stateDiff.key, metadata, minHex]));
     } else {
       repeated.push(
-        ethers.utils.solidityPack([enumerationIndexType, "uint8", "bytes"], [stateDiff.index, metadata, minHex])
+        ethers.solidityPacked([enumerationIndexType, "uint8", "bytes"], [stateDiff.index, metadata, minHex])
       );
     }
   }
-  return ethers.utils.hexlify(
-    ethers.utils.concat([ethers.utils.solidityPack(["uint16"], [num_initial]), ...initial, ...repeated])
-  );
+  return ethers.hexlify(ethers.concat([ethers.solidityPacked(["uint16"], [num_initial]), ...initial, ...repeated]));
 }

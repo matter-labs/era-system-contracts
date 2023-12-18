@@ -1,5 +1,6 @@
-import type { BigNumberish, BytesLike, Transaction } from "ethers";
-import * as zksync from "zksync-web3";
+import type { BigNumberish, BytesLike, TransactionLike } from "ethers";
+import { ethers, Transaction } from "ethers";
+import * as zksync from "zksync-ethers";
 
 // Interface encoding the transaction struct used for AA protocol
 export interface TransactionData {
@@ -31,7 +32,7 @@ export interface TransactionData {
   reservedDynamic: BytesLike;
 }
 
-export function signedTxToTransactionData(tx: Transaction) {
+export function signedTxToTransactionData(tx: TransactionLike) {
   // Transform legacy transaction's `v` part of the signature
   // to a single byte used in the packed eth signature
   function unpackV(v: number) {
@@ -60,7 +61,7 @@ export function signedTxToTransactionData(tx: Transaction) {
       value: tx.value || 0,
       reserved: [tx.chainId || 0, 0, 0, 0],
       data: tx.data!,
-      signature: ethers.utils.hexConcat([tx.r, tx.s, new Uint8Array([unpackV(tx.v)])]),
+      signature: ethers.concat([tx.r, tx.s, new Uint8Array([unpackV(tx.v)])]),
       factoryDeps: [],
       paymasterInput: "0x",
       reservedDynamic: "0x",
@@ -82,7 +83,7 @@ export function signedTxToTransactionData(tx: Transaction) {
       value: tx.value || 0,
       reserved: [0, 0, 0, 0],
       data: tx.data!,
-      signature: ethers.utils.hexConcat([tx.r, tx.s, unpackV(tx.v)]),
+      signature: ethers.concat([tx.r, tx.s, unpackV(tx.v)]),
       factoryDeps: [],
       paymasterInput: "0x",
       reservedDynamic: "0x",
@@ -104,7 +105,7 @@ export function signedTxToTransactionData(tx: Transaction) {
       value: tx.value || 0,
       reserved: [0, 0, 0, 0],
       data: tx.data!,
-      signature: ethers.utils.hexConcat([tx.r, tx.s, unpackV(tx.v)]),
+      signature: ethers.concat([tx.r, tx.s, unpackV(tx.v)]),
       factoryDeps: [],
       paymasterInput: "0x",
       reservedDynamic: "0x",

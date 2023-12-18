@@ -3,9 +3,9 @@ import type { ZkSyncArtifact } from "@matterlabs/hardhat-zksync-deploy/dist/type
 import type { BytesLike } from "ethers";
 import * as hre from "hardhat";
 import { ethers, network } from "hardhat";
-import * as zksync from "zksync-web3";
-import type { Contract } from "zksync-web3";
-import { Provider, Wallet } from "zksync-web3";
+import * as zksync from "zksync-ethers";
+import type { Contract } from "zksync-ethers";
+import { Provider, Wallet } from "zksync-ethers";
 import { Language } from "../../scripts/constants";
 import { readYulBytecode } from "../../scripts/utils";
 import { ContractDeployer__factory } from "../../typechain-types";
@@ -41,7 +41,7 @@ const deployer = new Deployer(hre, wallet as any);
 export async function callFallback(contract: Contract, data: string) {
   // `eth_Call` revert is not parsed by ethers, so we send
   // transaction to catch the error and use `eth_Call` to the return data.
-  await contract.fallback({ data });
+  await contract.fallback!({ data });
   return contract.provider.call({
     to: contract.address,
     data,
@@ -93,7 +93,7 @@ export async function deployContractYul(codeName: string, path: string): Promise
 export async function publishBytecode(bytecode: BytesLike) {
   await wallet.sendTransaction({
     type: 113,
-    to: ethers.constants.AddressZero,
+    to: ethers.ZeroAddress,
     data: "0x",
     customData: {
       factoryDeps: [bytecode],
@@ -121,7 +121,7 @@ export async function setCode(address: string, bytecode: BytesLike) {
     params: [DEPLOYER_SYSTEM_CONTRACT_ADDRESS],
   });
 
-  const deployerAccount = await ethers.getSigner(DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
+  const deployerAccount = new ethers.VoidSigner(DEPLOYER_SYSTEM_CONTRACT_ADDRESS);
   const deployerContract = ContractDeployer__factory.connect(DEPLOYER_SYSTEM_CONTRACT_ADDRESS, deployerAccount);
 
   const deployment = {
@@ -131,7 +131,7 @@ export async function setCode(address: string, bytecode: BytesLike) {
     value: 0,
     input: "0x",
   };
-  await deployerContract.forceDeployOnAddress(deployment, ethers.constants.AddressZero);
+  await deployerContract.forceDeployOnAddress(deployment, ethers.ZeroAddress);
 
   await network.provider.request({
     method: "hardhat_stopImpersonatingAccount",

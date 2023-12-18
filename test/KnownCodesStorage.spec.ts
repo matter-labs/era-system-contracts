@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { ethers, network } from "hardhat";
-import type { Wallet } from "zksync-web3";
+import type { Wallet } from "zksync-ethers";
 import type { KnownCodesStorage, MockL1Messenger } from "../typechain-types";
 import { MockL1Messenger__factory } from "../typechain-types";
 import {

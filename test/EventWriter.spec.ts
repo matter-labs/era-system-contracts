@@ -1,6 +1,6 @@
 import { expect } from "chai";
-import type { Wallet } from "zksync-web3";
-import { Contract } from "zksync-web3";
+import type { Wallet } from "zksync-ethers";
+import { Contract } from "zksync-ethers";
 import { Language } from "../scripts/constants";
 import { readYulBytecode } from "../scripts/utils";
 import type { EventWriterTest } from "../typechain-types";
