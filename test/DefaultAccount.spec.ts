@@ -39,7 +39,7 @@ describe("DefaultAccount tests", function () {
     wallet = getWallets()[0];
     account = getWallets()[2];
     const defaultAccountArtifact = await loadArtifact("DefaultAccount");
-    await setCode(account.address, defaultAccountArtifact.bytecode);
+    await setCode(account.address, defaultAccountArtifact.bytecode, wallet.provider);
     defaultAccount = DefaultAccount__factory.connect(account.address, wallet);
     nonceHolder = NonceHolder__factory.connect(NONCE_HOLDER_SYSTEM_CONTRACT_ADDRESS, wallet);
     l2EthToken = L2EthToken__factory.connect(ETH_TOKEN_SYSTEM_CONTRACT_ADDRESS, wallet);

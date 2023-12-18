@@ -87,7 +87,7 @@ describe("ContractDeployer tests", function () {
       method: "hardhat_stopImpersonatingAccount",
       params: [FORCE_DEPLOYER_ADDRESS],
     });
-    await setCode(DEPLOYER_SYSTEM_CONTRACT_ADDRESS, _contractDeployerCode);
+    await setCode(DEPLOYER_SYSTEM_CONTRACT_ADDRESS, _contractDeployerCode, wallet.provider);
   });
 
   describe("updateAccountVersion", function () {

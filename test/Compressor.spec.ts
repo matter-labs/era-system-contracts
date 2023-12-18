@@ -27,7 +27,7 @@ describe("Compressor tests", function () {
     compressor = (await deployContract("Compressor")) as unknown as Compressor;
     _knownCodesStorageCode = await getCode(KNOWN_CODE_STORAGE_CONTRACT_ADDRESS);
     const mockKnownCodesStorageArtifact = await loadArtifact("MockKnownCodesStorage");
-    await setCode(KNOWN_CODE_STORAGE_CONTRACT_ADDRESS, mockKnownCodesStorageArtifact.bytecode);
+    await setCode(KNOWN_CODE_STORAGE_CONTRACT_ADDRESS, mockKnownCodesStorageArtifact.bytecode, wallet.provider);
 
     await network.provider.request({
       method: "hardhat_impersonateAccount",

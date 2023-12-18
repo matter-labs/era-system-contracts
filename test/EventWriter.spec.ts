@@ -23,7 +23,7 @@ describe("EventWriter tests", function () {
       lang: Language.Yul,
       address: ethers.ZeroAddress,
     });
-    await setCode(EVENT_WRITER_CONTRACT_ADDRESS, eventWriterTestCode);
+    await setCode(EVENT_WRITER_CONTRACT_ADDRESS, eventWriterTestCode, wallet.provider);
 
     wallet = (await getWallets())[0];
     eventWriter = new Contract(EVENT_WRITER_CONTRACT_ADDRESS, [], wallet);
@@ -31,7 +31,7 @@ describe("EventWriter tests", function () {
   });
 
   after(async () => {
-    await setCode(EVENT_WRITER_CONTRACT_ADDRESS, _eventWriterCode);
+    await setCode(EVENT_WRITER_CONTRACT_ADDRESS, _eventWriterCode, wallet.provider);
   });
 
   it("non system call failed", async () => {

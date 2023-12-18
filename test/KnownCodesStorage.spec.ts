@@ -33,7 +33,7 @@ describe("KnownCodesStorage tests", function () {
 
     _l1MessengerCode = await getCode(L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS);
     const l1MessengerArtifact = await loadArtifact("MockL1Messenger");
-    await setCode(L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS, l1MessengerArtifact.bytecode);
+    await setCode(L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS, l1MessengerArtifact.bytecode, wallet.provider);
     mockL1Messenger = MockL1Messenger__factory.connect(L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS, wallet);
 
     await network.provider.request({
@@ -49,7 +49,7 @@ describe("KnownCodesStorage tests", function () {
   });
 
   after(async () => {
-    await setCode(L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS, _l1MessengerCode);
+    await setCode(L1_MESSENGER_SYSTEM_CONTRACT_ADDRESS, _l1MessengerCode, wallet.provider);
     await network.provider.request({
       method: "hardhat_stopImpersonatingAccount",
       params: [BOOTLOADER_FORMAL_ADDRESS],
