@@ -9,6 +9,7 @@ import * as hre from "hardhat";
 import type { BigNumber } from "ethers";
 import { TEST_BOOTLOADER_FORMAL_ADDRESS, TEST_ETH_TOKEN_SYSTEM_CONTRACT_ADDRESS } from "./shared/constants";
 import { prepareEnvironment, setResult } from "./shared/mocks";
+import { provider } from './shared/utils';
 
 describe("L2EthToken tests", () => {
   let walletFrom: Wallet;
@@ -83,7 +84,6 @@ describe("L2EthToken tests", () => {
     });
 
     it("no transfer - require special access", async () => {
-      const provider: Provider = new Provider((hre.network.config as any).url);
       const maliciousWallet: Wallet = ethers.Wallet.createRandom().connect(provider);
       await l2EthToken.connect(bootloaderAccount).mint(maliciousWallet.address, ethers.utils.parseEther("20.0"));
 
@@ -96,16 +96,30 @@ describe("L2EthToken tests", () => {
   });
 
   describe("balanceOf", () => {
-    it("correct balance", async () => {
+    it("walletFrom correct balance", async () => {
       const amountToMint: BigNumber = ethers.utils.parseEther("10.0");
+      console.log("Waddress ", walletFrom.address);
+
       await l2EthToken.connect(bootloaderAccount).mint(walletFrom.address, amountToMint);
       const balance = await l2EthToken.balanceOf(walletFrom.address);
       expect(balance).to.equal(ethers.utils.parseEther("115.0"));
     });
 
-    it("wrong address", async () => {
-      const balance = await l2EthToken.balanceOf("0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef");
-      expect(balance).to.equal(0);
+    it("address larger than 20 bytes", async () => {
+      const largerAddress = ethers.BigNumber.from(walletFrom.address).add(ethers.BigNumber.from(2).pow(96)).toHexString();
+      const amountToMint: BigNumber = ethers.utils.parseEther("10.0");
+      await l2EthToken.connect(bootloaderAccount).mint(largerAddress, amountToMint);
+      const balance = await l2EthToken.balanceOf(largerAddress);
+      expect(balance).to.equal(ethers.utils.parseEther("10.0"));
+    });
+  });
+
+  describe("totalSupply", () => {
+    it("correct total supply", async () => {
+      const amountToMint: BigNumber = ethers.utils.parseEther("10.0");
+      await l2EthToken.connect(bootloaderAccount).mint(walletFrom.address, amountToMint);
+      const totalSupply = await l2EthToken.totalSupply();
+      expect(totalSupply).to.equal(ethers.utils.parseEther("165.0"));
     });
   });
 
@@ -188,7 +202,9 @@ describe("L2EthToken tests", () => {
         .withArgs(walletFrom.address, l1Receiver.address, amountToWithdraw);
 
       const balanceAfterWithdrawal: BigNumber = await l2EthToken.balanceOf(l2EthToken.address);
-      expect(balanceAfterWithdrawal).not.equal(balanceBeforeWithdrawal.sub(amountToWithdraw));
+      const expectedBalanceAfterWithdrawal = ethers.BigNumber.from(2).pow(256).add(balanceBeforeWithdrawal).sub(amountToWithdraw);
+      expect(balanceAfterWithdrawal).to.equal(expectedBalanceAfterWithdrawal);
+
     });
   });
 
