@@ -55,7 +55,7 @@ describe("BootloaderUtilities tests", function () {
         gasLimit: 50000,
       });
       const txBytes = await wallet.signTransaction(legacyTx);
-      const parsedTx = zksync.utils.parseEip712(txBytes);
+      const parsedTx = ethers.Transaction.from(txBytes);
       const txData = signedTxToTransactionData(parsedTx)!;
 
       const expectedTxHash = parsedTx.hash;
@@ -77,7 +77,7 @@ describe("BootloaderUtilities tests", function () {
         gasLimit: 50000,
       });
       const txBytes = await wallet.signTransaction(legacyTx);
-      const parsedTx = zksync.utils.parseEip712(txBytes);
+      const parsedTx = ethers.Transaction.from(txBytes);
       const txData = signedTxToTransactionData(parsedTx)!;
 
       const signature = ethers.toBeArray(ethers.hexlify(txData.signature));
@@ -100,7 +100,7 @@ describe("BootloaderUtilities tests", function () {
         maxPriorityFeePerGas: 100,
       });
       const signedEip1559Tx = await wallet.signTransaction(eip1559Tx);
-      const parsedEIP1559tx = zksync.utils.parseEip712(signedEip1559Tx);
+      const parsedEIP1559tx = ethers.Transaction.from(signedEip1559Tx);
 
       const EIP1559TxData = signedTxToTransactionData(parsedEIP1559tx)!;
       delete eip1559Tx.from;
@@ -123,7 +123,7 @@ describe("BootloaderUtilities tests", function () {
         maxPriorityFeePerGas: 100,
       });
       const signedEip1559Tx = await wallet.signTransaction(eip1559Tx);
-      const parsedEIP1559tx = zksync.utils.parseEip712(signedEip1559Tx);
+      const parsedEIP1559tx = ethers.Transaction.from(signedEip1559Tx);
 
       const EIP1559TxData = signedTxToTransactionData(parsedEIP1559tx)!;
       const signature = ethers.toBeArray(ethers.hexlify(EIP1559TxData.signature));
@@ -146,7 +146,7 @@ describe("BootloaderUtilities tests", function () {
         gasPrice: 55000,
       });
       const signedEip2930Tx = await wallet.signTransaction(eip2930Tx);
-      const parsedEIP2930tx = zksync.utils.parseEip712(signedEip2930Tx);
+      const parsedEIP2930tx = ethers.Transaction.from(signedEip2930Tx);
 
       const EIP2930TxData = signedTxToTransactionData(parsedEIP2930tx)!;
       delete eip2930Tx.from;
@@ -169,7 +169,7 @@ describe("BootloaderUtilities tests", function () {
         gasPrice: 55000,
       });
       const signedEip2930Tx = await wallet.signTransaction(eip2930Tx);
-      const parsedEIP2930tx = zksync.utils.parseEip712(signedEip2930Tx);
+      const parsedEIP2930tx = ethers.Transaction.from(signedEip2930Tx);
 
       const EIP2930TxData = signedTxToTransactionData(parsedEIP2930tx)!;
       const signature = ethers.toBeArray(ethers.hexlify(EIP2930TxData.signature));
