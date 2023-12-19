@@ -103,10 +103,11 @@ describe("L2EthToken tests", () => {
     });
 
     it("address larger than 20 bytes", async () => {
-      const randomExtra = ethers.BigNumber.from("0x" + randomBytes(32).toString("hex"));
-      const largerAddress = ethers.BigNumber.from(walletFrom.address).add(randomExtra).toHexString();
+      const largerAddress = ethers.BigNumber.from(
+        "0x" + randomBytes(12).toString("hex") + walletFrom.address.slice(2)
+      ).toHexString();
       const balance = await l2EthToken.balanceOf(largerAddress);
-      expect(balance).to.equal(ethers.utils.parseEther("0.0"));
+      expect(balance).to.equal(ethers.utils.parseEther("115.0"));
     });
   });
 
