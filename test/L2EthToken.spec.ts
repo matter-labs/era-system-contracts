@@ -7,6 +7,7 @@ import { deployContractOnAddress, getWallets, provider } from "./shared/utils";
 import type { BigNumber } from "ethers";
 import { TEST_BOOTLOADER_FORMAL_ADDRESS, TEST_ETH_TOKEN_SYSTEM_CONTRACT_ADDRESS } from "./shared/constants";
 import { prepareEnvironment, setResult } from "./shared/mocks";
+import { randomBytes } from "crypto";
 
 describe("L2EthToken tests", () => {
   let walletFrom: Wallet;
@@ -26,7 +27,7 @@ describe("L2EthToken tests", () => {
   });
 
   describe("mint", () => {
-    it("successful", async () => {
+    it("called by bootlader", async () => {
       const initialSupply: BigNumber = await l2EthToken.totalSupply();
       const initialBalanceOfWallet: BigNumber = await l2EthToken.balanceOf(walletFrom.address);
       const amountToMint: BigNumber = ethers.utils.parseEther("10.0");
@@ -102,14 +103,10 @@ describe("L2EthToken tests", () => {
     });
 
     it("address larger than 20 bytes", async () => {
-      const randomNum = Math.floor(Math.random() * 96) + 1;
-      const randomExtra = ethers.BigNumber.from(2).pow(randomNum);
+      const randomExtra = ethers.BigNumber.from("0x" + randomBytes(32).toString("hex"));
       const largerAddress = ethers.BigNumber.from(walletFrom.address).add(randomExtra).toHexString();
-
-      const amountToMint: BigNumber = ethers.utils.parseEther("10.0");
-      await l2EthToken.connect(bootloaderAccount).mint(largerAddress, amountToMint);
       const balance = await l2EthToken.balanceOf(largerAddress);
-      expect(balance).to.equal(ethers.utils.parseEther("10.0"));
+      expect(balance).to.equal(ethers.utils.parseEther("0.0"));
     });
   });
 
@@ -118,7 +115,7 @@ describe("L2EthToken tests", () => {
       const amountToMint: BigNumber = ethers.utils.parseEther("10.0");
       await l2EthToken.connect(bootloaderAccount).mint(walletFrom.address, amountToMint);
       const totalSupply = await l2EthToken.totalSupply();
-      expect(totalSupply).to.equal(ethers.utils.parseEther("165.0"));
+      expect(totalSupply).to.equal(ethers.utils.parseEther("155.0"));
     });
   });
 
@@ -144,7 +141,7 @@ describe("L2EthToken tests", () => {
   });
 
   describe("withdraw", () => {
-    it("successful, correct contract balance and total supply", async () => {
+    it("event, balance, totalsupply", async () => {
       const iface = IMailbox__factory.createInterface();
       const selector = iface.getSighash("finalizeEthWithdrawal");
       const amountToWithdraw: BigNumber = ethers.utils.parseEther("1.0");
@@ -210,7 +207,7 @@ describe("L2EthToken tests", () => {
   });
 
   describe("withdrawWithMessage", () => {
-    it("successful", async () => {
+    it("event, balance, totalsupply", async () => {
       const iface = IMailbox__factory.createInterface();
       const selector = iface.getSighash("finalizeEthWithdrawal");
       const amountToWidthdraw: BigNumber = ethers.utils.parseEther("1.0");
