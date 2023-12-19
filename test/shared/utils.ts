@@ -39,11 +39,8 @@ const wallet = new Wallet(RICH_WALLETS[0].privateKey, provider);
 const deployer = new Deployer(hre, wallet as any);
 
 export async function callFallback(contract: Contract, data: string) {
-  // `eth_Call` revert is not parsed by ethers, so we send
-  // transaction to catch the error and use `eth_Call` to the return data.
-  await contract.fallback!({ data });
-  return contract.provider.call({
-    to: contract.address,
+  return contract.runner!.call!({
+    to: await contract.getAddress(),
     data,
   });
 }

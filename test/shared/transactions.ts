@@ -1,5 +1,6 @@
-import type { BigNumberish, BytesLike, TransactionLike } from "ethers";
+import type { BigNumberish, BytesLike, Transaction, TransactionLike } from "ethers";
 import { ethers } from "ethers";
+import { DataHexString } from "ethers/lib.commonjs/utils/data";
 import * as zksync from "zksync-ethers";
 
 // Interface encoding the transaction struct used for AA protocol
@@ -33,19 +34,6 @@ export interface TransactionData {
 }
 
 export function signedTxToTransactionData(tx: TransactionLike) {
-  // Transform legacy transaction's `v` part of the signature
-  // to a single byte used in the packed eth signature
-  function unpackV(v: number) {
-    if (v >= 35) {
-      const chainId = Math.floor((v - 35) / 2);
-      return v - chainId * 2 - 8;
-    } else if (v <= 1) {
-      return 27 + v;
-    }
-
-    throw new Error("Invalid `v`");
-  }
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function legacyTxToTransactionData(tx: any): TransactionData {
     return {
@@ -61,7 +49,7 @@ export function signedTxToTransactionData(tx: TransactionLike) {
       value: tx.value || 0,
       reserved: [tx.chainId || 0, 0, 0, 0],
       data: tx.data!,
-      signature: ethers.concat([tx.r, tx.s, new Uint8Array([unpackV(tx.v)])]),
+      signature: ethers.concat([tx.signature?.r! as DataHexString, tx.signature?.s! as  DataHexString, new Uint8Array(tx.signature?.v!)]),
       factoryDeps: [],
       paymasterInput: "0x",
       reservedDynamic: "0x",
@@ -83,7 +71,7 @@ export function signedTxToTransactionData(tx: TransactionLike) {
       value: tx.value || 0,
       reserved: [0, 0, 0, 0],
       data: tx.data!,
-      signature: ethers.concat([tx.r, tx.s, unpackV(tx.v)]),
+      signature: ethers.concat([tx.signature?.r! as DataHexString, tx.signature?.s! as  DataHexString, new Uint8Array(tx.signature?.v!)]),
       factoryDeps: [],
       paymasterInput: "0x",
       reservedDynamic: "0x",
@@ -98,14 +86,14 @@ export function signedTxToTransactionData(tx: TransactionLike) {
       to: tx.to!,
       gasLimit: tx.gasLimit!,
       gasPerPubdataByteLimit: zksync.utils.DEFAULT_GAS_PER_PUBDATA_LIMIT,
-      maxFeePerGas: tx.maxFeePerGas,
-      maxPriorityFeePerGas: tx.maxPriorityFeePerGas,
+      maxFeePerGas: tx.maxFeePerGas!,
+      maxPriorityFeePerGas: tx.maxPriorityFeePerGas!,
       paymaster: 0,
       nonce: tx.nonce,
       value: tx.value || 0,
       reserved: [0, 0, 0, 0],
       data: tx.data!,
-      signature: ethers.concat([tx.r, tx.s, unpackV(tx.v)]),
+      signature: ethers.concat([tx.signature?.r! as DataHexString, tx.signature?.s! as  DataHexString, new Uint8Array(tx.signature?.v!)]),
       factoryDeps: [],
       paymasterInput: "0x",
       reservedDynamic: "0x",
@@ -135,7 +123,7 @@ export function signedTxToTransactionData(tx: TransactionLike) {
   }
 
   const txType = tx.type ?? 0;
-
+  
   switch (txType) {
     case 0:
       return legacyTxToTransactionData(tx);
