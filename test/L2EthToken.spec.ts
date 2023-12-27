@@ -119,10 +119,13 @@ describe("L2EthToken tests", () => {
 
   describe("totalSupply", () => {
     it("correct total supply", async () => {
+      const totalSupplyBefore = await l2EthToken.totalSupply();
       const amountToMint: BigNumber = ethers.utils.parseEther("10.0");
+
       await l2EthToken.connect(bootloaderAccount).mint(walletFrom.address, amountToMint);
       const totalSupply = await l2EthToken.totalSupply();
-      expect(totalSupply).to.equal(ethers.utils.parseEther("155.0"));
+
+      expect(totalSupply).to.equal(totalSupplyBefore.add(amountToMint));
     });
   });
 
