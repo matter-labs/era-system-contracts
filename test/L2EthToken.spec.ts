@@ -3,7 +3,7 @@ import { ethers } from "hardhat";
 import type { Wallet } from "zksync-web3";
 import { IMailbox__factory, L2EthToken__factory } from "../typechain-types";
 import type { L2EthToken } from "../typechain-types";
-import { deployContractOnAddress, getWallets, provider } from "./shared/utils";
+import { deployContractOnAddress, getRandomInt, getWallets, provider } from "./shared/utils";
 import type { BigNumber } from "ethers";
 import { TEST_BOOTLOADER_FORMAL_ADDRESS, TEST_ETH_TOKEN_SYSTEM_CONTRACT_ADDRESS } from "./shared/constants";
 import { prepareEnvironment, setResult } from "./shared/mocks";
@@ -103,11 +103,17 @@ describe("L2EthToken tests", () => {
     });
 
     it("address larger than 20 bytes", async () => {
+      const wallet: Wallet = ethers.Wallet.createRandom().connect(provider);
+      const amountToMint: BigNumber = ethers.utils.parseEther(getRandomInt(100, 1000).toString());
+
+      const res = await l2EthToken.connect(bootloaderAccount).mint(wallet.address, amountToMint);
+      await res.wait();
       const largerAddress = ethers.BigNumber.from(
-        "0x" + randomBytes(12).toString("hex") + walletFrom.address.slice(2)
+        "0x" + randomBytes(12).toString("hex") + wallet.address.slice(2)
       ).toHexString();
       const balance = await l2EthToken.balanceOf(largerAddress);
-      expect(balance).to.equal(ethers.utils.parseEther("115.0"));
+
+      expect(balance).to.equal(amountToMint);
     });
   });
 
