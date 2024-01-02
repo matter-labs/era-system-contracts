@@ -3,7 +3,7 @@ import { ethers } from "hardhat";
 import type { Wallet } from "zksync-web3";
 import { IMailbox__factory, L2EthToken__factory } from "../typechain-types";
 import type { L2EthToken } from "../typechain-types";
-import { deployContractOnAddress, getRandomInt, getWallets, provider } from "./shared/utils";
+import { deployContractOnAddress, getWallets, provider } from "./shared/utils";
 import type { BigNumber } from "ethers";
 import { TEST_BOOTLOADER_FORMAL_ADDRESS, TEST_ETH_TOKEN_SYSTEM_CONTRACT_ADDRESS } from "./shared/constants";
 import { prepareEnvironment, setResult } from "./shared/mocks";
