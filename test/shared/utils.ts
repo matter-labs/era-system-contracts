@@ -167,3 +167,9 @@ export async function setConstructingCodeHash(address: string, bytecode: string)
   bytecodeHash[1] = 1;
   await accountCodeStorage.storeAccountConstructingCodeHash(address, bytecodeHash);
 }
+
+export function getRandomInt(min: number, max: number) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
