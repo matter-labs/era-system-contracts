@@ -95,16 +95,17 @@ describe("L2EthToken tests", () => {
 
   describe("balanceOf", () => {
     it("walletFrom address", async () => {
+      const wallet: Wallet = ethers.Wallet.createRandom().connect(provider);
       const amountToMint: BigNumber = ethers.utils.parseEther("10.0");
 
-      await l2EthToken.connect(bootloaderAccount).mint(walletFrom.address, amountToMint);
-      const balance = await l2EthToken.balanceOf(walletFrom.address);
-      expect(balance).to.equal(ethers.utils.parseEther("115.0"));
+      await l2EthToken.connect(bootloaderAccount).mint(wallet.address, amountToMint);
+      const balance = await l2EthToken.balanceOf(wallet.address);
+      expect(balance).to.equal(amountToMint);
     });
 
     it("address larger than 20 bytes", async () => {
       const wallet: Wallet = ethers.Wallet.createRandom().connect(provider);
-      const amountToMint: BigNumber = ethers.utils.parseEther(getRandomInt(100, 1000).toString());
+      const amountToMint: BigNumber = ethers.utils.parseEther("123.0");
 
       const res = await l2EthToken.connect(bootloaderAccount).mint(wallet.address, amountToMint);
       await res.wait();
