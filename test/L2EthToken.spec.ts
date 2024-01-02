@@ -152,38 +152,6 @@ describe("L2EthToken tests", () => {
   });
 
   describe("withdraw", () => {
-    it("event, balance, totalsupply", async () => {
-      const iface = IMailbox__factory.createInterface();
-      const selector = iface.getSighash("finalizeEthWithdrawal");
-      const amountToWithdraw: BigNumber = ethers.utils.parseEther("1.0");
-
-      const message: string = ethers.utils.solidityPack(
-        ["bytes4", "address", "uint256"],
-        [selector, l1Receiver.address, amountToWithdraw]
-      );
-
-      await setResult("L1Messenger", "sendToL1", [message], {
-        failure: false,
-        returnData: ethers.utils.defaultAbiCoder.encode(["bytes32"], [ethers.utils.keccak256(message)]),
-      });
-
-      const amountToMint: BigNumber = ethers.utils.parseEther("100.0");
-      await l2EthToken.connect(bootloaderAccount).mint(l2EthToken.address, amountToMint);
-
-      const balanceBeforeWithdrawal: BigNumber = await l2EthToken.balanceOf(l2EthToken.address);
-      const totalSupplyBefore = await l2EthToken.totalSupply();
-
-      await expect(l2EthToken.connect(walletFrom).withdraw(l1Receiver.address, { value: amountToWithdraw }))
-        .to.emit(l2EthToken, "Withdrawal")
-        .withArgs(walletFrom.address, l1Receiver.address, amountToWithdraw);
-
-      const balanceAfterWithdrawal: BigNumber = await l2EthToken.balanceOf(l2EthToken.address);
-      const totalSupplyAfter = await l2EthToken.totalSupply();
-
-      expect(balanceAfterWithdrawal).to.equal(balanceBeforeWithdrawal.sub(amountToWithdraw));
-      expect(totalSupplyAfter).to.equal(totalSupplyBefore.sub(amountToWithdraw));
-    });
-
     it("big amount to withdraw, underflow contract balance", async () => {
       const TWO_TO_256 = ethers.BigNumber.from(2).pow(256);
       const iface = IMailbox__factory.createInterface();
@@ -216,10 +184,40 @@ describe("L2EthToken tests", () => {
       }
       expect(balanceAfterWithdrawal).to.equal(expectedBalanceAfterWithdrawal);
     });
-  });
 
-  describe("withdrawWithMessage", () => {
     it("event, balance, totalsupply", async () => {
+      const iface = IMailbox__factory.createInterface();
+      const selector = iface.getSighash("finalizeEthWithdrawal");
+      const amountToWithdraw: BigNumber = ethers.utils.parseEther("1.0");
+
+      const message: string = ethers.utils.solidityPack(
+        ["bytes4", "address", "uint256"],
+        [selector, l1Receiver.address, amountToWithdraw]
+      );
+
+      await setResult("L1Messenger", "sendToL1", [message], {
+        failure: false,
+        returnData: ethers.utils.defaultAbiCoder.encode(["bytes32"], [ethers.utils.keccak256(message)]),
+      });
+
+      const amountToMint: BigNumber = ethers.utils.parseEther("100.0");
+      await l2EthToken.connect(bootloaderAccount).mint(l2EthToken.address, amountToMint);
+
+      const balanceBeforeWithdrawal: BigNumber = await l2EthToken.balanceOf(l2EthToken.address);
+      const totalSupplyBefore = await l2EthToken.totalSupply();
+
+      await expect(l2EthToken.connect(walletFrom).withdraw(l1Receiver.address, { value: amountToWithdraw }))
+        .to.emit(l2EthToken, "Withdrawal")
+        .withArgs(walletFrom.address, l1Receiver.address, amountToWithdraw);
+
+      const balanceAfterWithdrawal: BigNumber = await l2EthToken.balanceOf(l2EthToken.address);
+      const totalSupplyAfter = await l2EthToken.totalSupply();
+
+      expect(balanceAfterWithdrawal).to.equal(balanceBeforeWithdrawal.sub(amountToWithdraw));
+      expect(totalSupplyAfter).to.equal(totalSupplyBefore.sub(amountToWithdraw));
+    });
+
+    it("event, balance, totalsupply, withdrawWithMessage", async () => {
       const iface = IMailbox__factory.createInterface();
       const selector = iface.getSighash("finalizeEthWithdrawal");
       const amountToWidthdraw: BigNumber = ethers.utils.parseEther("1.0");
