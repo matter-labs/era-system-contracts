@@ -185,6 +185,7 @@ describe("L2EthToken tests", () => {
     });
 
     it("big amount to withdraw, underflow contract balance", async () => {
+      const TWO_TO_256 = ethers.BigNumber.from(2).pow(256);
       const iface = IMailbox__factory.createInterface();
       const selector = iface.getSighash("finalizeEthWithdrawal");
       const amountToWithdraw: BigNumber = ethers.utils.parseEther("300.0");
@@ -209,10 +210,10 @@ describe("L2EthToken tests", () => {
         .withArgs(walletFrom.address, l1Receiver.address, amountToWithdraw);
 
       const balanceAfterWithdrawal: BigNumber = await l2EthToken.balanceOf(l2EthToken.address);
-      const expectedBalanceAfterWithdrawal = ethers.BigNumber.from(2)
-        .pow(256)
-        .add(balanceBeforeWithdrawal)
-        .sub(amountToWithdraw);
+      let expectedBalanceAfterWithdrawal = balanceBeforeWithdrawal.sub(amountToWithdraw);
+      while (expectedBalanceAfterWithdrawal.lt(0)) {
+        expectedBalanceAfterWithdrawal = expectedBalanceAfterWithdrawal.add(TWO_TO_256);
+      }
       expect(balanceAfterWithdrawal).to.equal(expectedBalanceAfterWithdrawal);
     });
   });
